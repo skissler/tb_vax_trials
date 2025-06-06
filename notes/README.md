@@ -14,3 +14,17 @@ Personal recap of the meeting this week with Kristin and Tyler:
 	- What kind of sensitivity and specificity -- in terms of predicting the number of secondary cases -- would we want from an infectiousness test? Can we specify the test parameters we'd want for it to be a useful outbreak control tool? 
 
 
+I'd like to code up some initial sims. I want to see if I've got the right ideas in mind, and we might be able to use some of the output for preliminary data. 
+
+Some code architecture: 
+
+- Simulate an epidemic curve 
+- Simulate sampling at various points in time, with different tests 
+- Show estimates of incidence and prevalence over time 
+
+Before diving in, I want to look at existing TB models. Some useful resources: 
+
+- [Guidance for country-level TB modelling](https://researchonline.lshtm.ac.uk/id/eprint/4653000/1/gomez_etal_2019_guidance_for_country-level_tb_modelling.pdf) (led by Nick Menzies) 
+- [Progression from latent infection to active disease in dynamic tuberculosis transmission models: a systematic review of the validity of modelling assumptions](https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(18)30134-8/abstract) (Menzies ... Cohen) 
+- [Prospects for Tuberculosis Elimination in the United States: Results of a Transmission Dynamic Model](https://academic.oup.com/aje/article-abstract/187/9/2011/4995883) (Menzies, Cohen ... Salomon)
+- [Comparative Modeling of Tuberculosis Epidemiology and Policy Outcomes in California](https://www.atsjournals.org/doi/full/10.1164/rccm.201907-1289OC) (Menzies ... Shete) 
