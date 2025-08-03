@@ -146,8 +146,12 @@ No, better: what we should do is
 
 I think that's the way forward. 
 
+Welp, after all that work... the brute force algorithm runs faster. No idea why. Maybe the thing to do is to stick with that and use the theory for intuition/plotting mean lines. 
 
 
+# 3 Aug 2025 
+
+Would love to get some decent simulations done today. 
 
 
 
