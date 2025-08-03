@@ -121,10 +121,30 @@ Also: I need to think clearly through how we're doing the ultimate inference on 
 I wonder if a better mechanism of vaccine action might be to simply move people from the fast-progressor to the slow-progressor group with some probability equal to the VE. 
 
 
+This sort of works -- but really incidence needs to be higher if we're going to get the number of tests down to something like 8000 
 
+Good stuff in ncalc.R. Bed. 
 
+# 2 Aug 2025 
 
+Ok, so yesterday I got the derivation finally working in which I estimated the probability that a person is (a) infected in the past $\sigma$ years AND (b) a fast (or slow) progressor, given that they're currently symptomatic at age $a$. 
 
+This lets us simulate trial recruitment straightforwardly: if we test an asymptomatic person, this gives us the probability that they test positive on a test that detects infections within the past $\sigma$ years, and it tells us if the person is a fast or slow progressor. Of course, in reality, we won't know who is a fast or slow progressor, but knowing that for the simulations is important so that we cna project when the recruited people develop symptoms. 
+
+Now, I want to do something a little more thoughtful: given an age distribution, can we simulate recruitment? Here's the idea: 
+
+- Draw a person of age $a$ from the population's age distribution, possibly restricting to [18, 50) to align with other trials 
+- Given that person's age, calculate the joint probability that they're (a) infected in the past $\sigma$ years, (b) asymptomatic, and (c) a fast (slow) progressor. I think we should be able to do this using quantities I've already derived. 
+
+The reason we want this last thing is because, then, given a person's age, we can estimate the probability that we (a) test them and (b) what the outcome of that test is. 
+
+No, better: what we should do is 
+
+1. Draw a person from the population, using the population's age distribution
+2. Determine if that person is asymptomatic, for which we can use the denominator of the expression I derived yesterday 
+3. If they're asymptomatic, then we can assume we test them. Then, we can use the full expression I derived yesterday to calculate the probability that they test positive (infected in the last $\sigma$ years) and are a fast/slow progressor, given that they're asymptomatic. 
+
+I think that's the way forward. 
 
 
 

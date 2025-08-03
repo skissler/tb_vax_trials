@@ -10,22 +10,25 @@
 library(tidyverse)
 library(survival)
 
+# UNCOMMENT FOR LOOPING MANY TRIALS ###################################
 # n_fast_vec <- c()
 # for(indexA in 1:100){
+########################################################################
 
 minage <- 18
 maxage <- 50
-rho <- 0.025 # .003
-p_slow <- 0.75 # 0.95
+rho <- 0.0275 # 0.0275 # .003  # 0.025
+p_slow <- 0.5 # 0.95  # 0.75
 mu_slow <- 0.0001
-mu_fast <- 0.225 # 1.5 # 0.5 
-sigma <- 100
+mu_fast <- 1.5 # 1.5 # 0.5 
+sigma <- 2 # 100
 ve <- 0.55
 trial_length <- 3
 
 # Initialize tracking variables  
 n_tested <- 0
 n_recruited <- 0
+n_fast <- 0
 n_overall <- 0
 
 recruited_df <- tibble()
@@ -53,21 +56,23 @@ while(n_recruited < 3500){
 		if((tinf >= age-sigma) & (tinf <= age)){
 			# They were infected in past sigma years, so test positive. Recruit!
 			n_recruited <- n_recruited + 1
+			if(progressor_type=="fast"){n_fast <- n_fast + 1}
 			recruited_df <- bind_rows(recruited_df, tibble(
 				id=n_recruited,
 				age=age,
-				progressor_type=progressor_type
+				progressor_type=progressor_type,
+				tinf=tinf
 				))
 		}
 	}
 	n_overall <- n_overall + 1
 
 }
-
-n_fast <- nrow(filter(recruited_df, progressor_type=="fast"))
+# UNCOMMENT FOR LOOPING MANY TRIALS ###################################
 # print(n_tested)
 # n_fast_vec <- c(n_fast_vec, n_fast)
 # }
+########################################################################
 
 rexpV <- Vectorize(rexp)
 recruited_df <- recruited_df %>% 
@@ -76,8 +81,11 @@ recruited_df <- recruited_df %>%
 		rep(0, ceiling(n_recruited/2)), 
 		rep(1, ceiling(n_recruited/2)))[1:n_recruited]
 		)) %>% 
+	mutate(vaxworked = sample(c(TRUE,FALSE), 
+		replace=TRUE, size=nrow(recruited_df), prob=c(ve,1-ve))) %>% 
 	mutate(prograte = case_when(progressor_type=="slow"~mu_slow, TRUE~mu_fast)) %>% 
-	mutate(prograte = case_when(vaxstatus==1~prograte*(1-ve), TRUE~prograte)) %>% 
+	mutate(prograte = case_when(vaxstatus==1 & vaxworked~mu_slow, TRUE~prograte)) %>% 
+	# mutate(prograte = case_when(vaxstatus==1~prograte*(1-ve), TRUE~prograte)) %>% 
 	mutate(tsymp_trial = rexpV(1, rate=prograte)) %>% 
 	mutate(event=case_when(tsymp_trial < trial_length ~ 1, TRUE~0)) %>% 
 	mutate(tsymp_trial=case_when(tsymp_trial < trial_length~tsymp_trial, TRUE~trial_length))
