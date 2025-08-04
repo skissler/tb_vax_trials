@@ -10,6 +10,9 @@ p_inf_and_type_and_asymp_given_age <- function(
 	rho <- incidence 
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
+
+	# Make sure sigma isn't greater than age: 	
+	sigma <- min(sigma, age) 
   
   	# Check that the ptype is valid: 
 	if (!(ptype %in% c("slow", "fast"))) stop("Invalid ptype")

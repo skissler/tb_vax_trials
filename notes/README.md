@@ -153,6 +153,8 @@ Welp, after all that work... the brute force algorithm runs faster. No idea why.
 
 Would love to get some decent simulations done today. 
 
+Excellent -- got the simulations done, and a theoretical curve plotted over the top that matches well. I think this is good enough to share. 
+
 
 
 
