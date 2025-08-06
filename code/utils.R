@@ -290,3 +290,39 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 	return(theoretical_df)
 
 }
+
+
+plot_trial_theory <- function(trial_df, theoretical_df){
+	trial_df_toplot <- trial_df %>% 
+		select(sigma, n_tested, n_recruited, n_fast) %>% 
+		pivot_longer(-sigma) %>% 
+		mutate(name=case_when(
+			name=="n_tested"~"Tested",
+			name=="n_recruited"~"Recruited",
+			name=="n_fast"~"Fast",
+			name=="n_slow"~"Slow",
+			name=="n_overall"~"Overall"
+			))
+
+	theoretical_df_toplot <- theoretical_df %>% 
+		pivot_longer(-sigma) %>% 
+		mutate(name=case_when(
+			name=="n_tested"~"Tested",
+			name=="n_recruited"~"Recruited",
+			name=="n_fast"~"Fast",
+			name=="n_slow"~"Slow",
+			name=="n_overall"~"Overall"
+			))
+
+	fig_trial_theory <- ggplot() + 
+		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), size=0.5, alpha=0.2) + 
+		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), linewidth=1, alpha=1) + 
+		scale_color_manual(values=c("Tested"="black","Recruited"="blue","Fast"="red")) + 
+		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
+		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
+		theme_classic() + 
+		theme(legend.title=element_blank()) + 
+		labs(x="Test span (years)", y="People")
+
+	return(fig_trial_theory)
+}
