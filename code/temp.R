@@ -81,7 +81,6 @@ sim_trial <- function(pars, fasttarget=50){
 }
 
 
-
 sim_trial_fast <- function(pars, fasttarget=50){
 	with(as.list(pars), {
 
@@ -154,32 +153,34 @@ sim_trial_fast <- function(pars, fasttarget=50){
 sigmavec <- 1:80
 reps <- 25
 
-trial_list <- vector("list", length(sigmavec)*reps)
+# trial_list <- vector("list", length(sigmavec)*reps)
 
-counter <- 1
-for(sigma in sigmavec){
+# counter <- 1
+# for(sigma in sigmavec){
 	
-	these_pars <- pars_nejm_igra
-	these_pars$sigma <- sigma 
+# 	these_pars <- pars_nejm_igra
+# 	these_pars$sigma <- sigma 
 	
-	for(rep in 1:reps){
+# 	for(rep in 1:reps){
 		
-		trial_output <- sim_trial_fast(these_pars)
+# 		trial_output <- sim_trial_fast(these_pars)
 
-		trial_list[[counter]] <- list(
-			sigma=sigma,
-			rep=rep,
-			n_tested=trial_output$n_tested,
-			n_recruited=trial_output$n_recruited,
-			n_fast=trial_output$n_fast,
-			n_slow=trial_output$n_slow,
-			n_overall=trial_output$n_overall)
-		counter <- counter + 1
-	}
-	print(sigma)
-}
+# 		trial_list[[counter]] <- list(
+# 			sigma=sigma,
+# 			rep=rep,
+# 			n_tested=trial_output$n_tested,
+# 			n_recruited=trial_output$n_recruited,
+# 			n_fast=trial_output$n_fast,
+# 			n_slow=trial_output$n_slow,
+# 			n_overall=trial_output$n_overall)
+# 		counter <- counter + 1
+# 	}
+# 	print(sigma)
+# }
 
-trial_df <- bind_rows(trial_list)
+# trial_df <- bind_rows(trial_list)
+# write_csv(trial_df, file="output/trial_df_nejm.csv")
+trial_df <- read_csv("output/trial_df_nejm.csv")
 
 trial_means_df <- trial_df %>% 
 	group_by(sigma) %>% 
@@ -192,11 +193,25 @@ trial_means_df <- trial_df %>%
 
 trial_df_toplot <- trial_df %>% 
 	select(sigma, n_tested, n_recruited, n_fast) %>% 
-	pivot_longer(-sigma)
+	pivot_longer(-sigma) %>% 
+	mutate(name=case_when(
+		name=="n_tested"~"Tested",
+		name=="n_recruited"~"Recruited",
+		name=="n_fast"~"Fast",
+		name=="n_slow"~"Slow",
+		name=="n_overall"~"Overall"
+		))
 
 trial_means_df_toplot <- trial_means_df %>% 	
 	select(sigma, n_tested, n_recruited, n_fast) %>% 
-	pivot_longer(-sigma)
+	pivot_longer(-sigma) %>% 
+	mutate(name=case_when(
+		name=="n_tested"~"Tested",
+		name=="n_recruited"~"Recruited",
+		name=="n_fast"~"Fast",
+		name=="n_slow"~"Slow",
+		name=="n_overall"~"Overall"
+		))
 
 fig_trial <- ggplot(trial_df_toplot, aes(x=sigma, y=value, col=name)) + 
 	geom_point(size=0.5, alpha=0.6) + 
@@ -261,10 +276,176 @@ for(sigma in sigmavec){
 theoretical_df <- bind_rows(theoretical_df)
 
 theoretical_df_toplot <- theoretical_df %>% 
-	pivot_longer(-sigma)
+	pivot_longer(-sigma) %>% 
+	mutate(name=case_when(
+		name=="n_tested"~"Tested",
+		name=="n_recruited"~"Recruited",
+		name=="n_fast"~"Fast",
+		name=="n_slow"~"Slow",
+		name=="n_overall"~"Overall"
+		))
 
 fig_trial_theory <- ggplot() + 
-	geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=name), size=0.5, alpha=0.6) + 
-	geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=name), linewidth=1, alpha=0.6) + 
-	theme_classic() 
+	geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), size=0.5, alpha=0.2) + 
+	geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), linewidth=1, alpha=1) + 
+	scale_color_manual(values=c("Tested"="black","Recruited"="blue","Fast"="red")) + 
+	geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
+	geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
+	theme_classic() + 
+	theme(legend.title=element_blank()) + 
+	labs(x="Test span (years)", y="People")
+
+ggsave(fig_trial_theory, file="figures/trial_theory_nejm.pdf", width=5, height=5/1.6)
+
+# # ==============================================================================
+# # Same, for literature parameters
+# # ==============================================================================
+
+
+# sigmavec <- 1:80
+# reps <- 25
+
+# # trial_list <- vector("list", length(sigmavec)*reps)
+
+# # counter <- 1
+# # for(sigma in sigmavec){
+	
+# # 	these_pars <- pars_lit_igra
+# # 	these_pars$sigma <- sigma 
+	
+# # 	for(rep in 1:reps){
+		
+# # 		trial_output <- sim_trial_fast(these_pars)
+
+# # 		trial_list[[counter]] <- list(
+# # 			sigma=sigma,
+# # 			rep=rep,
+# # 			n_tested=trial_output$n_tested,
+# # 			n_recruited=trial_output$n_recruited,
+# # 			n_fast=trial_output$n_fast,
+# # 			n_slow=trial_output$n_slow,
+# # 			n_overall=trial_output$n_overall)
+# # 		counter <- counter + 1
+# # 	}
+# # 	print(sigma)
+# # }
+
+# # trial_df <- bind_rows(trial_list)
+# # write_csv(trial_df, file="output/trial_df_lit.csv")
+# trial_df <- read_csv("output/trial_df_lit.csv")
+
+# trial_means_df <- trial_df %>% 
+# 	group_by(sigma) %>% 
+# 	summarise(
+# 		n_tested=mean(n_tested), 
+# 		n_recruited=mean(n_recruited),
+# 		n_fast=mean(n_fast),
+# 		n_slow=mean(n_slow),
+# 		n_overall=mean(n_overall))
+
+# trial_df_toplot <- trial_df %>% 
+# 	select(sigma, n_tested, n_recruited, n_fast) %>% 
+# 	pivot_longer(-sigma) %>% 
+# 	mutate(name=case_when(
+# 		name=="n_tested"~"Tested",
+# 		name=="n_recruited"~"Recruited",
+# 		name=="n_fast"~"Fast",
+# 		name=="n_slow"~"Slow",
+# 		name=="n_overall"~"Overall"
+# 		))
+
+# trial_means_df_toplot <- trial_means_df %>% 	
+# 	select(sigma, n_tested, n_recruited, n_fast) %>% 
+# 	pivot_longer(-sigma) %>% 
+# 	mutate(name=case_when(
+# 		name=="n_tested"~"Tested",
+# 		name=="n_recruited"~"Recruited",
+# 		name=="n_fast"~"Fast",
+# 		name=="n_slow"~"Slow",
+# 		name=="n_overall"~"Overall"
+# 		))
+
+# fig_trial <- ggplot(trial_df_toplot, aes(x=sigma, y=value, col=name)) + 
+# 	geom_point(size=0.5, alpha=0.6) + 
+# 	geom_line(stat="smooth", method="loess", linewidth=1) + 
+# 	theme_classic() 
+
+# fig_trial_means <- ggplot() + 
+# 	geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=name), size=0.5, alpha=0.6) + 
+# 	# geom_point(data=trial_means_df_toplot, aes(x=sigma, y=value, col=name), size=2, alpha=0.6) + 
+# 	geom_line(data=trial_means_df_toplot, aes(x=sigma, y=value, col=name), alpha=0.6, linewidth=2) + 
+# 	theme_classic() 
+
+# # ==============================================================================
+# # Try including a theoretical line: 
+
+# # Define an age distribution (uniform for now): 
+# agedist <- rep(1, 80)
+# names(agedist) <- 1:80
+# agedist <- agedist/sum(agedist)
+
+# # Restrict to eligible age groups: 
+# eligible <- agedist[names(agedist) %in% 18:49]
+# eligible <- eligible/sum(eligible)
+
+# theoretical_df <- vector("list", length(sigmavec))
+# counter <- 1
+# for(sigma in sigmavec){
+# 	# Calculate a vector for drawing asymptomatic people of age a: 
+# 	p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){
+# 		p_asymp_given_age(age=x, p_slow=0.95, incidence=0.0025, prograte_slow=0.0001, prograte_fast=1.5)
+# 		}))
+# 	p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
+# 	names(p_asymp_given_age_vec) <- names(eligible)
+
+# 	# Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
+# 	p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
+# 		as.numeric(names(eligible)),
+# 		function(x){p_inf_and_type_given_asymp_and_age(ptype="slow", age=x, sigma=sigma, p_slow=0.95, incidence=0.0025, prograte_slow=0.0001, prograte_fast=1.5)}))
+# 	names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
+
+# 	p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
+# 		as.numeric(names(eligible)),
+# 		function(x){p_inf_and_type_given_asymp_and_age(ptype="fast", age=x, sigma=sigma, p_slow=0.95, incidence=0.0025, prograte_slow=0.0001, prograte_fast=1.5)}))
+# 	names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
+
+# 	p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
+# 	p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
+# 	p_pos  <- p_fast + p_slow
+
+# 	tests_to_50_fast    <- 50 / p_fast
+# 	recruits_to_50_fast <- 50 / (p_fast / p_pos)
+
+# 	theoretical_df[[counter]] <- list(
+# 		sigma=sigma, 
+# 		n_tested=tests_to_50_fast, 
+# 		n_recruited=recruits_to_50_fast,
+# 		n_fast=50)
+# 	counter <- counter + 1
+
+# }
+
+# theoretical_df <- bind_rows(theoretical_df)
+
+# theoretical_df_toplot <- theoretical_df %>% 
+# 	pivot_longer(-sigma) %>% 
+# 	mutate(name=case_when(
+# 		name=="n_tested"~"Tested",
+# 		name=="n_recruited"~"Recruited",
+# 		name=="n_fast"~"Fast",
+# 		name=="n_slow"~"Slow",
+# 		name=="n_overall"~"Overall"
+# 		))
+
+# fig_trial_theory <- ggplot() + 
+# 	geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), size=0.5, alpha=0.2) + 
+# 	geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), linewidth=1, alpha=1) + 
+# 	scale_color_manual(values=c("Tested"="black","Recruited"="blue","Fast"="red")) + 
+# 	geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
+# 	geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
+# 	theme_classic() + 
+# 	theme(legend.title=element_blank()) + 
+# 	labs(x="Test span (years)", y="People")
+
+# ggsave(fig_trial_theory, file="figures/trial_theory_lit.pdf", width=5, height=5/1.6)
 

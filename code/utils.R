@@ -88,3 +88,205 @@ p_inf_and_type_given_asymp_and_age <- function(
 	out <- num / den
 	return(out)
 }
+
+
+
+sim_trial <- function(pars, fasttarget=50){
+	with(as.list(pars), {
+
+	# Initialize tracking variables  
+	n_tested <- 0
+	n_recruited <- 0
+	n_fast <- 0
+	n_overall <- 0
+	recruited_df <- tibble()
+
+	while(n_fast < fasttarget){
+
+		# Grab their age 
+		age <- runif(1, min=minage, max=maxage)
+
+		# Grab their progression status 
+		progressor_type <- sample(c("slow","fast"), 
+			size=1, prob=c(p_slow, 1-p_slow))
+
+		# Simulate their time of infection
+		tinf <- rexp(1, rho)
+
+		# Simulate their time of symptoms 
+		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))
+
+		# ELIGIBILITY
+		if(tsymp > age){
+			# They are asymptomatic, so let's test them: 
+			n_tested <- n_tested + 1
+			if((tinf >= age-sigma) & (tinf <= age)){
+				# They were infected in past sigma years, so test positive. Recruit!
+				n_recruited <- n_recruited + 1
+				if(progressor_type=="fast"){n_fast <- n_fast + 1}
+				recruited_df <- bind_rows(recruited_df, tibble(
+					id=n_recruited,
+					age=age,
+					progressor_type=progressor_type,
+					tinf=tinf
+					))
+			}
+		}
+
+		n_overall <- n_overall + 1
+
+	}
+
+	out <- list(n_tested=n_tested, recruited_df=recruited_df)
+	return(out)
+
+	})
+}
+
+
+sim_trial_fast <- function(pars, fasttarget=50){
+	with(as.list(pars), {
+
+	# Initialize tracking variables  
+	n_tested <- 0
+	n_recruited <- 0
+	n_fast <- 0
+	n_overall <- 0
+
+	capacity <- 1e6
+	recruited_list <- vector("list", capacity)
+
+	while(n_fast < fasttarget){
+
+		# Grab their age 
+		age <- runif(1, min=minage, max=maxage)
+
+		# Grab their progression status 
+		progressor_type <- sample(c("slow","fast"), 
+			size=1, prob=c(p_slow, 1-p_slow))
+
+		# Simulate their time of infection
+		tinf <- rexp(1, rho)
+
+		# Simulate their time of symptoms 
+		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))
+
+		# ELIGIBILITY
+		if(tsymp > age){
+			# They are asymptomatic, so let's test them: 
+			n_tested <- n_tested + 1
+			if((tinf >= age-sigma) & (tinf <= age)){
+				# They were infected in past sigma years, so test positive. Recruit!
+				n_recruited <- n_recruited + 1
+				if(progressor_type=="fast"){n_fast <- n_fast + 1}
+
+				# Expand list if needed
+				if (n_recruited > capacity) {
+					capacity <- capacity * 2
+					length(recruited_list) <- capacity  
+				}
+
+				recruited_list[[n_recruited]] <- list(
+					id=n_recruited,
+					age=age,
+					progressor_type=progressor_type,
+					tinf=tinf
+					)
+
+			}
+		}
+
+		n_overall <- n_overall + 1
+
+	}
+
+	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])
+
+	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, recruited_df=recruited_df)
+	return(out)
+
+	})
+}
+
+
+sim_trials_over_sigma <- function(pars, sigmavec, reps=25){
+
+	trial_list <- vector("list", length(sigmavec)*reps)
+
+	counter <- 1
+	for(sigma in sigmavec){
+		
+		these_pars <- pars
+		these_pars$sigma <- sigma 
+		
+		for(rep in 1:reps){
+			
+			trial_output <- sim_trial_fast(these_pars)
+
+			trial_list[[counter]] <- list(
+				sigma=sigma,
+				rep=rep,
+				n_tested=trial_output$n_tested,
+				n_recruited=trial_output$n_recruited,
+				n_fast=trial_output$n_fast,
+				n_slow=trial_output$n_slow,
+				n_overall=trial_output$n_overall)
+			counter <- counter + 1
+		}
+		print(sigma)
+	}
+
+	trial_df <- bind_rows(trial_list)
+
+	return(trial_df)
+}
+
+
+sim_theory_over_sigma <- function(pars, sigmavec, agedist){
+	
+	# Restrict to eligible age groups: 
+	eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
+	eligible <- eligible/sum(eligible)
+
+	theoretical_df <- vector("list", length(sigmavec))
+	counter <- 1
+	for(sigma in sigmavec){
+		# Calculate a vector for drawing asymptomatic people of age a: 
+		p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){
+			p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)
+			}))
+		p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
+		names(p_asymp_given_age_vec) <- names(eligible)
+
+		# Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
+		p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
+			as.numeric(names(eligible)),
+			function(x){p_inf_and_type_given_asymp_and_age(ptype="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+		names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
+
+		p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
+			as.numeric(names(eligible)),
+			function(x){p_inf_and_type_given_asymp_and_age(ptype="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+		names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
+
+		p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
+		p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
+		p_pos  <- p_fast + p_slow
+
+		tests_to_50_fast    <- 50 / p_fast
+		recruits_to_50_fast <- 50 / (p_fast / p_pos)
+
+		theoretical_df[[counter]] <- list(
+			sigma=sigma, 
+			n_tested=tests_to_50_fast, 
+			n_recruited=recruits_to_50_fast,
+			n_fast=50,
+			n_slow=recruits_to_50_fast-50)
+		counter <- counter + 1
+
+	}
+
+	theoretical_df <- bind_rows(theoretical_df)
+	return(theoretical_df)
+
+}
