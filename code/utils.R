@@ -297,7 +297,7 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 		select(sigma, n_tested, n_recruited, n_fast) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
-			name=="n_tested"~"Tested",
+			name=="n_tested"~"Screened",
 			name=="n_recruited"~"Recruited",
 			name=="n_fast"~"Fast",
 			name=="n_slow"~"Slow",
@@ -305,9 +305,10 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 			))
 
 	theoretical_df_toplot <- theoretical_df %>% 
+		select(sigma, n_tested, n_recruited, n_fast) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
-			name=="n_tested"~"Tested",
+			name=="n_tested"~"Screened",
 			name=="n_recruited"~"Recruited",
 			name=="n_fast"~"Fast",
 			name=="n_slow"~"Slow",
@@ -315,9 +316,9 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 			))
 
 	fig_trial_theory <- ggplot() + 
-		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), size=0.5, alpha=0.2) + 
-		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Tested","Recruited","Fast"))), linewidth=1, alpha=1) + 
-		scale_color_manual(values=c("Tested"="black","Recruited"="blue","Fast"="red")) + 
+		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Screened","Recruited","Fast"))), size=0.5, alpha=0.2) + 
+		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Screened","Recruited","Fast"))), linewidth=1, alpha=1) + 
+		scale_color_manual(values=c("Screened"="black","Recruited"="blue","Fast"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
