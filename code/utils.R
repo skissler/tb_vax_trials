@@ -269,19 +269,23 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 			function(x){p_inf_and_type_given_asymp_and_age(ptype="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
 		names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
 
+		p_asymp <- sum(p_asymp_given_age_vec * eligible)
+
 		p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
 		p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
 		p_pos  <- p_fast + p_slow
 
 		tests_to_50_fast    <- 50 / p_fast
 		recruits_to_50_fast <- 50 / (p_fast / p_pos)
+		overall_to_50_fast <- 50 / (p_asymp * p_fast)
 
 		theoretical_df[[counter]] <- list(
 			sigma=sigma, 
 			n_tested=tests_to_50_fast, 
 			n_recruited=recruits_to_50_fast,
 			n_fast=50,
-			n_slow=recruits_to_50_fast-50)
+			n_slow=recruits_to_50_fast-50,
+			n_overall=overall_to_50_fast)
 		counter <- counter + 1
 
 	}
@@ -292,9 +296,9 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 }
 
 
-plot_trial_theory <- function(trial_df, theoretical_df){
+plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_recruited","n_fast")){
 	trial_df_toplot <- trial_df %>% 
-		select(sigma, n_tested, n_recruited, n_fast) %>% 
+		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested"~"Screened",
@@ -305,7 +309,7 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 			))
 
 	theoretical_df_toplot <- theoretical_df %>% 
-		select(sigma, n_tested, n_recruited, n_fast) %>% 
+		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested"~"Screened",
@@ -316,9 +320,9 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 			))
 
 	fig_trial_theory <- ggplot() + 
-		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Screened","Recruited","Fast"))), size=0.5, alpha=0.2) + 
-		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Screened","Recruited","Fast"))), linewidth=1, alpha=1) + 
-		scale_color_manual(values=c("Screened"="black","Recruited"="blue","Fast"="red")) + 
+		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), size=0.5, alpha=0.2) + 
+		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), linewidth=1, alpha=1) + 
+		scale_color_manual(values=c("Overall"="green","Screened"="black","Recruited"="blue","Slow"="magenta","Fast"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
@@ -327,3 +331,19 @@ plot_trial_theory <- function(trial_df, theoretical_df){
 
 	return(fig_trial_theory)
 }
+
+
+plot_screenslope <- function(theoretical_df){
+	fig_screenslope <- theoretical_df %>% 
+	select(sigma, n_tested) %>% 
+	mutate(sigma_diff = sigma - lag(sigma)) %>% 
+	mutate(tested_diff=n_tested - lag(n_tested)) %>% 
+	mutate(slope=tested_diff/sigma_diff) %>% 
+	filter(!is.na(slope)) %>% 
+	ggplot(aes(x=sigma, y=slope)) + 
+		geom_line(linewidth=1) + 
+		theme_classic() + 
+		labs(x="Test span (years)", y="Slope of screening line")
+	return(fig_screenslope)
+}
+
