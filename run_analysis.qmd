@@ -46,9 +46,7 @@ pars_lit_tasa$sigma <- 2
 ```{r}
 #| label: define_age_dist
 
-agedist <- rep(1, 80)
-names(agedist) <- 1:80
-agedist <- agedist/sum(agedist)
+agedist <- extract_age_distribution("uniform")
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
@@ -56,8 +54,8 @@ agedist <- agedist/sum(agedist)
 #| label: simulate_with_m72IIb
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, reps=25)
-stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb.csv")
+# stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
+stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
 analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
@@ -96,8 +94,8 @@ ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic
 #| label: simulate_with_lit
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, reps=25)
-stochastic_df_lit <- read_csv("output/stochastic_df_lit.csv")
+# stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
+stochastic_df_lit <- read_csv("output/stochastic_df_lit.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)

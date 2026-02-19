@@ -40,7 +40,7 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 	return(out)
 }
 
-p_asymp_given_age <- function(  
+p_asymp_given_age <- function(   # Used in calculating no. needed to screen (page 14)
 	age, p_slow, incidence, prograte_slow, prograte_fast){
 
 	# Rename variables 
@@ -65,13 +65,13 @@ p_asymp_given_age <- function(
 		term_s <- xi_s * rho / (mu_s - rho) * (exp(-rho * a) - exp(-mu_s * a))
 	}
 
-	# full probability
+	# full probability (fasts + slows + never infecteds)
 	out <- term_f + term_s + exp(-rho * a)
 
 	return(out)
 }
 
-p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 15/17)
+p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 14/~17)
 	prog_type, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
 	  
 	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
@@ -88,8 +88,72 @@ p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. neede
 	return(out)
 }
 
+# Age distribution functions
+extract_age_distribution <- function(method="uniform"){
+  if (method=="uniform") {
+    agedist <- rep(1, 80)
+  } else if (method=="test") {
+    life_exp <- 80
+    agedist <- c(1:life_exp)
+  }
+  
+  names(agedist) <- 1:length(agedist)
+  agedist <- agedist/sum(agedist)
+  return(agedist)
+}
+
 # Simulate functions
-sim_stoch <- function(pars, fasttarget=50){
+sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
+  # Restrict to eligible age groups: 
+  eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
+  eligible <- eligible/sum(eligible)
+  
+  analytical_df <- vector("list", length(sigmavec))
+  counter <- 1
+  for(sigma in sigmavec){
+    # Calculate a vector for drawing asymptomatic people of age a: 
+    p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){
+      p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)
+    }))
+    p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
+    names(p_asymp_given_age_vec) <- names(eligible)
+    
+    # Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
+    p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
+      as.numeric(names(eligible)),
+      function(x){p_inf_and_type_given_asymp_and_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+    names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
+    
+    p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
+      as.numeric(names(eligible)),
+      function(x){p_inf_and_type_given_asymp_and_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+    names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
+    
+    p_asymp <- sum(p_asymp_given_age_vec * eligible)
+    
+    p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
+    p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
+    p_pos  <- p_fast + p_slow
+    
+    tests_to_50_fast    <- 50 / p_fast
+    recruits_to_50_fast <- 50 / (p_fast / p_pos)
+    overall_to_50_fast <- 50 / (p_asymp * p_fast)
+    
+    analytical_df[[counter]] <- list(
+      sigma=sigma, 
+      n_tested=tests_to_50_fast, 
+      n_recruited=recruits_to_50_fast,
+      n_fast=50,
+      n_slow=recruits_to_50_fast-50,
+      n_overall=overall_to_50_fast)
+    counter <- counter + 1
+  }
+  
+  analytical_df <- bind_rows(analytical_df)
+  return(analytical_df)
+}
+
+sim_stoch <- function(pars, fasttarget=50, agedist){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -100,8 +164,8 @@ sim_stoch <- function(pars, fasttarget=50){
 	recruited_df <- tibble()
 
 	while(n_fast < fasttarget){
-		# Grab their age 
-		age <- runif(1, min=minage, max=maxage)
+		# Grab their age from the age distribution
+	  age <- sample(minage:maxage, size=1, prob=agedist[minage:maxage])  # R normalises the subset automatically
 
 		# Grab their progression status 
 		progressor_type <- sample(c("slow","fast"), 
@@ -139,7 +203,7 @@ sim_stoch <- function(pars, fasttarget=50){
 	})
 }  # 
 
-sim_stoch_fast <- function(pars, fasttarget=50){
+sim_stoch_fast <- function(pars, fasttarget=50, agedist){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -152,8 +216,8 @@ sim_stoch_fast <- function(pars, fasttarget=50){
 	recruited_list <- vector("list", capacity)
 
 	while(n_fast < fasttarget){
-		# Grab their age 
-		age <- runif(1, min=minage, max=maxage)
+	  # Grab their age from the age distribution
+	  age <- sample(minage:maxage, size=1, prob=agedist[minage:maxage])  # R normalises the subset automatically
 
 		# Grab their progression status 
 		progressor_type <- sample(c("slow","fast"), 
@@ -201,7 +265,7 @@ sim_stoch_fast <- function(pars, fasttarget=50){
 	})
 }
 
-sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
+sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
 	stoch_list <- vector("list", length(sigmavec)*reps)
 
 	counter <- 1
@@ -212,7 +276,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
 		
 		for(rep in 1:reps){
 			
-			stoch_output <- sim_stoch_fast(these_pars)
+			stoch_output <- sim_stoch_fast(these_pars, fasttarget=50, agedist)
 
 			stoch_list[[counter]] <- list(
 				sigma=sigma,
@@ -230,57 +294,6 @@ sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
 	stochastic_df <- bind_rows(stoch_list)
 
 	return(stochastic_df)
-}
-
-sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
-	# Restrict to eligible age groups: 
-	eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
-	eligible <- eligible/sum(eligible)
-
-	analytical_df <- vector("list", length(sigmavec))
-	counter <- 1
-	for(sigma in sigmavec){
-		# Calculate a vector for drawing asymptomatic people of age a: 
-		p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){
-			p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)
-			}))
-		p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
-		names(p_asymp_given_age_vec) <- names(eligible)
-
-		# Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
-		p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
-			as.numeric(names(eligible)),
-			function(x){p_inf_and_type_given_asymp_and_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
-		names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
-
-		p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
-			as.numeric(names(eligible)),
-			function(x){p_inf_and_type_given_asymp_and_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
-		names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
-
-		p_asymp <- sum(p_asymp_given_age_vec * eligible)
-
-		p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
-		p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
-		p_pos  <- p_fast + p_slow
-
-		tests_to_50_fast    <- 50 / p_fast
-		recruits_to_50_fast <- 50 / (p_fast / p_pos)
-		overall_to_50_fast <- 50 / (p_asymp * p_fast)
-
-		analytical_df[[counter]] <- list(
-			sigma=sigma, 
-			n_tested=tests_to_50_fast, 
-			n_recruited=recruits_to_50_fast,
-			n_fast=50,
-			n_slow=recruits_to_50_fast-50,
-			n_overall=overall_to_50_fast)
-		counter <- counter + 1
-
-	}
-
-	analytical_df <- bind_rows(analytical_df)
-	return(analytical_df)
 }
 
 # Plot functions
