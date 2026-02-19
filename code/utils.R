@@ -72,7 +72,6 @@ p_asymp_given_age <- function(
 
 }
 
-
 p_inf_and_type_given_asymp_and_age <- function(
 	ptype, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
 	  
@@ -88,8 +87,6 @@ p_inf_and_type_given_asymp_and_age <- function(
 	out <- num / den
 	return(out)
 }
-
-
 
 sim_trial <- function(pars, fasttarget=50){
 	with(as.list(pars), {
@@ -142,7 +139,6 @@ sim_trial <- function(pars, fasttarget=50){
 
 	})
 }
-
 
 sim_trial_fast <- function(pars, fasttarget=50){
 	with(as.list(pars), {
@@ -208,7 +204,6 @@ sim_trial_fast <- function(pars, fasttarget=50){
 	})
 }
 
-
 sim_trials_over_sigma <- function(pars, sigmavec, reps=25){
 
 	trial_list <- vector("list", length(sigmavec)*reps)
@@ -240,7 +235,6 @@ sim_trials_over_sigma <- function(pars, sigmavec, reps=25){
 
 	return(trial_df)
 }
-
 
 sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 	
@@ -295,7 +289,6 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 
 }
 
-
 plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_recruited","n_fast")){
 	trial_df_toplot <- trial_df %>% 
 		select(sigma, all_of(cols)) %>% 
@@ -332,7 +325,6 @@ plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_rec
 	return(fig_trial_theory)
 }
 
-
 plot_screenslope <- function(theoretical_df){
 	fig_screenslope <- theoretical_df %>% 
 	select(sigma, n_tested) %>% 
@@ -346,4 +338,3 @@ plot_screenslope <- function(theoretical_df){
 		labs(x="Test span (years)", y="Slope of screening line")
 	return(fig_screenslope)
 }
-
