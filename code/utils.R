@@ -1,7 +1,8 @@
 library(tidyverse) 
 
-p_inf_and_type_and_asymp_given_age <- function(
-	ptype, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
+# Probability expression functions
+p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed to sample (page 13)
+	prog_type, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
 
 	# Rename variables 
 	a <- age
@@ -14,11 +15,11 @@ p_inf_and_type_and_asymp_given_age <- function(
 	# Make sure sigma isn't greater than age: 	
 	sigma <- min(sigma, age) 
   
-  	# Check that the ptype is valid: 
-	if (!(ptype %in% c("slow", "fast"))) stop("Invalid ptype")
+  # Check that the prog_type is valid: 
+	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
 
 	# Define the xi and mu for this type: 
-	if (ptype == "slow") {
+	if (prog_type == "slow") {
 		xi <- xi_s
 		mu <- mu_s
 	} else {
@@ -37,10 +38,9 @@ p_inf_and_type_and_asymp_given_age <- function(
 	}
 
 	return(out)
-
 }
 
-p_asymp_given_age <- function(
+p_asymp_given_age <- function(  
 	age, p_slow, incidence, prograte_slow, prograte_fast){
 
 	# Rename variables 
@@ -69,25 +69,26 @@ p_asymp_given_age <- function(
 	out <- term_f + term_s + exp(-rho * a)
 
 	return(out)
-
 }
 
-p_inf_and_type_given_asymp_and_age <- function(
-	ptype, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
+p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 15/17)
+	prog_type, age, sigma, p_slow, incidence, prograte_slow, prograte_fast){
 	  
-	if (!(ptype %in% c("slow", "fast"))) stop("Invalid ptype")
+	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
 
 	# Calculate the joint probability, i.e. 
 	# P(infected in [a, a-sigma], type, asymp at age a)
-	num <- p_inf_and_type_and_asymp_given_age(ptype=ptype, age=age, sigma=sigma, p_slow=p_slow, incidence=incidence, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
+	num <- p_inf_and_type_and_asymp_given_age(prog_type=prog_type, age=age, sigma=sigma, p_slow=p_slow, incidence=incidence, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
 
 	# Calculate the marginal probability of being asymptomatic at age a: 
 	den <- p_asymp_given_age(age=age, p_slow=p_slow, incidence=incidence, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
 
 	out <- num / den
+	
 	return(out)
 }
 
+# Simulate functions
 sim_stoch <- function(pars, fasttarget=50){
 	with(as.list(pars), {
 
@@ -99,7 +100,6 @@ sim_stoch <- function(pars, fasttarget=50){
 	recruited_df <- tibble()
 
 	while(n_fast < fasttarget){
-
 		# Grab their age 
 		age <- runif(1, min=minage, max=maxage)
 
@@ -131,14 +131,13 @@ sim_stoch <- function(pars, fasttarget=50){
 		}
 
 		n_overall <- n_overall + 1
-
 	}
 
 	out <- list(n_tested=n_tested, recruited_df=recruited_df)
+	
 	return(out)
-
 	})
-}
+}  # 
 
 sim_stoch_fast <- function(pars, fasttarget=50){
 	with(as.list(pars), {
@@ -153,7 +152,6 @@ sim_stoch_fast <- function(pars, fasttarget=50){
 	recruited_list <- vector("list", capacity)
 
 	while(n_fast < fasttarget){
-
 		# Grab their age 
 		age <- runif(1, min=minage, max=maxage)
 
@@ -193,19 +191,17 @@ sim_stoch_fast <- function(pars, fasttarget=50){
 		}
 
 		n_overall <- n_overall + 1
-
 	}
 
 	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])
 
 	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, recruited_df=recruited_df)
+	
 	return(out)
-
 	})
 }
 
 sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
-
 	stoch_list <- vector("list", length(sigmavec)*reps)
 
 	counter <- 1
@@ -237,7 +233,6 @@ sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
 }
 
 sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
-	
 	# Restrict to eligible age groups: 
 	eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
 	eligible <- eligible/sum(eligible)
@@ -255,12 +250,12 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
 		# Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
 		p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
 			as.numeric(names(eligible)),
-			function(x){p_inf_and_type_given_asymp_and_age(ptype="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+			function(x){p_inf_and_type_given_asymp_and_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
 		names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
 
 		p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
 			as.numeric(names(eligible)),
-			function(x){p_inf_and_type_given_asymp_and_age(ptype="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
+			function(x){p_inf_and_type_given_asymp_and_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
 		names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
 
 		p_asymp <- sum(p_asymp_given_age_vec * eligible)
@@ -286,9 +281,9 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
 
 	analytical_df <- bind_rows(analytical_df)
 	return(analytical_df)
-
 }
 
+# Plot functions
 plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_recruited","n_fast")){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
@@ -336,5 +331,6 @@ plot_screenslope <- function(analytical_df){
 		geom_line(linewidth=1) + 
 		theme_classic() + 
 		labs(x="Test span (years)", y="Slope of screening line")
+	
 	return(fig_screenslope)
 }
