@@ -156,7 +156,10 @@ Would love to get some decent simulations done today.
 Excellent -- got the simulations done, and a theoretical curve plotted over the top that matches well. I think this is good enough to share. 
 
 
+# 19 Feb 2026 (LH)
 
+Added basic README and example workflow. New naming conventions introduced: analytic and stoch (formerly theory and trials). Parameter data taken from specific
+historic trials is now also labelled by the vaccine prototype and phase number e.g. m72_2b (formerly nejm).
 
 
 

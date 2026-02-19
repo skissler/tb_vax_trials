@@ -88,7 +88,7 @@ p_inf_and_type_given_asymp_and_age <- function(
 	return(out)
 }
 
-sim_trial <- function(pars, fasttarget=50){
+sim_stoch <- function(pars, fasttarget=50){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -140,7 +140,7 @@ sim_trial <- function(pars, fasttarget=50){
 	})
 }
 
-sim_trial_fast <- function(pars, fasttarget=50){
+sim_stoch_fast <- function(pars, fasttarget=50){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -204,9 +204,9 @@ sim_trial_fast <- function(pars, fasttarget=50){
 	})
 }
 
-sim_trials_over_sigma <- function(pars, sigmavec, reps=25){
+sim_stoch_over_sigma <- function(pars, sigmavec, reps=25){
 
-	trial_list <- vector("list", length(sigmavec)*reps)
+	stoch_list <- vector("list", length(sigmavec)*reps)
 
 	counter <- 1
 	for(sigma in sigmavec){
@@ -216,33 +216,33 @@ sim_trials_over_sigma <- function(pars, sigmavec, reps=25){
 		
 		for(rep in 1:reps){
 			
-			trial_output <- sim_trial_fast(these_pars)
+			stoch_output <- sim_stoch_fast(these_pars)
 
-			trial_list[[counter]] <- list(
+			stoch_list[[counter]] <- list(
 				sigma=sigma,
 				rep=rep,
-				n_tested=trial_output$n_tested,
-				n_recruited=trial_output$n_recruited,
-				n_fast=trial_output$n_fast,
-				n_slow=trial_output$n_slow,
-				n_overall=trial_output$n_overall)
+				n_tested=stoch_output$n_tested,
+				n_recruited=stoch_output$n_recruited,
+				n_fast=stoch_output$n_fast,
+				n_slow=stoch_output$n_slow,
+				n_overall=stoch_output$n_overall)
 			counter <- counter + 1
 		}
 		print(sigma)
 	}
 
-	trial_df <- bind_rows(trial_list)
+	stochastic_df <- bind_rows(stoch_list)
 
-	return(trial_df)
+	return(stochastic_df)
 }
 
-sim_theory_over_sigma <- function(pars, sigmavec, agedist){
+sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
 	
 	# Restrict to eligible age groups: 
 	eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
 	eligible <- eligible/sum(eligible)
 
-	theoretical_df <- vector("list", length(sigmavec))
+	analytical_df <- vector("list", length(sigmavec))
 	counter <- 1
 	for(sigma in sigmavec){
 		# Calculate a vector for drawing asymptomatic people of age a: 
@@ -273,7 +273,7 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 		recruits_to_50_fast <- 50 / (p_fast / p_pos)
 		overall_to_50_fast <- 50 / (p_asymp * p_fast)
 
-		theoretical_df[[counter]] <- list(
+		analytical_df[[counter]] <- list(
 			sigma=sigma, 
 			n_tested=tests_to_50_fast, 
 			n_recruited=recruits_to_50_fast,
@@ -284,13 +284,13 @@ sim_theory_over_sigma <- function(pars, sigmavec, agedist){
 
 	}
 
-	theoretical_df <- bind_rows(theoretical_df)
-	return(theoretical_df)
+	analytical_df <- bind_rows(analytical_df)
+	return(analytical_df)
 
 }
 
-plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_recruited","n_fast")){
-	trial_df_toplot <- trial_df %>% 
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_recruited","n_fast")){
+	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
@@ -301,7 +301,7 @@ plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_rec
 			name=="n_overall"~"Overall"
 			))
 
-	theoretical_df_toplot <- theoretical_df %>% 
+	analytical_df_toplot <- analytical_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
@@ -312,9 +312,9 @@ plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_rec
 			name=="n_overall"~"Overall"
 			))
 
-	fig_trial_theory <- ggplot() + 
-		geom_point(data=trial_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), size=0.5, alpha=0.2) + 
-		geom_line(data=theoretical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), linewidth=1, alpha=1) + 
+	fig_stochastic_analytic <- ggplot() + 
+		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), size=0.5, alpha=0.2) + 
+		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), linewidth=1, alpha=1) + 
 		scale_color_manual(values=c("Overall"="green","Screened"="black","Recruited"="blue","Slow"="magenta","Fast"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
@@ -322,11 +322,11 @@ plot_trial_theory <- function(trial_df, theoretical_df, cols=c("n_tested","n_rec
 		theme(legend.title=element_blank()) + 
 		labs(x="Test span (years)", y="People")
 
-	return(fig_trial_theory)
+	return(fig_stochastic_analytic)
 }
 
-plot_screenslope <- function(theoretical_df){
-	fig_screenslope <- theoretical_df %>% 
+plot_screenslope <- function(analytical_df){
+	fig_screenslope <- analytical_df %>% 
 	select(sigma, n_tested) %>% 
 	mutate(sigma_diff = sigma - lag(sigma)) %>% 
 	mutate(tested_diff=n_tested - lag(n_tested)) %>% 

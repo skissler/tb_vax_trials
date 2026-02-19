@@ -18,7 +18,7 @@ code has developed over time.
 
 `code/trialsim_rote.R` was Stephen’s main code for running the analysis.
 This has been copied to `run_analysis.qmd` in the parent folder for ease
-of editing (02/19/2026).
+of editing (02/19/2026), with new clearer naming conventions.
 
 All helper functions are stored in `code/utils.R`. If a piece of code is
 re-used more than twice, it should ideally be written up as a function
@@ -28,11 +28,11 @@ and added to `utils.R`. Naming conventions for functions are as follows:
 
 `plot_` = make a plot
 
-`_theory` = theoretical/analytical approach, using probability
-expressions derived in `documentation/MINA-TB.pdf`
+`_analytic` = analytical approach, using probability expressions derived
+in `documentation/MINA-TB.pdf` (formerly called ‘theory’)
 
-`_trials` = stochastic simulation-based approach, also described in
-`documentation/MINA-TB.pdf`
+`_stoch` = stochastic simulation-based approach, also described in
+`documentation/MINA-TB.pdf` (formerly called ‘trials’)
 
 The probability expressions derived in `documentation/MINA-TB.pdf` are
 also saved as the following functions:
@@ -43,8 +43,8 @@ Lastly, naming of parameter sets uses the following conventions:
 
 `_lit` = parameter values are taken from the literature
 
-`_nejm` = parameter values are backcalculated from the M72 NEJM trial
-(Van Der Meeren et al., 2018)
+`_m72IIb` = parameter values are backcalculated from the M72 phase 2b
+trial (Van Der Meeren et al., 2018) (formerly called ‘nejm’)
 
 ## Example workflow
 
@@ -73,7 +73,7 @@ source('code/utils.R')
 2.  define parameter values
 
 ``` r
-pars_nejm_igra <- list(
+pars_m72IIb_igra <- list(
     minage=18,
     maxage=49,
     rho=0.0275,
@@ -83,8 +83,8 @@ pars_nejm_igra <- list(
     sigma=100,
     ve=0.55,
     trial_length=3)
-pars_nejm_tasa <- pars_nejm_igra
-pars_nejm_tasa$sigma <- 2
+pars_m72IIb_tasa <- pars_m72IIb_igra
+pars_m72IIb_tasa$sigma <- 2
 
 pars_lit_igra <- list(
     minage=18,
@@ -108,13 +108,13 @@ names(agedist) <- 1:80
 agedist <- agedist/sum(agedist)
 ```
 
-4.  simulate trials under NEJM conditions (theoretical and stochastic
+4.  simulate trials under m72IIb conditions (analytical and stochastic
     approaches)
 
 ``` r
-#' Simulate the trials approach with NEJM params, over the duration of positivity sigma OR pre-load saved csv file
-# trial_df_nejm <- sim_trials_over_sigma(pars=pars_nejm_igra, sigmavec=1:80, reps=25)
-trial_df_nejm <- read_csv("output/trial_df_nejm.csv")
+#' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
+# stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, reps=25)
+stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb.csv")
 ```
 
     Rows: 2000 Columns: 7
@@ -126,9 +126,9 @@ trial_df_nejm <- read_csv("output/trial_df_nejm.csv")
     ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 ``` r
-#' Simulate the analytical approach with NEJM params, over the duration of positivity sigma
-theoretical_df_nejm <- sim_theory_over_sigma(pars=pars_nejm_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
-theoretical_df_nejm %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
+#' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
+analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
+analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 ```
 
     # A tibble: 5 × 6
@@ -142,63 +142,63 @@ theoretical_df_nejm %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 ``` r
 #' Plot all results
-fig_trial_theory_nejm <- plot_trial_theory(trial_df_nejm, theoretical_df_nejm, 
+fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
                                            cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
     labs(title="M72/AS01E trial emulation")
-fig_trial_theory_nejm
+fig_stochastic_analytic_m72IIb
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_4-1.png)
 
 ``` r
-ggsave(fig_trial_theory_nejm, file="figures/trial_theory_nejm.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb, file="figures/stochastic_analytic_m72IIb.pdf", width=5, height=5/1.6)
 
-fig_trial_theory_log_nejm <- fig_trial_theory_nejm + scale_y_continuous(trans="log10")
-fig_trial_theory_log_nejm
+fig_stochastic_analytic_log_m72IIb <- fig_stochastic_analytic_m72IIb + scale_y_continuous(trans="log10")
+fig_stochastic_analytic_log_m72IIb
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_4-2.png)
 
 ``` r
-ggsave(fig_trial_theory_log_nejm, file="figures/trial_theory_log_nejm.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log_m72IIb.pdf", width=5, height=5/1.6)
 
-fig_screenslope_nejm <- plot_screenslope(theoretical_df_nejm)
-fig_screenslope_nejm
+fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
+fig_screenslope_m72IIb
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_4-3.png)
 
 ``` r
-fig_trial_theory_nejm_r21 <- plot_trial_theory(trial_df_nejm, theoretical_df_nejm, cols=c("n_tested","n_recruited")) + 
+fig_stochastic_analytic_m72IIb_r21 <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, cols=c("n_tested","n_recruited")) + 
     labs(title="M72/AS01E trial emulation")
-fig_trial_theory_nejm_r21
+fig_stochastic_analytic_m72IIb_r21
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_4-4.png)
 
 ``` r
-ggsave(fig_trial_theory_nejm_r21, file="figures/trial_theory_nejm_r21.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb_r21, file="figures/stochastic_analytic_m72IIb_r21.pdf", width=5, height=5/1.6)
 
-fig_trial_theory_nejm_r21_log <- plot_trial_theory(trial_df_nejm, theoretical_df_nejm, 
+fig_stochastic_analytic_m72IIb_r21_log <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
                                                    cols=c("n_tested","n_recruited")) + 
     labs(title="M72/AS01E trial emulation") + 
     scale_y_continuous(trans="log10")
-fig_trial_theory_nejm_r21_log
+fig_stochastic_analytic_m72IIb_r21_log
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_4-5.png)
 
 ``` r
-ggsave(fig_trial_theory_nejm_r21_log, file="figures/trial_theory_nejm_r21_log.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic_m72IIb_r21_log.pdf", width=5, height=5/1.6)
 ```
 
-5.  simulate trials under literature conditions (theoretical and
+5.  simulate trials under literature conditions (analytical and
     stochastic approaches)
 
 ``` r
-#' Simulate the trials approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
-# trial_df_lit <- sim_trials_over_sigma(pars=pars_lit_igra, sigmavec=1:80, reps=25)
-trial_df_lit <- read_csv("output/trial_df_lit.csv")
+#' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
+# stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, reps=25)
+stochastic_df_lit <- read_csv("output/stochastic_df_lit.csv")
 ```
 
     Rows: 2000 Columns: 7
@@ -211,34 +211,46 @@ trial_df_lit <- read_csv("output/trial_df_lit.csv")
 
 ``` r
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-theoretical_df_lit <- sim_theory_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
+analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
+```
 
+    # A tibble: 5 × 6
+      sigma n_tested n_recruited n_fast n_slow n_overall
+      <dbl>    <dbl>       <dbl>  <dbl>  <dbl>     <dbl>
+    1   0.5 1230461.       1400.     50  1350.  1235485.
+    2   1    835368.       1885.     50  1835.   838779.
+    3   1.5  725231.       2441.     50  2391.   728193.
+    4   2    682664.       3052.     50  3002.   685451.
+    5   5    648869.       7210.     50  7160.   651518.
+
+``` r
 #' Plot all results
-fig_trial_theory_lit <- plot_trial_theory(trial_df_lit, theoretical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
+fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
     labs(title="Literature parameters")
-fig_trial_theory_lit
+fig_stochastic_analytic_lit
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_5-1.png)
 
 ``` r
-ggsave(fig_trial_theory_lit, file="figures/trial_theory_lit.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_lit, file="figures/stochastic_analytic_lit.pdf", width=5, height=5/1.6)
 
-fig_trial_theory_log_lit <- fig_trial_theory_lit + scale_y_continuous(trans="log10")
-fig_trial_theory_log_lit
+fig_stochastic_analytic_log_lit <- fig_stochastic_analytic_lit + scale_y_continuous(trans="log10")
+fig_stochastic_analytic_log_lit
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_5-2.png)
 
 ``` r
-ggsave(fig_trial_theory_log_lit, file="figures/trial_theory_log_lit.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_log_lit, file="figures/stochastic_analytic_log_lit.pdf", width=5, height=5/1.6)
 
-fig_screenslope_lit <- plot_screenslope(theoretical_df_lit)
+fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 fig_screenslope_lit
 ```
 
 ![](README_files/figure-commonmark/eg_workflow_5-3.png)
 
 Possible extensions to the above basic workflow are to include custom
-age distribution in `sim_trial` and custom fast targets for
-`sim_trials_over_sigma` and `sim_theory_over_sigma`.
+age distribution in `sim_trial`(?) and custom fast targets for
+`sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
