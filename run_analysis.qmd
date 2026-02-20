@@ -16,6 +16,7 @@ source('code/utils.R')
 #| label: define_params
 
 life_exp <- 80
+
 pars_m72IIb_igra <- list(
 	minage=18,
 	maxage=49,

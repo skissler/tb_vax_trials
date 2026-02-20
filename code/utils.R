@@ -89,17 +89,29 @@ p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. neede
 }
 
 # Age distribution functions
-extract_age_distribution <- function(method="uniform"){
+extract_age_distribution <- function(method="uniform", life_exp=80){
   if (method=="uniform") {
-    agedist <- rep(1, 80)
+    agedist <- rep(1, life_exp)
   } else if (method=="test") {
-    life_exp <- 80
     agedist <- c(1:life_exp)
   }
   
   names(agedist) <- 1:length(agedist)
   agedist <- agedist/sum(agedist)
   return(agedist)
+}
+
+extract_incidence_by_age <- function(method="uniform", life_exp=80){
+  if (method=="uniform") {
+    inc_by_age <- rep(1, life_exp)
+  } else if (method=="test") {
+    global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")  ## NEED TO FILTER
+    inc_by_age <- c(1:life_exp)
+  }
+  
+  names(inc_by_age) <- 1:life_exp
+  inc_by_age <- inc_by_age/sum(inc_by_age)
+  return(inc_by_age)
 }
 
 # Simulate functions
