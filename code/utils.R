@@ -185,7 +185,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 				# They were infected in past sigma years, so test positive. Recruit!
 				n_recruited <- n_recruited + 1
 				if(progressor_type=="fast"){n_fast <- n_fast + 1}
-				recruited_df <- bind_rows(recruited_df, tibble(
+				recruited_df <- bind_rows(recruited_df, tibble(  # bind_rows inside a loop is slow
 					id=n_recruited,
 					age=age,
 					progressor_type=progressor_type,
@@ -213,7 +213,7 @@ sim_stoch_fast <- function(pars, fasttarget=50, agedist){
 	n_overall <- 0
 
 	capacity <- 1e6
-	recruited_list <- vector("list", capacity)
+	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	while(n_fast < fasttarget){
 	  # Grab their age from the age distribution
@@ -257,7 +257,7 @@ sim_stoch_fast <- function(pars, fasttarget=50, agedist){
 		n_overall <- n_overall + 1
 	}
 
-	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])
+	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])  # bind_rows outside of the while loop is much faster
 
 	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, recruited_df=recruited_df)
 	

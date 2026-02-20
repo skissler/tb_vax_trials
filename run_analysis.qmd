@@ -54,8 +54,8 @@ agedist <- extract_age_distribution("uniform")
 #| label: simulate_with_m72IIb
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
-stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb.csv")  # uniform agedist
+stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+#stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
 analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
@@ -94,8 +94,8 @@ ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic
 #| label: simulate_with_lit
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
-stochastic_df_lit <- read_csv("output/stochastic_df_lit.csv")  # uniform agedist
+stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+#stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
@@ -115,4 +115,4 @@ fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 fig_screenslope_lit
 ```
 
-Possible extensions to the above basic workflow are to include custom age distribution in `sim_trial`(?) and custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
+Possible extensions to the above workflow are to include custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.

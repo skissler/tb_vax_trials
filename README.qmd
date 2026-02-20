@@ -145,4 +145,4 @@ fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 fig_screenslope_lit
 ```
 
-Possible extensions to the above basic workflow are to include custom age distribution in `sim_trial`(?) and custom fast targets for   `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
+Possible extensions to the above basic workflow are to include custom age distribution in `sim_stoch` and custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
