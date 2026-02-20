@@ -8,7 +8,7 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 	a <- age
 	xi_s <- p_slow 
 	xi_f <- 1 - p_slow
-	rho <- incidence 
+	rho <- incidence[age]  # age-specific incidence
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -47,7 +47,7 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 	a <- age
 	xi_s <- p_slow 
 	xi_f <- 1 - p_slow
-	rho <- incidence 
+	rho <- incidence[age]  # age-specific incidence
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -112,7 +112,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   counter <- 1
   for(sigma in sigmavec){
     # Calculate a vector for drawing asymptomatic people of age a: 
-    p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){
+    p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){  # probability for each age x
       p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)
     }))
     p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
@@ -173,8 +173,8 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 		progressor_type <- sample(c("slow","fast"), 
 			size=1, prob=c(p_slow, 1-p_slow))
 
-		# Simulate their time of infection
-		tinf <- rexp(1, rho)
+		# Simulate their time of infection, using age-specific incidence rho[age]
+		tinf <- rexp(1, rho[age])
 
 		# Simulate their time of symptoms 
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))

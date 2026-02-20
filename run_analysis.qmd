@@ -15,10 +15,11 @@ source('code/utils.R')
 ```{r}
 #| label: define_params
 
+life_exp <- 80
 pars_m72IIb_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=0.0275,
+	rho=rep(0.0275,life_exp),  # age-varying incidence
 	p_slow=0.5,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -31,7 +32,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=0.0025,
+	rho=rep(0.0025,life_exp),  # age-varying incidence
 	p_slow=0.95,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -42,7 +43,7 @@ pars_lit_tasa <- pars_lit_igra
 pars_lit_tasa$sigma <- 2
 ```
 
-## 3. define an age distribution e.g. uniform
+## 3. define a population age distribution e.g. uniform
 ```{r}
 #| label: define_age_dist
 
