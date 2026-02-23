@@ -8,6 +8,9 @@ This Quarto Markdown file outlines a workflow for running all steps of the analy
 ## 1. import functions and load packages
 ```{r}
 #| label: setup
+
+library(tidyverse)
+library(readxl)
 source('code/utils.R')
 ```
 
@@ -15,12 +18,10 @@ source('code/utils.R')
 ```{r}
 #| label: define_params
 
-life_exp <- 80
-
 pars_m72IIb_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0275,life_exp),  # age-varying incidence
+	rho=rep(0.0275,100),  # age-varying incidence
 	p_slow=0.5,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -33,7 +34,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0025,life_exp),  # age-varying incidence
+	rho=rep(0.0025,100),  # age-varying incidence
 	p_slow=0.95,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -48,7 +49,8 @@ pars_lit_tasa$sigma <- 2
 ```{r}
 #| label: define_age_dist
 
-agedist <- extract_age_distribution("uniform")
+#agedist <- extract_age_distribution("uniform")
+agedist <- extract_age_distribution("South Africa")  # works for any UN-recognised country
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
