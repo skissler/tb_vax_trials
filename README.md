@@ -54,7 +54,7 @@ workflow. Key steps are as follows:
 1.  import functions
 
 ``` r
-source('code/utils.R')
+library(tidyverse)
 ```
 
     Warning: package 'forcats' was built under R version 4.5.1
@@ -70,13 +70,18 @@ source('code/utils.R')
     ✖ dplyr::lag()    masks stats::lag()
     ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
+``` r
+library(readxl)
+source('code/utils.R')
+```
+
 2.  define parameter values
 
 ``` r
 pars_m72IIb_igra <- list(
     minage=18,
     maxage=49,
-    rho=0.0275,
+    rho=rep(0.0275,80),
     p_slow=0.5,
     mu_slow=0.0001,
     mu_fast=1.5,
@@ -89,7 +94,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
     minage=18,
     maxage=49,
-    rho=0.0025,
+    rho=rep(0.0025,80),
     p_slow=0.95,
     mu_slow=0.0001,
     mu_fast=1.5,
@@ -114,7 +119,7 @@ agedist <- agedist/sum(agedist)
 ``` r
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 # stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, reps=25)
-stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb.csv")
+stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")
 ```
 
     Rows: 2000 Columns: 7
@@ -198,7 +203,7 @@ ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic
 ``` r
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 # stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, reps=25)
-stochastic_df_lit <- read_csv("output/stochastic_df_lit.csv")
+stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")
 ```
 
     Rows: 2000 Columns: 7
@@ -252,5 +257,5 @@ fig_screenslope_lit
 ![](README_files/figure-commonmark/eg_workflow_5-3.png)
 
 Possible extensions to the above basic workflow are to include custom
-age distribution in `sim_trial`(?) and custom fast targets for
+age distribution in `sim_stoch` and custom fast targets for
 `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.

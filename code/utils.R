@@ -87,33 +87,38 @@ p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. neede
 }
 
 # Age distribution functions
-extract_age_distribution <- function(method="uniform"){
-  unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%
-    filter(Year == 2023 & Type == "Country/Area") %>% rename(location="Region, subregion, country or area *") %>%
-    mutate(across(all_of(as.character(0:99)), ~ as.numeric(.x) * 1000)) %>% select(location, all_of(as.character(0:99)))
-  
+extract_age_distribution <- function(df, method="uniform"){
   if (method=="uniform") {
     agedist <- rep(1, 100)
     names(agedist) <- 0:99
-  } else if (method %in% unwpp$location) {
-    agedist <- unwpp %>% filter(location==method) %>% select(-location) %>% unlist()
+  } else if (method %in% df$country) {
+    agedist <- df %>% filter(country==method) %>% select(-country) %>% unlist()
+  } else {
+    print("method must be \"uniform\" or any UN-recognised country")
   }
   
   agedist <- agedist/sum(agedist)
   return(agedist)
 }
 
-extract_incidence_by_age <- function(method="uniform"){
+extract_incidence_by_age <- function(df, method="uniform"){
   if (method=="uniform") {
-    inc_by_age <- rep(1, 100)
-  } else if (method=="test") {
-    global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")  ## NEED TO FILTER
-    inc_by_age <- c(1:100)
+    inc_by_age <- rep(0.0025, 100)
+  } else if (method %in% df$country) {
+    inc_by_age <- df %>% filter(country==method) %>% pull(inc)
+  } else {
+    print("method must be \"uniform\" or any UN-recognised country")
   }
   
-  names(inc_by_age) <- 1:100
-  inc_by_age <- inc_by_age/sum(inc_by_age)
+  names(inc_by_age) <- 0:99
   return(inc_by_age)
+}
+
+get_pop <- function(x, country, unwpp) {
+  if (country=="occupied Palestinian territory, including east Jerusalem") country <- "State of Palestine"
+  unwpp_row <- unwpp[unwpp$country == country, ]
+  ages <- as.character(pull_first(x):pull_last(x))
+  as.numeric(rowSums(unwpp_row[, ages]))
 }
 
 # Simulate functions
@@ -310,4 +315,22 @@ plot_screenslope <- function(analytical_df){
 		labs(x="Test span (years)", y="Slope of screening line")
 	
 	return(fig_screenslope)
+}
+
+# Character string manipulation functions
+numericize <- function(df, col){  # from Measles code
+  df %>% rowwise() %>%
+    mutate({{col}} := list(pull_first({{col}}):pull_last({{col}}))) %>%
+    unnest_longer({{col}})
+}
+
+pull_first <- function(x){  # for character string x
+  if (x=="all") return(0)
+  as.numeric(stringr::str_extract(x, "^[[:digit:]\\.]+"))
+}
+
+pull_last <- function(x, life_exp=99){  # for character string x
+  if (x == "all") return(life_exp)
+  if (stringr::str_detect(x, "(\\+|plus)$")) return(life_exp)
+  as.numeric(stringr::str_extract(x, "[[:digit:]\\.]+$"))
 }

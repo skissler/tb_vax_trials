@@ -5,23 +5,44 @@ format: html
 
 This Quarto Markdown file outlines a workflow for running all steps of the analysis. It is based on the example workflow in `code/trailsim_rote.R` and has been copied to a .qmd for ease of editing and commenting.
 
-## 1. import functions and load packages
+## 1. load packages, functions, data
 ```{r}
 #| label: setup
 
 library(tidyverse)
 library(readxl)
 source('code/utils.R')
+unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
+  filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
+  mutate(across(all_of(as.character(0:99)), ~ as.numeric(.x) * 1000)) %>% select(country, all_of(as.character(0:99))) %>% arrange(country)
+global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%  # number of cases per year, 2024 from WHO
+  filter(sex=="a" & risk_factor=="all") %>% select(country, year, age_group, best, lo, hi) %>% rename(cases=best, cases_lo=lo, cases_hi=hi) %>%
+  filter(age_group %in% c("0-4","5-9","10-14","15-19","20-24","25-34","35-44","45-54","55-64","65plus")) %>%  # filter duplicate age groups
+  mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
+  mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
+  select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
 ```
 
-## 2. define parameter values
+## 2. define age structure for the model e.g. uniform
+```{r}
+#| label: define_age_structure
+
+age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
+agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
+inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # incidence by age
+```
+
+## 3. define parameter values
 ```{r}
 #| label: define_params
 
+rho_m72IIb <- rep(0.0275,100)  # *uniform for now*
+rho_lit <- inc_by_age  # incidence by age from above
+  
 pars_m72IIb_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0275,100),  # age-varying incidence
+	rho=rho_m72IIb,
 	p_slow=0.5,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -34,7 +55,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0025,100),  # age-varying incidence
+	rho=rho_lit,
 	p_slow=0.95,
 	mu_slow=0.0001,
 	mu_fast=1.5,
@@ -43,14 +64,6 @@ pars_lit_igra <- list(
 	trial_length=3)
 pars_lit_tasa <- pars_lit_igra 
 pars_lit_tasa$sigma <- 2
-```
-
-## 3. define a population age distribution e.g. uniform
-```{r}
-#| label: define_age_dist
-
-#agedist <- extract_age_distribution("uniform")
-agedist <- extract_age_distribution("South Africa")  # works for any UN-recognised country
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
@@ -68,29 +81,29 @@ analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 #' Plot all results
 fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
                                            cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="M72/AS01E trial emulation")
+	labs(title="M72/AS01E trial emulation", subtitle=paste0("age_structure = ", age_structure))
 fig_stochastic_analytic_m72IIb
-ggsave(fig_stochastic_analytic_m72IIb, file="figures/stochastic_analytic_m72IIb.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",age_structure,".pdf"), width=5, height=5/1.6)
 
-fig_stochastic_analytic_log_m72IIb <- fig_stochastic_analytic_m72IIb + scale_y_continuous(trans="log10")
-fig_stochastic_analytic_log_m72IIb
-ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log_m72IIb.pdf", width=5, height=5/1.6)
-
-fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
-fig_screenslope_m72IIb
+# fig_stochastic_analytic_log_m72IIb <- fig_stochastic_analytic_m72IIb + scale_y_continuous(trans="log10")
+# fig_stochastic_analytic_log_m72IIb
+# ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log_m72IIb.pdf", width=5, height=5/1.6)
+# 
+# fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
+# fig_screenslope_m72IIb
 
 
 fig_stochastic_analytic_m72IIb_r21 <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, cols=c("n_tested","n_recruited")) + 
-	labs(title="M72/AS01E trial emulation")
+	labs(title="M72/AS01E trial emulation", subtitle=paste0("age_structure = ", age_structure))
 fig_stochastic_analytic_m72IIb_r21
-ggsave(fig_stochastic_analytic_m72IIb_r21, file="figures/stochastic_analytic_m72IIb_r21.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb_r21, file=paste0("figures/stochastic_analytic_m72IIb_r21_",age_structure,".pdf"), width=5, height=5/1.6)
 
-fig_stochastic_analytic_m72IIb_r21_log <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                                   cols=c("n_tested","n_recruited")) + 
-	labs(title="M72/AS01E trial emulation") + 
-	scale_y_continuous(trans="log10")
-fig_stochastic_analytic_m72IIb_r21_log
-ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic_m72IIb_r21_log.pdf", width=5, height=5/1.6)
+# fig_stochastic_analytic_m72IIb_r21_log <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
+#                                                    cols=c("n_tested","n_recruited")) + 
+# 	labs(title="M72/AS01E trial emulation") + 
+# 	scale_y_continuous(trans="log10")
+# fig_stochastic_analytic_m72IIb_r21_log
+# ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic_m72IIb_r21_log.pdf", width=5, height=5/1.6)
 ```
 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
@@ -107,16 +120,16 @@ analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="Literature parameters")
+	labs(title="Literature parameters", subtitle=paste0("age_structure = ", age_structure))
 fig_stochastic_analytic_lit
-ggsave(fig_stochastic_analytic_lit, file="figures/stochastic_analytic_lit.pdf", width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",age_structure,".pdf"), width=5, height=5/1.6)
 
-fig_stochastic_analytic_log_lit <- fig_stochastic_analytic_lit + scale_y_continuous(trans="log10")
-fig_stochastic_analytic_log_lit
-ggsave(fig_stochastic_analytic_log_lit, file="figures/stochastic_analytic_log_lit.pdf", width=5, height=5/1.6)
-
-fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
-fig_screenslope_lit
+# fig_stochastic_analytic_log_lit <- fig_stochastic_analytic_lit + scale_y_continuous(trans="log10")
+# fig_stochastic_analytic_log_lit
+# ggsave(fig_stochastic_analytic_log_lit, file="figures/stochastic_analytic_log_lit.pdf", width=5, height=5/1.6)
+# 
+# fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
+# fig_screenslope_lit
 ```
 
 Possible extensions to the above workflow are to include custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
