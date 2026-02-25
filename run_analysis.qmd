@@ -53,15 +53,15 @@ pars_m72IIb_tasa <- pars_m72IIb_igra
 pars_m72IIb_tasa$sigma <- 2
 
 pars_lit_igra <- list(
-	minage=18,
-	maxage=49,
+	minage=18, # taken from above
+	maxage=49, # taken from above
 	rho=rho_lit,
 	p_slow=0.95,
 	mu_slow=0.0001,
 	mu_fast=1.5,
 	sigma=100,
-	ve=0.55,
-	trial_length=3)
+	ve=0.55, # taken from above
+	trial_length=3) # taken from above
 pars_lit_tasa <- pars_lit_igra 
 pars_lit_tasa$sigma <- 2
 ```

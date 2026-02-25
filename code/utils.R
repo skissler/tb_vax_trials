@@ -192,11 +192,17 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 		progressor_type <- sample(c("slow","fast"), 
 			size=1, prob=c(p_slow, 1-p_slow))
 
-		# Simulate their time of infection, using age-specific incidence rho[age]
-		tinf <- rexp(1, rho[age])
+		# # Simulate their time to infection, using constant annual incidence rho
+		# tinf <- rexp(1, rho)  # exponential distribution for constant rate
+		
+		# Simulate their time to infection, using age-specific incidence rho[age]
+		survival_fn <- vector()
+		for (a in 1:100) survival_fn[a] <- exp(-sum(rho[1:a]))  # survival fn with incidence by single-year ages
+		# then draw a number from sample(0:99, prob=survival_fn) to get age of infection (which may or may not be less than current age) ?
+		#tinf <- rexp(1, rho[age])  ##EDIT THIS
 
 		# Simulate their time of symptoms 
-		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))
+		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  #EDIT HERE FOR VARYING RATE OF PROGRESSION BY AGE
 
 		# ELIGIBILITY
 		if(tsymp > age){
