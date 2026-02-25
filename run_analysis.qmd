@@ -29,7 +29,7 @@ global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # incidence by age
+inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annual incidence by age
 ```
 
 ## 3. define parameter values
