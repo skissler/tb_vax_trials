@@ -172,7 +172,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist){
+sim_stoch <- function(pars, fasttarget=50, agedist, old_tinf_method=F){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -184,12 +184,14 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	capacity <- 1e6
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
-	# Pre-compute survival function pmf
-	survival_fn <- vector()
-	for (a in 1:100) survival_fn[a] <- exp(-sum(rho[1:a]))  # survival fn with case incidence by single-year ages
-	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
-	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
-	
+	if (old_tinf_method==F) {
+	  # Pre-compute survival function pmf
+	  survival_fn <- vector()
+	  for (a in 1:100) survival_fn[a] <- exp(-sum(rho[1:a]))  # survival fn with case incidence by single-year ages
+	  survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
+	  survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
+	}
+
 	while(n_fast < fasttarget){
 	  # Grab their age from the age distribution
 	  age <- sample(minage:maxage, size=1, prob=agedist[minage:maxage])  # R normalises the subset automatically
@@ -197,19 +199,19 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 		# Grab their progression status 
 		progressor_type <- sample(c("slow","fast"), size=1, prob=c(p_slow, 1-p_slow))
 
-		# # Simulate their time to infection, using constant annual incidence rho
-		# tinf <- rexp(1, rho)  # exponential distribution for constant rate
-		# # Simulate their time of symptoms 
-		# tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))
+		# Simulate their time to infection, using constant annual incidence rho
+		tinf <- rexp(1, rho)  # exponential distribution for constant rate
 		
-		# Simulate their time to infection, using age-specific case incidence vector rho
-		tinf <- sample(0:100, size=1, prob=survival_pmf)
-		if (tinf < 100) {
-		  tinf <- tinf + runif(1)            # continuous within that year
-		} else {
-		  tinf <- Inf                            # never infected within ages 0–99
+		if (old_tinf_method==F) {
+		  # Simulate their time to infection, using age-specific case incidence vector rho
+		  tinf <- sample(0:100, size=1, prob=survival_pmf)
+		  if (tinf < 100) {
+		    tinf <- tinf + runif(1)            # continuous within that year
+		  } else {
+		    tinf <- Inf                            # never infected within ages 0–99
+		  } 
 		}
-		
+	
 		# Simulate their time to symptoms
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  #EDIT HERE FOR VARYING RATE OF PROGRESSION BY AGE
 
@@ -232,7 +234,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 					id=n_recruited,
 					age=age,
 					progressor_type=progressor_type,
-					tinf=tinf
+					tinf=tinf  # only recording tinf values for those who were recruited
 					)
 
 			}
@@ -249,7 +251,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	})
 }
 
-sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
+sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25, old_tinf_method=T){
 	stoch_list <- vector("list", length(sigmavec)*reps)
 
 	counter <- 1
@@ -260,7 +262,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25
 		
 		for(rep in 1:reps){
 			
-			stoch_output <- sim_stoch(these_pars, fasttarget=50, agedist)
+			stoch_output <- sim_stoch(these_pars, fasttarget=50, agedist, old_tinf_method)
 
 			stoch_list[[counter]] <- list(
 				sigma=sigma,

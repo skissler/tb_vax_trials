@@ -85,25 +85,8 @@ fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb,
 fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",age_structure,".pdf"), width=5, height=5/1.6)
 
-# fig_stochastic_analytic_log_m72IIb <- fig_stochastic_analytic_m72IIb + scale_y_continuous(trans="log10")
-# fig_stochastic_analytic_log_m72IIb
-# ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log_m72IIb.pdf", width=5, height=5/1.6)
-# 
-# fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
-# fig_screenslope_m72IIb
-
-
-fig_stochastic_analytic_m72IIb_r21 <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, cols=c("n_tested","n_recruited")) + 
-	labs(title="M72/AS01E trial emulation", subtitle=paste0("age_structure = ", age_structure))
-fig_stochastic_analytic_m72IIb_r21
-ggsave(fig_stochastic_analytic_m72IIb_r21, file=paste0("figures/stochastic_analytic_m72IIb_r21_",age_structure,".pdf"), width=5, height=5/1.6)
-
-# fig_stochastic_analytic_m72IIb_r21_log <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-#                                                    cols=c("n_tested","n_recruited")) + 
-# 	labs(title="M72/AS01E trial emulation") + 
-# 	scale_y_continuous(trans="log10")
-# fig_stochastic_analytic_m72IIb_r21_log
-# ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic_m72IIb_r21_log.pdf", width=5, height=5/1.6)
+fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
+fig_screenslope_m72IIb
 ```
 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
@@ -124,10 +107,6 @@ fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analy
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",age_structure,".pdf"), width=5, height=5/1.6)
 
-# fig_stochastic_analytic_log_lit <- fig_stochastic_analytic_lit + scale_y_continuous(trans="log10")
-# fig_stochastic_analytic_log_lit
-# ggsave(fig_stochastic_analytic_log_lit, file="figures/stochastic_analytic_log_lit.pdf", width=5, height=5/1.6)
-# 
 # fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 # fig_screenslope_lit
 ```

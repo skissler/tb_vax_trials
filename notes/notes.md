@@ -157,11 +157,11 @@ Added basic README and example workflow. New naming conventions introduced: anal
 
 # 23/24 Feb 2026 (LH)
 
-Age structure added to model - population age distribution and incidence by age. (Uniform or any UN-recognised country).
+Age structure added to model - population age distribution and incidence by age. Works for "uniform" or any UN-recognised country.
 
-# 25 Feb 2026 (LH)
+# 25/26 Feb 2026 (LH)
 
-Dealing with varying hazard rates for time to infection. Initially we use an exponential distribution with constant annual incidence rho to estimate time-to-infection. Now rho is age-varying, so I've been investigating survival analysis and other ways to estimate 'time to event X'.
+Dealing with varying hazard rates for time to infection (sim_stoch() function). Initially we use an exponential distribution with constant annual incidence rho to estimate time-to-infection. Now rho is age-varying, so I've been investigating survival analysis and other ways to estimate 'time to event X'.
 
 In short, my conclusion is to use a general survival function with empirically-specified hazard rate (inc_by_age). The general survival function collapses to exponential when the hazard rate is constant (which is what we want).
 
@@ -172,3 +172,13 @@ In short, my conclusion is to use a general survival function with empirically-s
 -   Discrete version: ∫₀ᵃ ρ(u) du = Σ (ρ(aᵢ) · Δaᵢ) i.e. adding up the cumulative incidence up to age a, for discrete age bands of width Δaᵢ.
 
 See <https://en.wikipedia.org/wiki/Failure_rate#Conversion_to_cumulative_failure_rate> for a derivation of the equation relating S and rho (comes from solving a differential eqn).
+
+From this survival function, we then compute the survival probability mass function (successive differences) and append a probability for tinf \> 100 (i.e. never infected during lifetime). One then draws a random number tinf from this sample, and procedure continues as before.
+
+How has this changed model outputs? The distribution of tinf times now follows the survival pmf curve (and generally the inc_by_age curve):
+
+![old_tinfs_recruited_histogram](images/old_tinfs_recruited_histogram-01.png)
+
+![new_tinfs_recruited_histogram.png](images/new_tinfs_recruited_histogram.png)
+
+Important note: Currently, incidence of *cases* is used as the hazard rate for tinf. What we actually want is incidence of *infection.*
