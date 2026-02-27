@@ -33,33 +33,36 @@ inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annua
 ```
 
 ## 3. define parameter values
+`pars_m72IIb` currently uses values such that model outputs emulate the M72 Van Der Meeren trial outputs of # enrolled, # recruited etc. Note this is different to some of the values of the trial population itself (e.g. p_slow).
+
+`pars_lit` takes best-known parameter values from the literature. 
 ```{r}
 #| label: define_params
 
-rho_m72IIb <- rep(0.0275,100)  # *uniform for now*
-rho_lit <- inc_by_age  # incidence by age from above
+rho_m72IIb <- rep(0.0275,100)  # *uniform for now* - where does this come from?
+rho_lit <- inc_by_age  # incidence by age from above for now
   
 pars_m72IIb_igra <- list(
-	minage=18,
-	maxage=49,
-	rho=rho_m72IIb,
-	p_slow=0.5,
-	mu_slow=0.0001,
-	mu_fast=1.5,
-	sigma=100,
-	ve=0.55,
-	trial_length=3)
+	minage=18,  # from trial
+	maxage=49,  # from trial (technically 50y)
+	rho=rho_m72IIb,  #0.0275  # ??
+	p_slow=0.5,  # modelled value?
+	mu_slow=0.0001,  # assumed
+	mu_fast=1.5,  # assumed
+	sigma=100,  # IGRA test is essentially lifelong
+	ve=0.55,  # from trial (technically 54% VE)
+	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
 pars_m72IIb_tasa <- pars_m72IIb_igra
 pars_m72IIb_tasa$sigma <- 2
 
 pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
-	rho=rho_lit,  #rho=rep(0.0025,life_exp)
-	p_slow=0.95,
-	mu_slow=0.0001,
-	mu_fast=1.5,
-	sigma=100,
+	rho=rho_lit,  #rho=rep(0.0025,life_exp)  # from lit
+	p_slow=0.95,  # from lit
+	mu_slow=0.0001,  # from lit
+	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
+	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above
 	trial_length=3) # taken from above
 pars_lit_tasa <- pars_lit_igra 
