@@ -191,4 +191,4 @@ Time to infection (tinf in sim_stoch()) currently uses incidence of *cases* as t
 
 ![](images/calculating_tsymp_first---tinfs_drawn_histogram.png)
 
-Most tinfs are negative with this method.... Need to find another workaround.
+Most tinfs are negative with this method.... Need to find another workaround. I will undo these changes.
