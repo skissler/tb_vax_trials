@@ -28,7 +28,7 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 	# Calculate P(infected in [a, a-sigma], type, asymp at age a)
 	if (abs(rho - mu) < 1e-8) {
 		# Special case: rho == mu
-		out <- xi * rho * sigma * exp(-rho * a)
+		out <- xi * rho * sigma * exp(-rho * a)  # from l'hopital's rule differentiating e.g. wrt mu
 	} else {
 		out <- xi * rho / (rho - mu) * (
 		  exp(-rho * (a - sigma)) * exp(-mu * sigma) - exp(-rho * a)
@@ -123,51 +123,56 @@ get_pop <- function(x, country, unwpp) {
 
 # Simulate functions
 sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
-  # Restrict to eligible age groups: 
+  # Restrict to eligible age groups
   eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
   eligible <- eligible/sum(eligible)
-  
+  ages <- as.numeric(names(eligible))
+
+  # Pre-compute sigma-independent quantities outside the for loop
+  # Vector for drawing asymtomatic people of age a
+  p_asymp_given_age_vec <- vapply(ages, function(x)
+    p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),  # probability for each age x
+    numeric(1))
+  names(p_asymp_given_age_vec) <- names(eligible)
+  # Integrate over all a
+  p_asymp <- sum(p_asymp_given_age_vec * eligible)
+  # Defn of conditional probability
+  p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / p_asymp
+
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
   for(sigma in sigmavec){
-    # Calculate a vector for drawing asymptomatic people of age a: 
-    p_asymp_given_age_vec <- unlist(lapply(as.numeric(names(eligible)), function(x){  # probability for each age x
-      p_asymp_given_age(age=x, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)
-    }))
-    p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / sum(p_asymp_given_age_vec * eligible)
-    names(p_asymp_given_age_vec) <- names(eligible)
-    
-    # Calculate the probability vectors of testing positive and being fast/slow given asymptomatic and age a: 
-    p_inf_and_slow_given_asymp_and_age_vec <- unlist(lapply(
-      as.numeric(names(eligible)),
-      function(x){p_inf_and_type_given_asymp_and_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
-    names(p_inf_and_slow_given_asymp_and_age_vec) <- names(eligible)
-    
-    p_inf_and_fast_given_asymp_and_age_vec <- unlist(lapply(
-      as.numeric(names(eligible)),
-      function(x){p_inf_and_type_given_asymp_and_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast)}))
-    names(p_inf_and_fast_given_asymp_and_age_vec) <- names(eligible)
-    
-    p_asymp <- sum(p_asymp_given_age_vec * eligible)
-    
-    p_fast <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
-    p_slow <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
-    p_pos  <- p_fast + p_slow
-    
+    # Calculate numerator P(infected in [a, a-sigma], type, asymp at age a)
+    num_slow <- vapply(ages, function(x)
+      p_inf_and_type_and_asymp_given_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
+      numeric(1))
+
+    num_fast <- vapply(ages, function(x)
+      p_inf_and_type_and_asymp_given_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
+      numeric(1))
+
+    # Divide by pre-computed denominator to get conditional probabilities
+    p_inf_and_slow_given_asymp_and_age_vec <- num_slow / p_asymp_given_age_vec
+    p_inf_and_fast_given_asymp_and_age_vec <- num_fast / p_asymp_given_age_vec
+
+    p_fast     <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
+    p_slow_prop <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
+    p_pos      <- p_fast + p_slow_prop
+
     tests_to_50_fast    <- 50 / p_fast
     recruits_to_50_fast <- 50 / (p_fast / p_pos)
-    overall_to_50_fast <- 50 / (p_asymp * p_fast)
-    
+    overall_to_50_fast  <- 50 / (p_asymp * p_fast)
+
     analytical_df[[counter]] <- list(
-      sigma=sigma, 
-      n_tested=tests_to_50_fast, 
+      sigma=sigma,
+      n_tested=tests_to_50_fast,
       n_recruited=recruits_to_50_fast,
       n_fast=50,
       n_slow=recruits_to_50_fast-50,
       n_overall=overall_to_50_fast)
     counter <- counter + 1
   }
-  
+
   analytical_df <- bind_rows(analytical_df)
   return(analytical_df)
 }
@@ -185,17 +190,22 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	# Pre-compute survival function pmf
-	survival_fn <- vector()
-	for (a in 1:100) survival_fn[a] <- exp(-sum(rho[1:a]))  # survival fn with case incidence by single-year ages
+	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with case incidence by single-year ages
 	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
 	
+	# Pre-compute some of the sampling vectors
+	eligible_ages  <- minage:maxage
+	eligible_probs <- agedist[minage:maxage]
+	prog_types     <- c("slow","fast")
+	prog_probs     <- c(p_slow, 1-p_slow)
+	
 	while(n_fast < fasttarget){
 	  # Grab their age from the age distribution
-	  age <- sample(minage:maxage, size=1, prob=agedist[minage:maxage])  # R normalises the subset automatically
+	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
 
 		# Grab their progression status 
-		progressor_type <- sample(c("slow","fast"), size=1, prob=c(p_slow, 1-p_slow))
+		progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 
 		# Simulate their time to infection, using age-specific case incidence vector rho
 		tinf <- sample(0:100, size=1, prob=survival_pmf)
@@ -212,7 +222,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 		if(tsymp > age){
 			# They are asymptomatic, so let's test them: 
 			n_tested <- n_tested + 1
-			if((tinf >= age-sigma) & (tinf <= age)){
+			if((tinf >= age-sigma) && (tinf <= age)){
 				# They were infected in past sigma years, so test positive. Recruit!
 				n_recruited <- n_recruited + 1
 				if(progressor_type=="fast"){n_fast <- n_fast + 1}
@@ -243,8 +253,9 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	return(out)
 	})
 }
+sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
-sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25, old_tinf_method=T){
+sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
 	stoch_list <- vector("list", length(sigmavec)*reps)
 
 	counter <- 1
@@ -255,7 +266,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25
 		
 		for(rep in 1:reps){
 			
-			stoch_output <- sim_stoch(these_pars, fasttarget=50, agedist, old_tinf_method)
+			stoch_output <- sim_stoch(these_pars, fasttarget=50, agedist)
 
 			stoch_list[[counter]] <- list(
 				sigma=sigma,
