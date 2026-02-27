@@ -182,3 +182,13 @@ How has this changed model outputs? The distribution of tinf times now follows t
 ![new_tinfs_recruited_histogram.png](images/new_tinfs_recruited_histogram.png)
 
 Important note: Currently, incidence of *cases* is used as the hazard rate for tinf. What we actually want is incidence of *infection.*
+
+# 27 Feb 2026 (LH)
+
+Time to infection (tinf in sim_stoch()) currently uses incidence of *cases* as the hazard rate. We could instead use this hazard rate to calculate tsymp, and then backcalculate tinf values. This is tricky for tsymp \> 100 - I instead tried drawing a rexp(1, 0.0025) if the tsymp \> 100. This is a little better, gives a longer tail, but we still end up with negative tinf values. See plots here of 1000 draws of progressor_type and tsymp, with tinf then backcalculated:
+
+![](images/calculating_tsymp_first---tsymps_drawn_histogram.png)
+
+![](images/calculating_tsymp_first---tinfs_drawn_histogram.png)
+
+Most tinfs are negative with this method.... Need to find another workaround.

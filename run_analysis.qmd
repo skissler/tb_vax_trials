@@ -55,7 +55,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
-	rho=rho_lit,
+	rho=rho_lit,  #rho=rep(0.0025,life_exp)
 	p_slow=0.95,
 	mu_slow=0.0001,
 	mu_fast=1.5,
