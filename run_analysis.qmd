@@ -11,7 +11,11 @@ This Quarto Markdown file outlines a workflow for running all steps of the analy
 
 library(tidyverse)
 library(readxl)
+library(future.apply)
+library(progressr)
 source('code/utils.R')
+plan(multisession, workers=4)  # use multiple cores for speed
+
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
   filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
   mutate(across(all_of(as.character(0:99)), ~ as.numeric(.x) * 1000)) %>% select(country, all_of(as.character(0:99))) %>% arrange(country)
@@ -74,7 +78,9 @@ pars_lit_tasa$sigma <- 2
 #| label: simulate_with_m72IIb
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
-stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+with_progress({
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+})
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
@@ -97,7 +103,9 @@ fig_screenslope_m72IIb
 #| label: simulate_with_lit
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
-stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+with_progress({
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+})
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
@@ -114,4 +122,4 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 # fig_screenslope_lit
 ```
 
-Possible extensions to the above workflow are to include custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
+Possible extensions to the above workflow are to include custom fast targets for `sim_analytic_over_sigma`.

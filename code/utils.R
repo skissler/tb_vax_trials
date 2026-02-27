@@ -256,34 +256,20 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
 sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
-	stoch_list <- vector("list", length(sigmavec)*reps)
-
-	counter <- 1
-	for(sigma in sigmavec){
-		
-		these_pars <- pars
-		these_pars$sigma <- sigma 
-		
-		for(rep in 1:reps){
-			
-			stoch_output <- sim_stoch(these_pars, fasttarget=50, agedist)
-
-			stoch_list[[counter]] <- list(
-				sigma=sigma,
-				rep=rep,
-				n_tested=stoch_output$n_tested,
-				n_recruited=stoch_output$n_recruited,
-				n_fast=stoch_output$n_fast,
-				n_slow=stoch_output$n_slow,
-				n_overall=stoch_output$n_overall)
-			counter <- counter + 1
-		}
-		print(sigma)
-	}
-
-	stochastic_df <- bind_rows(stoch_list)
-
-	return(stochastic_df)
+	grid <- expand.grid(sigma=sigmavec, rep=1:reps)  # expand.grid is faster than nested for loops
+  p <- progressr::progressor(steps=nrow(grid))  # set up progress bar
+  
+	stoch_list <- future.apply::future_lapply(1:nrow(grid), function(i) {  # put everything into a lapply to use multiple cores
+	  these_pars <- pars
+	  these_pars$sigma <- grid$sigma[i]
+	  stoch_output <- sim_stoch(these_pars, fasttarget=fasttarget, agedist=agedist)
+	  p()  # report progress
+	  list(sigma=grid$sigma[i], rep=grid$rep[i],
+	    n_tested=stoch_output$n_tested, n_recruited=stoch_output$n_recruited,
+	    n_fast=stoch_output$n_fast, n_slow=stoch_output$n_slow, n_overall=stoch_output$n_overall)
+	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
+	
+	bind_rows(stoch_list)
 }
 
 # Plot functions
