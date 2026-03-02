@@ -192,3 +192,18 @@ Time to infection (tinf in sim_stoch()) currently uses incidence of *cases* as t
 ![](images/calculating_tsymp_first---tinfs_drawn_histogram.png)
 
 Most tinfs are negative with this method.... Need to find another workaround. Have made a GitHub Issue. In the meantime, I will undo the above changes.
+
+# 3rd March 2026 (LH)
+
+Exploration of tinf methods and adding age structure to the model. How have the changes affected model outputs?
+
+| \# | Population agedist method | tinf method/values | Probability of fast progression by age | Comments on model outputs |
+|----|----|----|----|----|
+| 1 | uniform Stephen | uniform Stephen | uniform Stephen |  |
+| 2 | by_age country e.g. South Africa | uniform Stephen | uniform Stephen |  |
+| 3 | by_age country | using by_age case inc as a naive proxy for tinf hazard rate | uniform Stephen |  |
+| 4 | by_age country | using by_age case inc with a lag (for tinf hazard rate) | uniform Stephen |  |
+| 5 | by_age country | ARTI uniform (e.g. 4%) | uniform Stephen |  |
+| 6 | by_age country | ARTI_by_age data if it exists OR estimate ARTI_by_age from other metrics | uniform Stephen |  |
+| 7 | by_age country | best method from 1-6 | source XX suggested by Kristin |  |
+| 8 | by_age country | best method from 1-6 | source XX suggested by Kristin |  |
