@@ -137,7 +137,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   # Integrate over all a
   p_asymp <- sum(p_asymp_given_age_vec * eligible)
   # Defn of conditional probability
-  p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / p_asymp
+  p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / p_asymp  # why do we need to introduce P(age|asymp)?
 
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
@@ -153,7 +153,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
 
     # Divide by pre-computed denominator to get conditional probabilities
     p_inf_and_slow_given_asymp_and_age_vec <- num_slow / p_asymp_given_age_vec
-    p_inf_and_fast_given_asymp_and_age_vec <- num_fast / p_asymp_given_age_vec
+    p_inf_and_fast_given_asymp_and_age_vec <- num_fast / p_asymp_given_age_vec  # used to calculate no. tested
 
     p_fast     <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
     p_slow_prop <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
