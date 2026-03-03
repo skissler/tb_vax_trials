@@ -3,7 +3,7 @@ title: "run_analysis"
 format: html
 ---
 
-This Quarto Markdown file outlines a workflow for running all steps of the analysis. It is based on the example workflow in `code/trailsim_rote.R` and has been copied to a .qmd for ease of editing and commenting.
+This Quarto Markdown file outlines a workflow for running all steps of the analysis. It is based on the example workflow in `code/trialsim_rote.R` and has been copied to a .qmd for ease of editing and commenting.
 
 ## 1. load packages, functions, data
 ```{r}
@@ -13,8 +13,9 @@ library(tidyverse)
 library(readxl)
 library(future.apply)
 library(progressr)
+library(countrycode)
 source('code/utils.R')
-plan(multisession, workers=4)  # use multiple cores for speed
+plan(multisession, workers=8)  # use multiple cores for speed
 
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
   filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
@@ -31,9 +32,15 @@ global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%
 ```{r}
 #| label: define_age_structure
 
-age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
+age_structure <- "uniform"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
+tinf_method <- "uniform"
+
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annual incidence by age
+
+iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
+fig_name <- paste0(iso3,"_",tinf_method,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
+fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, "; pfast method = ", "unif")
 ```
 
 ## 3. define parameter values
@@ -44,7 +51,7 @@ inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annua
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform for now* - where does this come from?
-rho_lit <- inc_by_age  # incidence by age from above for now
+rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else inc_by_age  # incidence by age from above for now
   
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
@@ -90,12 +97,12 @@ analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 #' Plot all results
 fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
                                            cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="M72/AS01E trial emulation", subtitle=paste0("age_structure = ", age_structure))
+	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
 fig_stochastic_analytic_m72IIb
-ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",age_structure,".pdf"), width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
 
-fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
-fig_screenslope_m72IIb
+# fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
+# fig_screenslope_m72IIb
 ```
 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
@@ -114,9 +121,9 @@ analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="Literature parameters", subtitle=paste0("age_structure = ", age_structure))
+	labs(title="Literature parameters", subtitle=fig_labels)
 fig_stochastic_analytic_lit
-ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",age_structure,".pdf"), width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
 
 # fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 # fig_screenslope_lit

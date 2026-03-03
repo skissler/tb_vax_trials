@@ -177,7 +177,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist){
+sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -212,7 +212,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 		if (tinf < 100) {
 		  tinf <- tinf + runif(1)  # continuous within that year
 		} else {
-		  tinf <- rexp(1, 0.0025)  # not infected during lifetime; assume constant incidence for ages 101+?
+		  tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant incidence for ages 101+?
 		}
 	
 		# Simulate their time to infection, working backwards
