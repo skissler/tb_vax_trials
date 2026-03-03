@@ -33,8 +33,8 @@ global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-tinf_method <- "case-inc-naive"
-tinf_method_shortname <- "naive"
+tinf_method <- "ARTI-unif"  # works for "uniform", "case-inc-naive", "ARTI-unif"
+tinf_method_shortname <- "ARTI"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annual incidence by age
@@ -52,15 +52,15 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, ";
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform for now* - where does this come from?
-rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else if (tinf_method=="case-inc-naive") inc_by_age  # incidence by age from above for now
-  
+rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else if (tinf_method=="case-inc-naive") inc_by_age else if (tinf_method=="ARTI-unif") rep(0.04,100)
+
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
-	maxage=49,  # from trial (technically 50y)
-	rho=rho_m72IIb,  #0.0275  # ??
-	p_slow=0.5,  # modelled value?
-	mu_slow=0.0001,  # assumed
-	mu_fast=1.5,  # assumed
+	maxage=49,  # from trial (up to 50.0y)
+	rho=rho_m72IIb,  #0.0275  # modelled value (range considered: 0.002-0.03 e.g. up to an order of mag greater than lit)
+	p_slow=0.5,  # modelled value (range considered: ...)
+	mu_slow=0.0001,  # assumed, informed by lit - could play around with this
+	mu_fast=1.5,  # from lit
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55,  # from trial (technically 54% VE)
 	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
@@ -70,7 +70,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
-	rho=rho_lit,  #rho=rep(0.0025,life_exp)  # from lit
+	rho=rho_lit,  # from lit, with choice of tinf method
 	p_slow=0.95,  # from lit
 	mu_slow=0.0001,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
@@ -84,6 +84,7 @@ pars_lit_tasa$sigma <- 2
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
 ```{r}
 #| label: simulate_with_m72IIb
+#| include: FALSE
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({

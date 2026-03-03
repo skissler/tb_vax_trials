@@ -190,8 +190,8 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	# Pre-compute survival function pmf
-	if (tinf_method %in% c("uniform", "case-inc-naive")) {
-	  survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with case incidence by single-year ages
+	if (tinf_method %in% c("uniform", "case-inc-naive", "ARTI-unif")) {
+	  survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with incidence by single-year ages
 	  survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	  survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
 	} else {
@@ -211,8 +211,8 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 		# Grab their progression status 
 		progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 
-		# Simulate their time to infection, using e.g. age-specific case incidence vector rho
-		if (tinf_method %in% c("uniform", "case-inc-naive")) {
+		# Simulate their time to infection, using survival_pmf probabilities
+		if (tinf_method %in% c("uniform", "case-inc-naive", "ARTI-unif")) {
 		  tinf <- sample(0:100, size=1, prob=survival_pmf)
 		  if (tinf < 100) {
 		    tinf <- tinf + runif(1)  # continuous within that year
