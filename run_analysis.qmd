@@ -32,14 +32,15 @@ global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%
 ```{r}
 #| label: define_age_structure
 
-age_structure <- "uniform"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-tinf_method <- "uniform"
+age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
+tinf_method <- "case-inc-naive"
+tinf_method_shortname <- "naive"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annual incidence by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-fig_name <- paste0(iso3,"_",tinf_method,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
+fig_name <- paste0(iso3,"_",tinf_method_shortname,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
 fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, "; pfast method = ", "unif")
 ```
 
@@ -51,7 +52,7 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, ";
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform for now* - where does this come from?
-rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else inc_by_age  # incidence by age from above for now
+rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else if (tinf_method=="case-inc-naive") inc_by_age  # incidence by age from above for now
   
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
@@ -86,7 +87,7 @@ pars_lit_tasa$sigma <- 2
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, tinf_method=tinf_method, reps=1)
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -111,7 +112,7 @@ ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, tinf_method=tinf_method, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
