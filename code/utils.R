@@ -162,7 +162,17 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
     tests_to_50_fast    <- 50 / p_fast
     recruits_to_50_fast <- 50 / (p_fast / p_pos)
     overall_to_50_fast  <- 50 / (p_asymp * p_fast)
-
+    
+    # checking for redundancies
+    # p_fast2 <- sum(num_fast * eligible) / p_asymp
+    # print(p_fast - p_fast2) # this is 0 yay
+    # p_slow2 <- sum(num_slow * eligible) / p_asymp
+    # print(p_slow_prop - p_slow2) # this is 0 yay
+    # overall_to_50_fast2 <- 50 / sum(num_fast * eligible)
+    # print(overall_to_50_fast - overall_to_50_fast2) # this is 0 yay
+    # recruits_to_50_fast2 <- 50 * (1 + (sum(num_slow * eligible) / sum(num_fast * eligible)))
+    # print(recruits_to_50_fast - recruits_to_50_fast2) # this is now 0
+    
     analytical_df[[counter]] <- list(
       sigma=sigma,
       n_tested=tests_to_50_fast,
@@ -223,7 +233,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 		  
 		}
 	
-		# Simulate their time to infection, working backwards
+		# Simulate their time to symptoms
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  #EDIT HERE FOR VARYING RATE OF PROGRESSION BY AGE
 
 		# ELIGIBILITY
