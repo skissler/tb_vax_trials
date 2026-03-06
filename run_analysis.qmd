@@ -20,7 +20,7 @@ plan(multisession, workers=8)  # use multiple cores for speed
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
   filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
   mutate(across(all_of(as.character(0:99)), ~ as.numeric(.x) * 1000)) %>% select(country, all_of(as.character(0:99))) %>% arrange(country)
-global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%  # number of cases per year, 2024 from WHO
+global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%  # number of cases per year, 2024 from WHO
   filter(sex=="a" & risk_factor=="all") %>% select(country, year, age_group, best, lo, hi) %>% rename(cases=best, cases_lo=lo, cases_hi=hi) %>%
   filter(age_group %in% c("0-4","5-9","10-14","15-19","20-24","25-34","35-44","45-54","55-64","65plus")) %>%  # filter duplicate age groups
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
@@ -33,11 +33,12 @@ global_TB_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv") %>%
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-tinf_method <- "ARTI-unif"  # works for "uniform", "case-inc-naive", "ARTI-unif"
+tinf_method <- "ARTI-unif"  # works for "ARTI-unif", "ARTI-by-age"
 tinf_method_shortname <- "ARTI"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-inc_by_age <- extract_incidence_by_age(global_TB_report, age_structure)  # annual incidence by age
+ARTI_by_age <- ...  # annual risk of infection by age
+inc_by_age <- extract_incidence_by_age(global_TB_inc_report, age_structure)  # annual case incidence by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 fig_name <- paste0(iso3,"_",tinf_method_shortname,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
@@ -51,13 +52,13 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, ";
 ```{r}
 #| label: define_params
 
-rho_m72IIb <- rep(0.0275,100)  # *uniform for now* - where does this come from?
-rho_lit <- if (tinf_method=="uniform") rep(0.0025,100) else if (tinf_method=="case-inc-naive") inc_by_age else if (tinf_method=="ARTI-unif") rep(0.04,100)
+rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
+rho_lit <- if (tinf_method=="ARTI-unif") rep(0.04,100) else if (tinf_method=="ARTI-by-age") ARTI_by_age
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
 	maxage=49,  # from trial (up to 50.0y)
-	rho=rho_m72IIb,  #0.0275  # modelled value (range considered: 0.002-0.03 e.g. up to an order of mag greater than lit)
+	rho=rho_m72IIb,  #0.0275  # modelled value (range considered thus far: ~0.002-0.03 e.g. up to an order of mag greater than old lit)
 	p_slow=0.5,  # modelled value (range considered: ...)
 	mu_slow=0.0001,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
