@@ -136,8 +136,6 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   names(p_asymp_given_age_vec) <- names(eligible)
   # Integrate over all a
   p_asymp <- sum(p_asymp_given_age_vec * eligible)
-  # Defn of conditional probability
-  p_age_given_asymp_vec <- p_asymp_given_age_vec * eligible / p_asymp  # why do we need to introduce P(age|asymp)?
 
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
@@ -150,29 +148,17 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
     num_fast <- vapply(ages, function(x)
       p_inf_and_type_and_asymp_given_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, incidence=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
       numeric(1))
-
-    # Divide by pre-computed denominator to get conditional probabilities
-    p_inf_and_slow_given_asymp_and_age_vec <- num_slow / p_asymp_given_age_vec
-    p_inf_and_fast_given_asymp_and_age_vec <- num_fast / p_asymp_given_age_vec  # used to calculate no. tested
-
-    p_fast     <- sum(p_inf_and_fast_given_asymp_and_age_vec * p_age_given_asymp_vec)
-    p_slow_prop <- sum(p_inf_and_slow_given_asymp_and_age_vec * p_age_given_asymp_vec)
-    p_pos      <- p_fast + p_slow_prop
-
-    tests_to_50_fast    <- 50 / p_fast
-    recruits_to_50_fast <- 50 / (p_fast / p_pos)
-    overall_to_50_fast  <- 50 / (p_asymp * p_fast)
     
-    # checking for redundancies
-    # p_fast2 <- sum(num_fast * eligible) / p_asymp
-    # print(p_fast - p_fast2) # this is 0 yay
-    # p_slow2 <- sum(num_slow * eligible) / p_asymp
-    # print(p_slow_prop - p_slow2) # this is 0 yay
-    # overall_to_50_fast2 <- 50 / sum(num_fast * eligible)
-    # print(overall_to_50_fast - overall_to_50_fast2) # this is 0 yay
-    # recruits_to_50_fast2 <- 50 * (1 + (sum(num_slow * eligible) / sum(num_fast * eligible)))
-    # print(recruits_to_50_fast - recruits_to_50_fast2) # this is now 0
+    # Calculate probabilities needed for no. overall, no. tested, and no. recruited
+    p_inf_and_fast_and_asymp <- sum(num_fast * eligible)
+    p_inf_and_fast_given_asymp <- sum(num_fast * eligible) / p_asymp  # used to be called p_fast but it is actually P_{pos&fast|asymp} from p15
+    p_inf_and_slow_given_asymp <- sum(num_slow * eligible) / p_asymp  # used to be called p_slow or p_slow_prop
+    p_fast_given_inf_and_asymp <- p_inf_and_fast_given_asymp / (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp)
     
+    recruits_to_50_fast <- 50 / p_fast_given_inf_and_asymp
+    tests_to_50_fast    <- 50 / p_inf_and_fast_given_asymp
+    overall_to_50_fast <- 50 / p_inf_and_fast_and_asymp
+
     analytical_df[[counter]] <- list(
       sigma=sigma,
       n_tested=tests_to_50_fast,
