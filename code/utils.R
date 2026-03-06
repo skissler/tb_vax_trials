@@ -86,7 +86,7 @@ p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. neede
 	return(out)
 }
 
-# Age distribution functions
+# Age structure functions
 extract_age_distribution <- function(df, method="uniform"){
   if (method=="uniform") {
     agedist <- rep(1, 100)
@@ -158,7 +158,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
     recruits_to_50_fast <- 50 / p_fast_given_inf_and_asymp
     tests_to_50_fast    <- 50 / p_inf_and_fast_given_asymp
     overall_to_50_fast <- 50 / p_inf_and_fast_and_asymp
-
+    
     analytical_df[[counter]] <- list(
       sigma=sigma,
       n_tested=tests_to_50_fast,
@@ -344,4 +344,12 @@ pull_last <- function(x, life_exp=99){  # for character string x
   if (x == "all") return(life_exp)
   if (stringr::str_detect(x, "(\\+|plus)$")) return(life_exp)
   as.numeric(stringr::str_extract(x, "[[:digit:]\\.]+$"))
+}
+
+# Other miscellaneous helper functions
+estimate_case_incidence_from_model <- function(df, pars=NA, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
+  if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
+  model_run <- df %>% filter(sigma==sig) %>% unlist()
+  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
+  return(incidence*100000)
 }

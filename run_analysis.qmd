@@ -33,11 +33,11 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-tinf_method <- "ARTI-unif"  # works for "ARTI-unif", "ARTI-by-age"
+tinf_method <- "ARTI-unif"  # works for "ARTI-unif" and soon "ARTI-by-age"
 tinf_method_shortname <- "ARTI"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-ARTI_by_age <- ...  # annual risk of infection by age
+#ARTI_by_age <- ...  # annual risk of infection by age
 inc_by_age <- extract_incidence_by_age(global_TB_inc_report, age_structure)  # annual case incidence by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
@@ -104,6 +104,10 @@ fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb,
 fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
 
+#' Optional: estimate case incidence per 100k from model 
+estimate_case_incidence_from_model(stochastic_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
+estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
+
 # fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
 # fig_screenslope_m72IIb
 ```
@@ -127,6 +131,10 @@ fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analy
 	labs(title="Literature parameters", subtitle=fig_labels)
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
+
+#' Optional: estimate case incidence per 100k from model 
+estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, sig=80)
+estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
 
 # fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
 # fig_screenslope_lit
