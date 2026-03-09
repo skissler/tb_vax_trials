@@ -26,6 +26,9 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
   mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
+national_TB_prev_surveys <- read.csv(file="data/National_TB_prevalence_surveys_data2025.csv") %>% # prevalence cases per 100k from WHO  # likely not needed
+  mutate(prev=prev/denom, prev_lo=prev_lo/denom, prev_hi=prev_hi/denom) %>%  select(-denom) %>% # convert to %
+numericize(age_group)
 ```
 
 ## 2. define age structure for the model e.g. uniform
@@ -33,15 +36,15 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
+unique(national_TB_prev_surveys$country)  # countries for which ARTI-by-age data exists
 tinf_method <- "ARTI-unif"  # works for "ARTI-unif" and soon "ARTI-by-age"
-tinf_method_shortname <- "ARTI"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 #ARTI_by_age <- ...  # annual risk of infection by age
 inc_by_age <- extract_incidence_by_age(global_TB_inc_report, age_structure)  # annual case incidence by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-fig_name <- paste0(iso3,"_",tinf_method_shortname,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
+fig_name <- paste0(iso3,"_",tinf_method,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
 fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, "; pfast method = ", "unif")
 ```
 

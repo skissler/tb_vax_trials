@@ -1,0 +1,23 @@
+﻿study,country,age,ARTI,notes
+Jeremiah-2021,United Republic of Tanzania,12,0.013,
+Jeremiah-2022,United Republic of Tanzania,13,0.014,calculated from prev - believe there is a typo in the paper
+Jeremiah-2023,United Republic of Tanzania,14,0.015,calculated from prev - believe there is a typo in the paper
+Jeremiah-2024,United Republic of Tanzania,15,0.015,calculated from prev - believe there is a typo in the paper
+Jeremiah-2025,United Republic of Tanzania,16,0.016,
+Wood-2010,South Africa,5,0.039,
+Wood-2011,South Africa,10,0.039,
+Wood-2012,South Africa,15,0.048,
+Wood-2013,South Africa,20,0.054,calculated - not in paper
+Wood-2014,South Africa,25,0.054,calculated - not in paper
+Wood-2015,South Africa,30,0.047,calculated - not in paper
+Wood-2016,South Africa,35,0.038,calculated - not in paper
+Wood-2017,South Africa,40,0.029,calculated - not in paper
+Adetifa-2015,The Gambia,7,0.0114,
+Adetifa-2016,The Gambia,8,0.0101,
+Adetifa-2017,The Gambia,9,0.0127,
+Adetifa-2018,The Gambia,10,0.0122,
+Adetifa-2019,The Gambia,11,0.0142,
+Balkhy-2017,Saudi Arabia,0-14,0.0052,calculated - not in paper
+Balkhy-2018,Saudi Arabia,15-44,0.0027,calculated - not in paper
+Balkhy-2019,Saudi Arabia,45-64,0.0035,calculated - not in paper
+Balkhy-2020,Saudi Arabia,65+,0.0062,calculated - not in paper

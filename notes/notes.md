@@ -227,7 +227,7 @@ Summary and further exploration of age structure methods. How have the changes a
 
 Formally, $\rho$ should be the annual rate of Tuberculosis infection (ARTI) not case incidence. **So scenarios 1-4 are now obsolete and can be ignored.**
 
-Age-varying ARTI can be calculated from infection prevalence estimates, using the following formula: $R = 1 –(1 –P)^{1/A}$, where R is the annual risk of infection (expressed as a fraction), P is M.tb. infection prevalence of the age group (expressed as a fraction), and A is the mean age of the participants. This method is defined in [Arnadottir et al., 1996](https://linkinghub.elsevier.com/retrieve/pii/S0962847996901276).
+Age-varying ARTI can be calculated from infection prevalence estimates, using the following formula: $R = 1 –(1 –P)^{1/A}$, where R is the annual risk of infection (expressed as a fraction), P is M.tb. infection prevalence of the age group (expressed as a fraction), and A is the mean age of the participants. This method is defined in [Arnadottir et al., 1996](https://linkinghub.elsevier.com/retrieve/pii/S0962847996901276). Note that most national TB prevalence surveys are for *prevalence of disease* not *prevalence of infection* so are not what we want for P.
 
 # 6th March 2026 (LH)
 

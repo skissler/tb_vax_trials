@@ -346,6 +346,10 @@ pull_last <- function(x, life_exp=99){  # for character string x
   as.numeric(stringr::str_extract(x, "[[:digit:]\\.]+$"))
 }
 
+pull_mean <- function(x, life_exp=99){
+  (pull_first(x) + pull_last(x, life_exp)) / 2
+}
+
 # Other miscellaneous helper functions
 estimate_case_incidence_from_model <- function(df, pars=NA, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
