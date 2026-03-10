@@ -121,6 +121,36 @@ get_pop <- function(x, country, unwpp) {
   as.numeric(rowSums(unwpp_row[, ages]))
 }
 
+impute_ARTI_by_age <- function(df) {
+  df %>%
+    group_by(study, country) %>%
+    tidyr::complete(age = 0:99) %>%
+    mutate(
+      imputed = is.na(ARTI),
+      ARTI = zoo::na.approx(ARTI, x = age, rule = 2)
+    ) %>%
+    ungroup()
+}
+
+extract_ARTI_by_age <- function(df, method="uniform", lo=F) {
+  if (method=="South Africa" & lo==F) {  # specify which South Africa data to use (Wood or Ncayiyana)
+    df <- df %>% filter(study=="Wood-2010") 
+  } else if (method=="South Africa" & lo==T) {
+    df <- df %>% filter(study=="Ncayiyana-2016")
+  }
+  
+  if (method=="uniform") {
+    ARTI_by_age <- rep(0.04, 100)
+  } else if (method %in% unique(df$country)) {
+    ARTI_by_age <- df %>% filter(country==method) %>% pull(ARTI)
+  } else {
+    print("method must be \"uniform\" or any country from `unique(ARTI_by_age_studies$country)`")
+  }
+  
+  names(ARTI_by_age) <- 0:99
+  return(ARTI_by_age)
+}
+
 # Simulate functions
 sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   # Restrict to eligible age groups
@@ -173,7 +203,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
+sim_stoch <- function(pars, fasttarget=50, agedist){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -186,13 +216,9 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	# Pre-compute survival function pmf
-	if (tinf_method %in% c("ARTI-unif", "ARTI-by-age")) {
-	  survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with arti by single-year ages
-	  survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
-	  survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
-	} else {
-	  print("tinf_method is misspecified")
-	}
+	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with arti by single-year ages
+	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
+	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
 	
 	# Pre-compute some of the sampling vectors
 	eligible_ages  <- minage:maxage
@@ -208,15 +234,11 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 		progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 
 		# Simulate their time to infection, using survival_pmf probabilities
-		if (tinf_method %in% c("ARTI-unif", "ARTI-by-age")) {
-		  tinf <- sample(0:100, size=1, prob=survival_pmf)
-		  if (tinf < 100) {
-		    tinf <- tinf + runif(1)  # continuous within that year
-		  } else {
-		    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant arti for ages 101+?
-		  }
+		tinf <- sample(0:100, size=1, prob=survival_pmf)
+		if (tinf < 100) {
+		  tinf <- tinf + runif(1)  # continuous within that year
 		} else {
-		  
+		  tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant arti for ages 101+?
 		}
 	
 		# Simulate their time to symptoms
@@ -259,14 +281,14 @@ sim_stoch <- function(pars, fasttarget=50, agedist, tinf_method){
 }
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
-sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, tinf_method, reps=25){
+sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
 	grid <- expand.grid(sigma=sigmavec, rep=1:reps)  # expand.grid is faster than nested for loops
   p <- progressr::progressor(steps=nrow(grid))  # set up progress bar
   
 	stoch_list <- future.apply::future_lapply(1:nrow(grid), function(i) {  # put everything into a lapply to use multiple cores
 	  these_pars <- pars
 	  these_pars$sigma <- grid$sigma[i]
-	  stoch_output <- sim_stoch(these_pars, fasttarget=fasttarget, agedist=agedist, tinf_method=tinf_method)
+	  stoch_output <- sim_stoch(these_pars, fasttarget=fasttarget, agedist=agedist)
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_recruited=stoch_output$n_recruited,

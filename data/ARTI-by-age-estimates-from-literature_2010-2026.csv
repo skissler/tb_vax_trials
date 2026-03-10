@@ -1,39 +1,39 @@
-﻿study,country,age,ARTI,notes,
-Jeremiah-2021,United Republic of Tanzania,12,0.013,,
-Jeremiah-2022,United Republic of Tanzania,13,0.014,calculated from prev - believe there is a typo in the paper,
-Jeremiah-2023,United Republic of Tanzania,14,0.015,calculated from prev - believe there is a typo in the paper,
-Jeremiah-2024,United Republic of Tanzania,15,0.015,calculated from prev - believe there is a typo in the paper,
-Jeremiah-2025,United Republic of Tanzania,16,0.016,,
-Wood-2010,South Africa,5,0.039,,
-Wood-2011,South Africa,10,0.039,,
-Wood-2012,South Africa,15,0.048,,
-Wood-2013,South Africa,20,0.054,calculated - not in paper,
-Wood-2014,South Africa,25,0.054,calculated - not in paper,
-Wood-2015,South Africa,30,0.047,calculated - not in paper,
-Wood-2016,South Africa,35,0.038,calculated - not in paper,
-Wood-2017,South Africa,40,0.029,calculated - not in paper,
-Adetifa-2015,The Gambia,7,0.0114,,
-Adetifa-2016,The Gambia,8,0.0101,,
-Adetifa-2017,The Gambia,9,0.0127,,
-Adetifa-2018,The Gambia,10,0.0122,,
-Adetifa-2019,The Gambia,11,0.0142,,
-Balkhy-2017,Saudi Arabia,0-14,0.0052,calculated - not in paper,
-Balkhy-2018,Saudi Arabia,15-44,0.0027,calculated - not in paper,
-Balkhy-2019,Saudi Arabia,45-64,0.0035,calculated - not in paper,
-Balkhy-2020,Saudi Arabia,65+,0.0062,calculated - not in paper,
-Hoa-2013,Viet Nam,6,0.012,,
-Hoa-2014,Viet Nam,7,0.015,,
-Hoa-2015,Viet Nam,8,0.017,,
-Hoa-2016,Viet Nam,9,0.017,,
-Hoa-2017,Viet Nam,10,0.018,,
-Hoa-2018,Viet Nam,11,0.019,,
-Hoa-2019,Viet Nam,12,0.017,,
-Hoa-2020,Viet Nam,13,0.017,,
-Hoa-2021,Viet Nam,14,0.017,,
-Soborg-2010,Greenland,6-10,0.0081,,
-Soborg-2011,Greenland,11-16,0.0079,,
-Ncayiyana-2016,South Africa,0-14,0.02931251,0.188,0.02931251
-Ncayiyana-2017,South Africa,15-24,0.015527791,0.263,0.015527791
-Ncayiyana-2018,South Africa,25-34,0.012306138,0.306,0.012306138
-Ncayiyana-2019,South Africa,35-44,0.015066532,0.451,0.015066532
-Ncayiyana-2020,South Africa,45+,0.008319092,0.452,0.008319092
+﻿study,country,age,ARTI,notes
+Jeremiah-2021,United Republic of Tanzania,12,0.013,
+Jeremiah-2021,United Republic of Tanzania,13,0.014,calculated from prev - believe there is a typo in the paper
+Jeremiah-2021,United Republic of Tanzania,14,0.015,calculated from prev - believe there is a typo in the paper
+Jeremiah-2021,United Republic of Tanzania,15,0.015,calculated from prev - believe there is a typo in the paper
+Jeremiah-2021,United Republic of Tanzania,16,0.016,
+Wood-2010,South Africa,5,0.039,
+Wood-2010,South Africa,10,0.039,
+Wood-2010,South Africa,15,0.048,
+Wood-2010,South Africa,20,0.054,calculated - not in paper
+Wood-2010,South Africa,25,0.054,calculated - not in paper
+Wood-2010,South Africa,30,0.047,calculated - not in paper
+Wood-2010,South Africa,35,0.038,calculated - not in paper
+Wood-2010,South Africa,40,0.029,calculated - not in paper
+Adetifa-2015,The Gambia,7,0.0114,
+Adetifa-2015,The Gambia,8,0.0101,
+Adetifa-2015,The Gambia,9,0.0127,
+Adetifa-2015,The Gambia,10,0.0122,
+Adetifa-2015,The Gambia,11,0.0142,
+Balkhy-2017,Saudi Arabia,0-14,0.0052,calculated - not in paper
+Balkhy-2017,Saudi Arabia,15-44,0.0027,calculated - not in paper
+Balkhy-2017,Saudi Arabia,45-64,0.0035,calculated - not in paper
+Balkhy-2017,Saudi Arabia,65+,0.0062,calculated - not in paper
+Hoa-2013,Viet Nam,6,0.012,
+Hoa-2013,Viet Nam,7,0.015,
+Hoa-2013,Viet Nam,8,0.017,
+Hoa-2013,Viet Nam,9,0.017,
+Hoa-2013,Viet Nam,10,0.018,
+Hoa-2013,Viet Nam,11,0.019,
+Hoa-2013,Viet Nam,12,0.017,
+Hoa-2013,Viet Nam,13,0.017,
+Hoa-2013,Viet Nam,14,0.017,
+Soborg-2010,Greenland,6-10,0.0081,
+Soborg-2010,Greenland,11-16,0.0079,
+Ncayiyana-2016,South Africa,0-14,0.02931251,calculated - not in paper
+Ncayiyana-2016,South Africa,15-24,0.015527791,calculated - not in paper
+Ncayiyana-2016,South Africa,25-34,0.012306138,calculated - not in paper
+Ncayiyana-2016,South Africa,35-44,0.015066532,calculated - not in paper
+Ncayiyana-2016,South Africa,45+,0.008319092,calculated - not in paper

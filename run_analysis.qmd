@@ -14,6 +14,7 @@ library(readxl)
 library(future.apply)
 library(progressr)
 library(countrycode)
+library(zoo)
 source('code/utils.R')
 plan(multisession, workers=8)  # use multiple cores for speed
 
@@ -26,9 +27,8 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
   mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
-national_TB_prev_surveys <- read.csv(file="data/National_TB_prevalence_surveys_data2025.csv") %>% # prevalence cases per 100k from WHO  # likely not needed
-  mutate(prev=prev/denom, prev_lo=prev_lo/denom, prev_hi=prev_hi/denom) %>%  select(-denom) %>% # convert to %
-numericize(age_group)
+ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>%
+  select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
 ```
 
 ## 2. define age structure for the model e.g. uniform
@@ -36,16 +36,15 @@ numericize(age_group)
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-unique(national_TB_prev_surveys$country)  # countries for which ARTI-by-age data exists
-tinf_method <- "ARTI-unif"  # works for "ARTI-unif" and soon "ARTI-by-age"
+unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
+arti_structure <- "South Africa"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-#ARTI_by_age <- ...  # annual risk of infection by age
-inc_by_age <- extract_incidence_by_age(global_TB_inc_report, age_structure)  # annual case incidence by age
+ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure)  # annual risk of infection by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-fig_name <- paste0(iso3,"_",tinf_method,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
-fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, "; pfast method = ", "unif")
+fig_name <- paste0(iso3,"_",arti_structure,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
+fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", arti_structure, "; pfast method = ", "unif")
 ```
 
 ## 3. define parameter values
@@ -56,7 +55,7 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", tinf_method, ";
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
-rho_lit <- if (tinf_method=="ARTI-unif") rep(0.04,100) else if (tinf_method=="ARTI-by-age") ARTI_by_age
+rho_lit <- ARTI
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
@@ -74,7 +73,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
-	rho=rho_lit,  # from lit, with choice of tinf method
+	rho=rho_lit,  # from lit, with choice of tinf method (arti_structure)
 	p_slow=0.95,  # from lit
 	mu_slow=0.0001,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
@@ -88,11 +87,11 @@ pars_lit_tasa$sigma <- 2
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
 ```{r}
 #| label: simulate_with_m72IIb
-#| include: FALSE
+#| eval: FALSE
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, tinf_method=tinf_method, reps=1)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -121,7 +120,7 @@ estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, 
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, tinf_method=tinf_method, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
