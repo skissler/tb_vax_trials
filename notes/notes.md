@@ -234,3 +234,15 @@ Age-varying ARTI can be calculated from infection prevalence estimates, using th
 # 6th March 2026 (LH)
 
 Added short few lines of code to estimate the case incidence from each simulation (sigma=80 and rep=1 by default).
+
+# 10th March 2026 (LH)
+
+**Calculation of tinf using age-varying ARTI as the hazard rate:**
+
+This now works properly - yay! Note that only the stochastic method has age-varying risk of infection. Adding age-varying hazard to the analytic method would require recalculation of the probability expressions - currently it is still uniform exponential, with rate naively grabbed from rho[age].
+
+**Fast progressors to disease:**
+
+This is about adding age-varying probability of being a fast progressor. This changes p_slow (but not mu_slow or mu_fast). Again, we leave the analytic method as is (constant rates), so as not to get into much horrid probability expressions and algebra.
+
+For the stochastic method, we ...

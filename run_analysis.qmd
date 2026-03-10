@@ -38,9 +38,11 @@ ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
 arti_structure <- "South Africa"
+progression_structure <- "unif"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure)  # annual risk of infection by age
+prog <- 
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 fig_name <- paste0(iso3,"_",arti_structure,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
@@ -56,12 +58,14 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", arti_structure,
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
 rho_lit <- ARTI
+p_slow_m72IIb <- 0.5  # *uniform probability of being a progressor in pars_m72 for now*
+p_slow_lit <- if (progression_structure=="uniform") 0.95 else prog
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
 	maxage=49,  # from trial (up to 50.0y)
 	rho=rho_m72IIb,  #0.0275  # modelled value (range considered thus far: ~0.002-0.03 e.g. up to an order of mag greater than old lit)
-	p_slow=0.5,  # modelled value (range considered: ...)
+	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
 	mu_slow=0.0001,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
 	sigma=100,  # IGRA test is essentially lifelong
@@ -74,7 +78,7 @@ pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
 	rho=rho_lit,  # from lit, with choice of tinf method (arti_structure)
-	p_slow=0.95,  # from lit
+	p_slow=p_slow_lit,  # from lit
 	mu_slow=0.0001,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
 	sigma=100,  # IGRA test is essentially lifelong

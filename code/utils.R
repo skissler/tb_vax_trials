@@ -69,7 +69,7 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 	return(out)
 }
 
-p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 14/~17)
+p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 14/~17)  # Unused in code
 	prog_type, age, sigma, p_slow, arti, prograte_slow, prograte_fast){
 	  
 	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
@@ -203,7 +203,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist){
+sim_stoch <- function(pars, fasttarget=50, agedist, progression_structure="uniform"){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -224,26 +224,34 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	eligible_ages  <- minage:maxage
 	eligible_probs <- agedist[minage:maxage]
 	prog_types     <- c("slow","fast")
-	prog_probs     <- c(p_slow, 1-p_slow)
 	
 	while(n_fast < fasttarget){
 	  # Grab their age from the age distribution
 	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
 
-		# Grab their progression status 
-		progressor_type <- sample(prog_types, size=1, prob=prog_probs)
-
-		# Simulate their time to infection, using survival_pmf probabilities
-		tinf <- sample(0:100, size=1, prob=survival_pmf)
-		if (tinf < 100) {
-		  tinf <- tinf + runif(1)  # continuous within that year
-		} else {
-		  tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant arti for ages 101+?
-		}
+	  # Simulate their time to infection, using survival_pmf probabilities
+	  tinf <- sample(0:100, size=1, prob=survival_pmf)
+	  if (tinf < 100) {
+	    tinf <- tinf + runif(1)  # continuous within that year
+	  } else {
+	    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant arti for ages 101+?
+	  }
+	  
+		# Grab their (tinf-dependent) progression status 
+	  if (progression_structure=="uniform") {
+	    prog_probs <- c(p_slow, 1-p_slow)  # p_slow is a scalar
+	  } else {
+	    if (tinf < 100) {
+	      prog_probs <- c(p_slow[tinf], 1-p_slow[tinf])  # p_slow is a vector of age-varying probability of being slow
+	    } else {
+	      prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
+	    }	    
+	  }
+	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 	
 		# Simulate their time to symptoms
-		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  #EDIT HERE FOR VARYING RATE OF PROGRESSION BY AGE
-
+		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
+		
 		# ELIGIBILITY
 		if(tsymp > age){
 			# They are asymptomatic, so let's test them: 
