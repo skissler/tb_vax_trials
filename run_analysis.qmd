@@ -29,6 +29,8 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
 ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>%
   select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
+progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-estimates-from-literature.csv") %>%
+  numericize(age) %>% impute_probability_of_being_slow()
 ```
 
 ## 2. define age structure for the model e.g. uniform
@@ -37,12 +39,12 @@ ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
-arti_structure <- "South Africa"
-progression_structure <- "unif"
+arti_structure <- "South Africa"  # works for "uniform" or the above countries
+progression_structure <- "uniform"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure)  # annual risk of infection by age
-prog <- 
+prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
 iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 fig_name <- paste0(iso3,"_",arti_structure,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
@@ -58,8 +60,8 @@ fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", arti_structure,
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
 rho_lit <- ARTI
-p_slow_m72IIb <- 0.5  # *uniform probability of being a progressor in pars_m72 for now*
-p_slow_lit <- if (progression_structure=="uniform") 0.95 else prog
+p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
+p_slow_lit <- prog
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial

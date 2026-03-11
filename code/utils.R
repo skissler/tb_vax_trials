@@ -151,6 +151,30 @@ extract_ARTI_by_age <- function(df, method="uniform", lo=F) {
   return(ARTI_by_age)
 }
 
+impute_probability_of_being_slow <- function(df) {
+  df %>%
+    group_by(study) %>%
+    tidyr::complete(age = 0:99) %>%
+    mutate(
+      p_slow = zoo::na.approx(p_slow, x = age, rule = 2),
+      p_fast = zoo::na.approx(p_fast, x = age, rule = 2),
+    ) %>%
+    ungroup()
+}
+
+extract_probability_of_being_slow <- function(df, method="uniform"){
+  if (method=="uniform") {
+    p_slow_by_age <- rep(0.95, 100)
+  } else if (method %in% df$study) {
+    p_slow_by_age <- df %>% filter(study==method) %>% pull(p_slow)
+  } else {
+    print("method must be \"uniform\" or any study from `unique(progressor_type_by_age_studies$study)`")
+  }
+  
+  names(p_slow_by_age) <- 0:99
+  return(p_slow_by_age)
+}
+
 # Simulate functions
 sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   # Restrict to eligible age groups
@@ -203,7 +227,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist, progression_structure="uniform"){
+sim_stoch <- function(pars, fasttarget=50, agedist){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -238,17 +262,13 @@ sim_stoch <- function(pars, fasttarget=50, agedist, progression_structure="unifo
 	  }
 	  
 		# Grab their (tinf-dependent) progression status 
-	  if (progression_structure=="uniform") {
-	    prog_probs <- c(p_slow, 1-p_slow)  # p_slow is a scalar
+	  if (tinf < 100) {
+	    prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
 	  } else {
-	    if (tinf < 100) {
-	      prog_probs <- c(p_slow[tinf], 1-p_slow[tinf])  # p_slow is a vector of age-varying probability of being slow
-	    } else {
-	      prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
-	    }	    
+	    prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
 	  }
 	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
-	
+	  
 		# Simulate their time to symptoms
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
 		

@@ -243,6 +243,8 @@ This now works properly - yay! Note that only the stochastic method has age-vary
 
 **Fast progressors to disease:**
 
-This is about adding age-varying probability of being a fast progressor. This changes p_slow (but not mu_slow or mu_fast). Again, we leave the analytic method as is (constant rates), so as not to get into much horrid probability expressions and algebra.
+This is about adding age-varying probability of being a fast progressor. This changes p_slow (but not mu_slow or mu_fast). Again, we leave the analytic method as is (constant rates), so as not to get into much horrid probability expressions and algebra. For the stochastic method, we use values from Vynnycky & Fine 1997.
 
-For the stochastic method, we ...
+I have not included any variation in mu_slow or mu_fast by age, but there is some evidence to support this. E.g. for slow progressors (infected more than 2 years ago), Menzies et al. reports that "Rates of progression to TB were higher in younger age groups, estimated to be 5.7 (4.5, 7.0) per 1000 person–years for 0–14 year olds and 1.5 (1.3, 1.7) per 1000 person–years for 15–24 year olds."
+
+Menzies et al LID 2018 (a review of how progression is modelled in TB models) identifies \~10 different compartmental model structures that are in use. Structure B has a different progression risk for each time step since infection, but I can't see that any model parameters vary by *age* (rather than time)?
