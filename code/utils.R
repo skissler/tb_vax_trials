@@ -4,8 +4,8 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 
 	# Rename variables 
 	a <- age
-	xi_s <- p_slow 
-	xi_f <- 1 - p_slow
+	xi_s <- p_slow[age] 
+	xi_f <- 1 - p_slow[age]
 	rho <- arti[age]  # age-specific arti #check
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
@@ -43,8 +43,8 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 
 	# Rename variables 
 	a <- age
-	xi_s <- p_slow 
-	xi_f <- 1 - p_slow
+	xi_s <- p_slow[age]
+	xi_f <- 1 - p_slow[age]
 	rho <- arti[age]  # age-specific arti #check
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
@@ -156,8 +156,8 @@ impute_probability_of_being_slow <- function(df) {
     group_by(study) %>%
     tidyr::complete(age = 0:99) %>%
     mutate(
-      p_slow = zoo::na.approx(p_slow, x = age, rule = 2),
-      p_fast = zoo::na.approx(p_fast, x = age, rule = 2),
+      p_slow = zoo::na.approx(p_slow, x = age, rule = 2),  # straight line interpolation
+      p_fast = zoo::na.approx(p_fast, x = age, rule = 2),  # straight line interpolation
     ) %>%
     ungroup()
 }
@@ -176,7 +176,7 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
 }
 
 # Simulate functions
-sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
+sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   # Restrict to eligible age groups
   eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
   eligible <- eligible/sum(eligible)
@@ -209,17 +209,17 @@ sim_analytic_over_sigma <- function(pars, sigmavec, agedist){
     p_inf_and_slow_given_asymp <- sum(num_slow * eligible) / p_asymp  # used to be called p_slow or p_slow_prop
     p_fast_given_inf_and_asymp <- p_inf_and_fast_given_asymp / (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp)
     
-    recruits_to_50_fast <- 50 / p_fast_given_inf_and_asymp
-    tests_to_50_fast    <- 50 / p_inf_and_fast_given_asymp
-    overall_to_50_fast <- 50 / p_inf_and_fast_and_asymp
+    recruits_to_fasttarget <- fasttarget / p_fast_given_inf_and_asymp
+    tests_to_fasttarget    <- fasttarget / p_inf_and_fast_given_asymp
+    overall_to_fasttarget <- fasttarget / p_inf_and_fast_and_asymp
     
     analytical_df[[counter]] <- list(
       sigma=sigma,
-      n_tested=tests_to_50_fast,
-      n_recruited=recruits_to_50_fast,
-      n_fast=50,
-      n_slow=recruits_to_50_fast-50,
-      n_overall=overall_to_50_fast)
+      n_tested=tests_to_fasttarget,
+      n_recruited=recruits_to_fasttarget,
+      n_fast=fasttarget,
+      n_slow=recruits_to_fasttarget - fasttarget,
+      n_overall=overall_to_fasttarget)
     counter <- counter + 1
   }
 

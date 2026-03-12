@@ -40,15 +40,18 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
 arti_structure <- "South Africa"  # works for "uniform" or the above countries
-progression_structure <- "uniform"  # works for "uniform" or "Vynnycky-1997"
+progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure)  # annual risk of infection by age
 prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
-iso3 <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-fig_name <- paste0(iso3,"_",arti_structure,"_","unif")  # pattern is agedist method _ tinf method _ pfast method
-fig_labels <- paste0("pop agedist = ", iso3, "; tinf method = ", arti_structure, "; pfast method = ", "unif")
+#' shorthand names for plots
+iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
+iso3_artistructure <- if (arti_structure!="uniform") countrycode(arti_structure, origin="country.name.en", destination="iso3c") else "ARTIunif"
+shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") unif
+fig_name <- paste0(iso3_agestructure,"_",iso3_artistructure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
+fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; ARTI = ",iso3_artistructure,"; p_slow = ",shorthand_progstructure)
 ```
 
 ## 3. define parameter values
@@ -102,7 +105,7 @@ with_progress({
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
-analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
+analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), fasttarget=50, agedist=agedist)
 analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
@@ -115,9 +118,6 @@ ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_
 #' Optional: estimate case incidence per 100k from model 
 estimate_case_incidence_from_model(stochastic_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
 estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
-
-# fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
-# fig_screenslope_m72IIb
 ```
 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
@@ -131,7 +131,7 @@ with_progress({
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), fasttarget=50, agedist=agedist)
 analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
@@ -143,9 +143,4 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 #' Optional: estimate case incidence per 100k from model 
 estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, sig=80)
 estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
-
-# fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
-# fig_screenslope_lit
 ```
-
-Possible extensions to the above workflow are to include custom fast targets for `sim_analytic_over_sigma`.

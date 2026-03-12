@@ -13,7 +13,7 @@ Code and data are stored in the respective `code/` / `data/` folders. Model outp
 
 ### Code
 
-`code/trialsim_rote.R` was Stephen's main code for running the analysis. This has been copied to `run_analysis.qmd` in the parent folder for ease of editing (02/19/2026), with new clearer naming conventions. 
+The main run file is `run_analysis.qmd`. This builds on Stephen's original code `code/vaxsim_old/trialsim_rote.R`, with new clearer naming conventions and extended model functionality.
 
 All helper functions are stored in `code/utils.R`. If a piece of code is re-used more than twice, it should ideally be written up as a function and added to `utils.R`. Naming conventions for functions are as follows:
 
@@ -31,11 +31,11 @@ Lastly, naming of parameter sets uses the following conventions:
 
 `_lit` = parameter values are taken from the literature
 
-`_m72IIb` = parameter values are backcalculated from the M72 phase 2b trial (Van Der Meeren et al., 2018) (formerly called 'nejm')
+`_m72IIb` = parameter values are chosen to emulate results of the M72 phase 2b trial (Van Der Meeren et al., 2018) (formerly called 'nejm')
 
 ## Example workflow
 
-The file `code/trialsim_rote.R` has been preserved as an example workflow. Key steps are as follows:
+The file `code/vaxsim_old/trialsim_rote.R` has been preserved as an example workflow. Key steps are as follows:
 
 1. import functions
 ```{r}
@@ -51,8 +51,8 @@ source('code/utils.R')
 pars_m72IIb_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0275,80),
-	p_slow=0.5,
+	rho=rep(0.0275,100),
+	p_slow=rep(0.5,100),
 	mu_slow=0.0001,
 	mu_fast=1.5,
 	sigma=100,
@@ -64,8 +64,8 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18,
 	maxage=49,
-	rho=rep(0.0025,80),
-	p_slow=0.95,
+	rho=rep(0.0025,100),
+	p_slow=rep(0.95,100),
 	mu_slow=0.0001,
 	mu_fast=1.5,
 	sigma=100,
@@ -107,19 +107,6 @@ ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log
 
 fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
 fig_screenslope_m72IIb
-
-
-fig_stochastic_analytic_m72IIb_r21 <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, cols=c("n_tested","n_recruited")) + 
-	labs(title="M72/AS01E trial emulation")
-fig_stochastic_analytic_m72IIb_r21
-ggsave(fig_stochastic_analytic_m72IIb_r21, file="figures/stochastic_analytic_m72IIb_r21.pdf", width=5, height=5/1.6)
-
-fig_stochastic_analytic_m72IIb_r21_log <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                                   cols=c("n_tested","n_recruited")) + 
-	labs(title="M72/AS01E trial emulation") + 
-	scale_y_continuous(trans="log10")
-fig_stochastic_analytic_m72IIb_r21_log
-ggsave(fig_stochastic_analytic_m72IIb_r21_log, file="figures/stochastic_analytic_m72IIb_r21_log.pdf", width=5, height=5/1.6)
 ```
 
 5. simulate trials under literature conditions (analytical and stochastic approaches)
