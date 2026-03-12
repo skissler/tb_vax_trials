@@ -39,17 +39,17 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
-arti_structure <- "South Africa"  # works for "uniform" or the above countries
+arti_structure <- "uniform"  # works for "uniform" or the above countries
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure)  # annual risk of infection by age
+ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=F)  # annual risk of infection by age
 prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
 #' shorthand names for plots
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 iso3_artistructure <- if (arti_structure!="uniform") countrycode(arti_structure, origin="country.name.en", destination="iso3c") else "ARTIunif"
-shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") unif
+shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") "unif"
 fig_name <- paste0(iso3_agestructure,"_",iso3_artistructure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
 fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; ARTI = ",iso3_artistructure,"; p_slow = ",shorthand_progstructure)
 ```
@@ -87,7 +87,7 @@ pars_lit_igra <- list(
 	mu_slow=0.0001,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
 	sigma=100,  # IGRA test is essentially lifelong
-	ve=0.55, # taken from above
+	ve=0.55, # taken from above, currently unused
 	trial_length=3) # taken from above
 pars_lit_tasa <- pars_lit_igra 
 pars_lit_tasa$sigma <- 2
@@ -126,12 +126,12 @@ estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, 
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=79:80, fasttarget=50, agedist=agedist, reps=50)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), fasttarget=50, agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=79, to=80, by=0.01), fasttarget=50, agedist=agedist)
 analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
@@ -141,6 +141,13 @@ fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
 
 #' Optional: estimate case incidence per 100k from model 
-estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, sig=80)
-estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
+cases <- vector()
+for (i in 1:25) {
+  cases[i] <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  #estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+}
+min(cases)
+max(cases)
+mean(cases)
+median(cases)
 ```

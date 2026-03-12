@@ -404,6 +404,6 @@ pull_mean <- function(x, life_exp=99){
 estimate_case_incidence_from_model <- function(df, pars=NA, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   model_run <- df %>% filter(sigma==sig) %>% unlist()
-  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
+  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_tested"]*pars$trial_length))
   return(incidence*100000)
 }
