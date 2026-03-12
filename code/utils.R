@@ -4,9 +4,9 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 
 	# Rename variables 
 	a <- age
-	xi_s <- p_slow[age] 
-	xi_f <- 1 - p_slow[age]
-	rho <- arti[age]  # age-specific arti #check
+	xi_s <- p_slow[as.character(age)]
+	xi_f <- 1 - p_slow[as.character(age)]
+	rho <- arti[as.character(age)]  # age-specific arti
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -43,9 +43,9 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 
 	# Rename variables 
 	a <- age
-	xi_s <- p_slow[age]
-	xi_f <- 1 - p_slow[age]
-	rho <- arti[age]  # age-specific arti #check
+	xi_s <- p_slow[as.character(age)]
+	xi_f <- 1 - p_slow[as.character(age)]
+	rho <- arti[as.character(age)]  # age-specific arti
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -246,7 +246,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	
 	# Pre-compute some of the sampling vectors
 	eligible_ages  <- minage:maxage
-	eligible_probs <- agedist[minage:maxage]
+	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
 	while(n_fast < fasttarget){
@@ -404,6 +404,6 @@ pull_mean <- function(x, life_exp=99){
 estimate_case_incidence_from_model <- function(df, pars=NA, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   model_run <- df %>% filter(sigma==sig) %>% unlist()
-  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_tested"]*pars$trial_length))
+  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
   return(incidence*100000)
 }
