@@ -16,7 +16,7 @@ library(progressr)
 library(countrycode)
 library(zoo)
 source('code/utils.R')
-plan(multisession, workers=8)  # use multiple cores for speed
+plan(multisession, workers=1)  # use multiple cores for speed
 
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
   filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
@@ -40,10 +40,10 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
 arti_structure <- "South Africa"  # works for "uniform" or the above countries
-progression_structure <- "uniform"  # works for "uniform" or "Vynnycky-1997"
+progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=T)  # annual risk of infection by age
+ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=F)  # annual risk of infection by age
 prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
 #' shorthand names for plots
@@ -62,6 +62,7 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; ARTI = ",iso3_artistr
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
+#ARTI[20:40] <- ARTI[20:40]*5  # test
 rho_lit <- ARTI
 p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
 p_slow_lit <- prog
@@ -126,7 +127,7 @@ estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, 
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=100)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
@@ -142,7 +143,7 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 
 #' Optional: estimate case incidence per 100k from model 
 cases <- vector()
-for (i in 1:100) {
+for (i in 1:1) {
   cases[i] <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   #estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
 }

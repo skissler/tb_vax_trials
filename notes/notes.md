@@ -259,7 +259,7 @@ I have not included any variation in mu_slow or mu_fast by age, but there is som
 
 Menzies et al LID 2018 (a review of how progression is modelled in TB models) identifies \~10 different compartmental model structures that are in use. Structure B has a different progression risk for each time step since infection, but I can't see that any model parameters vary by *age* (rather than time)?
 
-# 12th March 2026 (LH)
+# 12th-16th March 2026 (LH)
 
 Results 1: What values of age-varying ARTI give a plausible case incidence e.g. 100-250 cases per 100,000 per year?
 
@@ -279,12 +279,48 @@ Assume a South Africa-like population age distribution and by-age ARTI. We can u
 
 We are an order of magnitude off. Try ARTI = uniform 6%:
 
-+-------------+------------------+------------+------------------------------------+
-| Uniform 6%  | Vynnycky (4-14%) | as above   | 39 (31-53) cases per 100k per year |
-+-------------+------------------+------------+------------------------------------+
-| Uniform 4%  | Vynnycky (4-14%) | as above   | 43 (32-55) cases per 100k per year |
-+-------------+------------------+------------+------------------------------------+
-| Uniform 10% | Vynnycky (4-14%) | as above   | 26 (23-33) cases per 100k per year |
-+-------------+------------------+------------+------------------------------------+
++-------------+------------------+-------------+------------------------------------+
+| Uniform 6%  | Vynnycky (4-14%) | as above    | 39 (31-53) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
+| Uniform 4%  | Vynnycky (4-14%) | as above    | 43 (32-55) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
+| Uniform 10% | Vynnycky (4-14%) | as above    | 26 (23-33) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
 
-Uniform ARTI seems to not be acting in the way I expect. Possible code error?
+Uniform ARTI seems to not be acting in the way I expect. Let's explore the survival functions for these scenarios, to understand what is going on under the hood:
+
+A higher annual rate of infection means higher chance of contracting the infection each year and hence more likely for first infection to be in younger ages. Hence infections are concentrated into the \<20y population and the survival_fn for larger ARTI has a steeper drop (first: ARTI=4%, second: ARTI=10%):
+
+![](images/clipboard-4153803285.png){width="251"}
+
+![](images/clipboard-2479178056.png){width="251"}
+
+How does this affect the survival_pmf? Plots are as follows (first: ARTI=4%, second: ARTI=10%):
+
+![](images/clipboard-1191711835.png){width="251"}
+
+![](images/clipboard-3622380870.png){width="251"}
+
+We see the probability of being infected in first \~20years of life is much greater with ARTI=10%. Here the vast majority of infections happen in the first \~10 years of life. Translating to our model, most tinf values will be $\leq$ 10 and a fair number would have developed disease already before enrolment (`n_overall - n_recruited`). There are also fewer 'recent' infections (more slow progressors). Both of these lead to a larger denominator `n_overall` and lower estimated case incidence.
+
+Great - now we understand what is going on in the model, we should ask if this is realistic? Something to think about.
+
+# 16th March 2026 (LH)
+
+We are still working on the following:
+
+"Results 1: What values of age-varying ARTI give a plausible case incidence e.g. 100-250 cases per 100,000 per year?"
+
+Currently our age-varying ARTI for South Africa (Wood et al) is as follows (first=ARTI, second=survival_fn, third=survival_pmf):
+
+![](images/clipboard-148245680.png){width="175"}
+
+![](images/clipboard-1768760886.png){width="175"}
+
+![](images/clipboard-3809957128.png){width="175"}
+
+Using the intuition from the above notes (12th-16th March), I imagine we want to concentrate our infections in the ages of the trial population, to increase % of individuals who are recently infected, thus increasing % who are fast.
+
+-   What happens if we just double the SA ARTI curve throughout (e.g. rho\<-rho\*2)? Again this concentrates infections in the young which is not what we want.
+
+-   Consider increasing ARTI *only* in ages \~20-40 (around the eligible age range for the trial). Set `ARTI[20:40] <- ARTI[20:40]*5`. Call this 'stretched peak'. Better - case incidence is now \~68 per 100k per year. Still not the range we are looking for though.

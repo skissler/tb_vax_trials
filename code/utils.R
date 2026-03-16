@@ -243,6 +243,15 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with arti by single-year ages
 	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
+	# png(filename="figures/survival_saarti_stretchedpeak/rho.png")
+	# plot(rho, ylim=c(0,0.1))
+	# dev.off()
+	# png(filename="figures/survival_saarti_stretchedpeak/survival_fn.png")
+	# plot(survival_fn, ylim=c(0,1))
+	# dev.off()
+	# png(filename="figures/survival_saarti_stretchedpeak/survival_pmf.png")
+	# plot(survival_pmf, ylim=c(0,0.1))
+	# dev.off()
 	
 	# Pre-compute some of the sampling vectors
 	eligible_ages  <- minage:maxage
