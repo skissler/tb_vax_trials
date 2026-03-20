@@ -323,4 +323,22 @@ Using the intuition from the above notes (12th-16th March), I imagine we want to
 
 -   What happens if we just double the SA ARTI curve throughout (e.g. rho\<-rho\*2)? Again this concentrates infections in the young which is not what we want.
 
--   Consider increasing ARTI *only* in ages \~20-40 (around the eligible age range for the trial). Set `ARTI[20:40] <- ARTI[20:40]*5`. Call this 'stretched peak'. Better - case incidence is now \~68 per 100k per year. Still not the range we are looking for though.
+-   Consider increasing ARTI *only* in ages \~20-40 (around the eligible age range for the trial). Set `ARTI[20:40] <- ARTI[20:40]*5`. Call this 'stretched peak'. Better - case incidence is now \~68 cases per 100k per year. Still not the range we are looking for though.
+
+After discussing with Stephen (20th March), we conclude the following:
+
+-   Conclusion : we think that ARTI is not what we want for rho.
+
+    -   As defined, we now think rho should be **force of infection.** 
+
+        -   We are simulating infection to a steady state with hazard of infection rho (exponentially distributed). Low hazard rate - things happen late. High hazard rate - things happen early.
+
+        -   rho is a rate, so its not quite ARTI (which is a risk). Stephen thinks that for the physical processes we are representing here, rho should be force of infection.
+
+    -   Now the preliminary results question is: What values of age-varying foi rho give plausible ARTI? (Calculating ARTI outside of the model like I am for cases).
+
+        -   Investigate this numerically. E.g. maybe four values foi at age 0, 20, 40, 80. See what ARTI the model produces (and subsequently what cases the model produces).
+
+        -   We think foi should grow massively with age (because very few susceptibles left in adulthood).
+
+        -   Nb: ignore Wood et al 2010 foi estimates - their definition of foi does not align with our interpretation.
