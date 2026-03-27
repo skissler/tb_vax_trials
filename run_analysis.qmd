@@ -27,8 +27,8 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
   mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
-ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>%
-  select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
+# ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>%
+#   select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
 progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-estimates-from-literature.csv") %>%
   numericize(age) %>% impute_probability_of_being_slow()
 ```
@@ -38,20 +38,22 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
-arti_structure <- "South Africa"  # works for "uniform" or the above countries
+# unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
+# arti_structure <- "South Africa"  # works for "uniform" or the above countries
+foi_structure <- "test"
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=F)  # annual risk of infection by age
+#ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=F)  # annual risk of infection by age
+foi <- rep(0.04,100) # force of infection by age
 prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
 #' shorthand names for plots
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-iso3_artistructure <- if (arti_structure!="uniform") countrycode(arti_structure, origin="country.name.en", destination="iso3c") else "ARTIunif"
+iso3_foistructure <- if (foi_structure!="test") countrycode(foi_structure, origin="country.name.en", destination="iso3c") else "test"
 shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") "unif"
-fig_name <- paste0(iso3_agestructure,"_",iso3_artistructure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
-fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; ARTI = ",iso3_artistructure,"; p_slow = ",shorthand_progstructure)
+fig_name <- paste0(iso3_agestructure,"_",iso3_foistructure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
+fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",iso3_foistructure,"; p_slow = ",shorthand_progstructure)
 ```
 
 ## 3. define parameter values
@@ -61,9 +63,9 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; ARTI = ",iso3_artistr
 ```{r}
 #| label: define_params
 
-rho_m72IIb <- rep(0.0275,100)  # *uniform ARTI in pars_m72 for now*
+rho_m72IIb <- rep(0.0275,100)  # *uniform in pars_m72 for now*
 #ARTI[20:40] <- ARTI[20:40]*5  # test
-rho_lit <- ARTI
+rho_lit <- foi  #ARTI
 p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
 p_slow_lit <- prog
 

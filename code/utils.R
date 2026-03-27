@@ -1,12 +1,12 @@
 # Probability expression functions
 p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed to sample (page 13)
-	prog_type, age, sigma, p_slow, arti, prograte_slow, prograte_fast){
+	prog_type, age, sigma, p_slow, foi, prograte_slow, prograte_fast){
 
 	# Rename variables 
 	a <- age
 	xi_s <- p_slow[as.character(age)]
 	xi_f <- 1 - p_slow[as.character(age)]
-	rho <- arti[as.character(age)]  # age-specific arti
+	rho <- foi[as.character(age)]  # age-specific foi
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -39,13 +39,13 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 }
 
 p_asymp_given_age <- function(   # Used in calculating no. needed to screen (page 14)
-	age, p_slow, arti, prograte_slow, prograte_fast){
+	age, p_slow, foi, prograte_slow, prograte_fast){
 
 	# Rename variables 
 	a <- age
 	xi_s <- p_slow[as.character(age)]
 	xi_f <- 1 - p_slow[as.character(age)]
-	rho <- arti[as.character(age)]  # age-specific arti
+	rho <- foi[as.character(age)]  # age-specific foi
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -70,16 +70,16 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 }
 
 p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 14/~17)  # Unused in code
-	prog_type, age, sigma, p_slow, arti, prograte_slow, prograte_fast){
+	prog_type, age, sigma, p_slow, foi, prograte_slow, prograte_fast){
 	  
 	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
 
 	# Calculate the joint probability, i.e. 
 	# P(infected in [a, a-sigma], type, asymp at age a)
-	num <- p_inf_and_type_and_asymp_given_age(prog_type=prog_type, age=age, sigma=sigma, p_slow=p_slow, arti=arti, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
+	num <- p_inf_and_type_and_asymp_given_age(prog_type=prog_type, age=age, sigma=sigma, p_slow=p_slow, foi=foi, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
 
 	# Calculate the marginal probability of being asymptomatic at age a: 
-	den <- p_asymp_given_age(age=age, p_slow=p_slow, arti=arti, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
+	den <- p_asymp_given_age(age=age, p_slow=p_slow, foi=foi, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
 
 	out <- num / den
 	
@@ -185,7 +185,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   # Pre-compute sigma-independent quantities outside the for loop
   # Vector for drawing asymtomatic people of age a
   p_asymp_given_age_vec <- vapply(ages, function(x)
-    p_asymp_given_age(age=x, p_slow=pars$p_slow, arti=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),  # probability for each age x
+    p_asymp_given_age(age=x, p_slow=pars$p_slow, foi=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),  # probability for each age x
     numeric(1))
   names(p_asymp_given_age_vec) <- names(eligible)
   # Integrate over all a
@@ -196,11 +196,11 @@ sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   for(sigma in sigmavec){
     # Calculate numerator P(infected in [a, a-sigma], type, asymp at age a)
     num_slow <- vapply(ages, function(x)
-      p_inf_and_type_and_asymp_given_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, arti=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
+      p_inf_and_type_and_asymp_given_age(prog_type="slow", age=x, sigma=sigma, p_slow=pars$p_slow, foi=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
       numeric(1))
 
     num_fast <- vapply(ages, function(x)
-      p_inf_and_type_and_asymp_given_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, arti=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
+      p_inf_and_type_and_asymp_given_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, foi=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
       numeric(1))
     
     # Calculate probabilities needed for no. overall, no. tested, and no. recruited
@@ -240,7 +240,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	# Pre-compute survival function pmf
-	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with arti by single-year ages
+	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
 	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
 	# png(filename="figures/survival_saarti_stretchedpeak/rho.png")
@@ -267,7 +267,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	  if (tinf < 100) {
 	    tinf <- tinf + runif(1)  # continuous within that year
 	  } else {
-	    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant arti for ages 101+?
+	    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
 	  }
 	  
 		# Grab their (tinf-dependent) progression status 

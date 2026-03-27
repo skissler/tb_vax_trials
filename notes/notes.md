@@ -342,3 +342,7 @@ After discussing with Stephen (20th March), we conclude the following:
         -   We think foi should grow massively with age (because very few susceptibles left in adulthood).
 
         -   Nb: ignore Wood et al 2010 foi estimates - their definition of foi does not align with our interpretation.
+
+# 27th March 2026 (LH)
+
+Changed ARTI -\> foi in code.
