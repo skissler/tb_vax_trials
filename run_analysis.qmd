@@ -16,7 +16,7 @@ library(progressr)
 library(countrycode)
 library(zoo)
 source('code/utils.R')
-plan(multisession, workers=1)  # use multiple cores for speed
+plan(multisession, workers=8)  # use multiple cores for speed
 
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
   filter(Year == 2023 & Type == "Country/Area") %>% rename(country="Region, subregion, country or area *") %>%
@@ -27,8 +27,7 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
   mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
-# ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>%
-#   select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
+#ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>% select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
 progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-estimates-from-literature.csv") %>%
   numericize(age) %>% impute_probability_of_being_slow()
 ```
@@ -38,22 +37,18 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-# unique(ARTI_by_age_studies$country)  # countries for which ARTI-by-age data exists
-# arti_structure <- "South Africa"  # works for "uniform" or the above countries
-foi_structure <- "test"
+foi_structure <- "uniform4"  # works for "uniform4", "uniform6", 
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-#ARTI <- extract_ARTI_by_age(ARTI_by_age_studies, arti_structure, lo=F)  # annual risk of infection by age
-foi <- rep(0.04,100) # force of infection by age
+foi <- define_foi_by_age(foi_structure)  # force of infection by age
 prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 
 #' shorthand names for plots
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
-iso3_foistructure <- if (foi_structure!="test") countrycode(foi_structure, origin="country.name.en", destination="iso3c") else "test"
 shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") "unif"
-fig_name <- paste0(iso3_agestructure,"_",iso3_foistructure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
-fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",iso3_foistructure,"; p_slow = ",shorthand_progstructure)
+fig_name <- paste0(iso3_agestructure,"_",foi_structure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
+fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure,"; p_slow = ",shorthand_progstructure)
 ```
 
 ## 3. define parameter values
@@ -64,8 +59,7 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",iso3_foistruc
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform in pars_m72 for now*
-#ARTI[20:40] <- ARTI[20:40]*5  # test
-rho_lit <- foi  #ARTI
+rho_lit <- foi
 p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
 p_slow_lit <- prog
 
@@ -92,8 +86,8 @@ pars_lit_igra <- list(
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above, currently unused
 	trial_length=3) # taken from above
-pars_lit_tasa <- pars_lit_igra 
-pars_lit_tasa$sigma <- 2
+#pars_lit_tasa <- pars_lit_igra 
+#pars_lit_tasa$sigma <- 2
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
@@ -103,7 +97,7 @@ pars_lit_tasa$sigma <- 2
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -126,15 +120,16 @@ estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
 ```{r}
 #| label: simulate_with_lit
+#| eval: FALSE
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=2)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.01), fasttarget=50, agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
 analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
@@ -143,13 +138,47 @@ fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analy
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
 
-#' Optional: estimate case incidence per 100k from model 
-cases <- vector()
-for (i in 1:1) {
-  cases[i] <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  #estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+#' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
+from_model <- tibble()
+for (i in 1:2) {
+  cases <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  #estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  from_model <- bind_rows(from_model, tibble(i = i, infection_prevalence = ARTI_and_prev["infection_prevalence"], ARTI = ARTI_and_prev["ARTI"], cases= cases))
 }
-min(cases)
-max(cases)
-median(cases)
+#summary_table <- tibble()
+summary_table <- bind_rows(summary_table, tibble(foi_structure=foi_structure, infection_prevalence=median(from_model$infection_prevalence), 
+                                                 ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
+```
+
+# 6. (Optional) Parameter fitting: simulate trials under literature conditions, for different foi's
+Note: run code snippets 1-3 first.
+```{r}
+#| label: parameter_fit
+
+foi_structures <- c("uniform4", "uniform6", "5888", "5102030", "5204050", "5255070")  # (apologies for terrible naming) 
+summary_table <- tibble()
+for (foi_structure in foi_structures) {
+  # Redefine parameter which is looped
+  foi <- define_foi_by_age(foi_structure)  # force of infection by age
+  pars_lit_igra$rho <- foi
+  
+  # Simulate stochastic and analytic approaches
+  reps <- 100
+  with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
+  analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.1), fasttarget=50, agedist=agedist)
+  
+  # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
+  from_model <- tibble()
+  cases2 <- estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
+  ARTI_and_prev2 <- estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
+  for (i in 1:reps) {
+    cases1 <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+    ARTI_and_prev1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+    from_model <- bind_rows(from_model, tibble(i = i, infection_prevalence1 = ARTI_and_prev1["infection_prevalence"], ARTI1 = ARTI_and_prev1["ARTI"], cases1= cases1))
+  }
+  summary_table <- bind_rows(summary_table, tibble(foi_structure=foi_structure, infection_prevalence1=median(from_model$infection_prevalence1), 
+                                                 ARTI1=median(from_model$ARTI1), cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1),
+                                                 infection_prevalence2=ARTI_and_prev2["infection_prevalence"], ARTI2=ARTI_and_prev2["ARTI"], cases2=cases2))
+}
 ```

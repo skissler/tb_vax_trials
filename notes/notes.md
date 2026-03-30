@@ -328,7 +328,6 @@ Using the intuition from the above notes (12th-16th March), I imagine we want to
 After discussing with Stephen (20th March), we conclude the following:
 
 -   Conclusion : we think that ARTI is not what we want for rho.
-
     -   As defined, we now think rho should be **force of infection.** 
 
         -   We are simulating infection to a steady state with hazard of infection rho (exponentially distributed). Low hazard rate - things happen late. High hazard rate - things happen early.
@@ -343,6 +342,50 @@ After discussing with Stephen (20th March), we conclude the following:
 
         -   Nb: ignore Wood et al 2010 foi estimates - their definition of foi does not align with our interpretation.
 
-# 27th March 2026 (LH)
+# 27th-30th March 2026 (LH)
 
-Changed ARTI -\> foi in code.
+Changed ARTI -\> foi in code. Wrote a quick function to estimate infection prevalence and ARTI from model. Ran a few simulations for different foi's:
+
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| foi_structure | infection_prevalence1 | ARTI1     | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2     | cases2   |
++:==============+======================:+==========:+===========:+===========:+======================:+==========:+=========:+
+| uniform4      | 0.7114811             | 0.0364244 | 30.79454   | 58.86564   | 0.7108885             | 0.0363654 | 42.65139 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| uniform6      | 0.8377743             | 0.0528441 | 32.31318   | 52.57591   | 0.8378896             | 0.0528642 | 38.27642 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,8,8,8       | 0.8311868             | 0.0517180 | 37.85567   | 60.65643   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,10,20,30    | 0.8548957             | 0.0559923 | 43.26882   | 73.00132   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,20,40,50    | 0.9082453             | 0.0688199 | 43.45901   | 69.75439   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,25,50,70    | 0.9196090             | 0.0724878 | 41.67618   | 66.20451   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+
+1=stochastic approach (median from 25 repetitions); 2=analytic approach. Note the analytic has no age structure and is meaningless when run with non-uniform foi.
+
+25 repetitions isn't very many so I ran again for 100 repetitions. Here the new summary table (using `knitr::kable(summary_table)` to print the table in a nice markdown format):
+
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| foi_structure | infection_prevalence1 | ARTI1     | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2     | cases2   |
++:==============+======================:+==========:+===========:+===========:+======================:+==========:+=========:+
+| uniform4      | 0.7103147             | 0.0363083 | 32.31737   | 62.48219   | 0.7108885             | 0.0363654 | 42.65139 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| uniform6      | 0.8378392             | 0.0528554 | 29.58173   | 56.92928   | 0.8378896             | 0.0528642 | 38.27642 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,8,8,8       | 0.8314365             | 0.0517599 | 35.75042   | 65.75450   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,10,20,30    | 0.8551929             | 0.0560501 | 34.43678   | 67.94885   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,20,40,50    | 0.9081022             | 0.0687766 | 39.37186   | 79.66431   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,25,50,70    | 0.9202141             | 0.0726970 | 43.03942   | 69.38878   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+
+Thoughts:
+
+-   Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all adults in South Africa to be infected, so this seems plausible.
+-   ARTI is perhaps a bit low when using uniform 4% force of infection. (We also do not expect force of infection to be at all uniform).
+-   The non-uniform force of infection scenarios ("5,a,b,c") use 5% for ages 0-19, then a% for ages 20-39, b% for ages 40-79, and c% for ages 80+. The final scenario gives an average ARTI which is a bit too large.
+-   The foi values for age \> 49 years are probably not being used at all - since these individuals are not in the eligible age range of the trial.
+-   Middle scenarios seem somewhat ok but we still aren't getting anywhere near the case numbers we would expect.

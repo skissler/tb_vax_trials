@@ -6,7 +6,7 @@ p_inf_and_type_and_asymp_given_age <- function(  # Used to calculate no. needed 
 	a <- age
 	xi_s <- p_slow[as.character(age)]
 	xi_f <- 1 - p_slow[as.character(age)]
-	rho <- foi[as.character(age)]  # age-specific foi
+	rho <- foi[as.character(age)]  # age-specific foi - only meaningful if uniform
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -45,7 +45,7 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 	a <- age
 	xi_s <- p_slow[as.character(age)]
 	xi_f <- 1 - p_slow[as.character(age)]
-	rho <- foi[as.character(age)]  # age-specific foi
+	rho <- foi[as.character(age)]  # age-specific foi - only meaningful if uniform
 	mu_s <- prograte_slow 
 	mu_f <- prograte_fast 
 
@@ -173,6 +173,27 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
   
   names(p_slow_by_age) <- 0:99
   return(p_slow_by_age)
+}
+
+define_foi_by_age <- function(method){
+  if (method=="uniform4") {
+    foi <- rep(0.04,100)
+  } else if (method=="uniform6") {
+    foi <- rep(0.06,100)
+  } else if (method=="uniform10") {
+    foi <- rep(0.1,100)
+  } else if (method=="5888") {
+    foi <- c(rep(0.05,20), rep(0.08,20), rep(0.08,40), rep(0.08,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="5102030") {
+    foi <- c(rep(0.05,20), rep(0.10,20), rep(0.20,40), rep(0.30,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="5204050") {
+    foi <- c(rep(0.05,20), rep(0.20,20), rep(0.40,40), rep(0.50,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="5255070") {
+    foi <- c(rep(0.05,20), rep(0.25,20), rep(0.50,40), rep(0.70,20))  # age 0-19, 20-39, 40-79, 80+
+  }
+  
+  names(foi) <- 0:99
+  return(foi)
 }
 
 # Simulate functions
@@ -409,10 +430,19 @@ pull_mean <- function(x, life_exp=99){
   (pull_first(x) + pull_last(x, life_exp)) / 2
 }
 
-# Other miscellaneous helper functions
-estimate_case_incidence_from_model <- function(df, pars=NA, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
+# Functions outside the model
+estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   model_run <- df %>% filter(sigma==sig) %>% unlist()
   incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
   return(incidence*100000)
 }
+
+estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
+  if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
+  model_run <- df %>% filter(sigma==sig) %>% unlist()
+  infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # infection prevalence at start of trial (for eligible ages)
+  meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
+  ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
+  return(c(infection_prevalence = infection_prevalence, ARTI = ARTI))
+  }
