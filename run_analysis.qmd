@@ -79,7 +79,7 @@ pars_m72IIb_tasa$sigma <- 2
 pars_lit_igra <- list(
 	minage=18, # taken from above
 	maxage=49, # taken from above
-	rho=rho_lit,  # from lit, with choice of tinf method (arti_structure)
+	rho=rho_lit,  # from lit, with choice of tinf method (foi_structure)
 	p_slow=p_slow_lit,  # from lit
 	mu_slow=0.0001,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
