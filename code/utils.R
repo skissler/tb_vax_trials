@@ -196,6 +196,18 @@ define_foi_by_age <- function(method){
   return(foi)
 }
 
+# Utility functions
+compute_survival_fn <- function(rho) {
+  # Compute survival function and PMF from age-specific FOI vector (length 100, names 0:99)
+  # NB: survival_fn[a]  = P(not infected by age a)
+  # NB: survival_pmf[a] = P(first infected during year a-1 to a)
+  # NB: survival_pmf[101] = P(never infected during lifetime)
+  survival_fn  <- exp(-cumsum(rho[1:100]))
+  survival_pmf <- c(1, survival_fn[-100]) - survival_fn
+  survival_pmf <- c(survival_pmf, survival_fn[100])
+  list(survival_fn=survival_fn, survival_pmf=survival_pmf)
+}
+
 # Simulate functions
 sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   # Restrict to eligible age groups
@@ -264,15 +276,6 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
 	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
-	# png(filename="figures/survival_saarti_stretchedpeak/rho.png")
-	# plot(rho, ylim=c(0,0.1))
-	# dev.off()
-	# png(filename="figures/survival_saarti_stretchedpeak/survival_fn.png")
-	# plot(survival_fn, ylim=c(0,1))
-	# dev.off()
-	# png(filename="figures/survival_saarti_stretchedpeak/survival_pmf.png")
-	# plot(survival_pmf, ylim=c(0,0.1))
-	# dev.off()
 	
 	# Pre-compute some of the sampling vectors
 	eligible_ages  <- minage:maxage
