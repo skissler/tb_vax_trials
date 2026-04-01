@@ -279,13 +279,13 @@ Assume a South Africa-like population age distribution and by-age ARTI. We can u
 
 We are an order of magnitude off. Try ARTI = uniform 6%:
 
-+-------------+------------------+-------------+------------------------------------+
-| Uniform 6%  | Vynnycky (4-14%) | as above    | 39 (31-53) cases per 100k per year |
-+-------------+------------------+-------------+------------------------------------+
-| Uniform 4%  | Vynnycky (4-14%) | as above    | 43 (32-55) cases per 100k per year |
-+-------------+------------------+-------------+------------------------------------+
-| Uniform 10% | Vynnycky (4-14%) | as above    | 26 (23-33) cases per 100k per year |
-+-------------+------------------+-------------+------------------------------------+
++-------------+------------------+------------+------------------------------------+
+| Uniform 6%  | Vynnycky (4-14%) | as above   | 39 (31-53) cases per 100k per year |
++-------------+------------------+------------+------------------------------------+
+| Uniform 4%  | Vynnycky (4-14%) | as above   | 43 (32-55) cases per 100k per year |
++-------------+------------------+------------+------------------------------------+
+| Uniform 10% | Vynnycky (4-14%) | as above   | 26 (23-33) cases per 100k per year |
++-------------+------------------+------------+------------------------------------+
 
 Uniform ARTI seems to not be acting in the way I expect. Let's explore the survival functions for these scenarios, to understand what is going on under the hood:
 
