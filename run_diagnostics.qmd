@@ -1,20 +1,26 @@
 ---
 title: "Age-structure diagnostics"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
-Six diagnostics to investigate why model case incidence (30--80/100k) falls short of
-the 100--250/100k South Africa target, and to understand the contribution of each
-age-structure addition made in February--March 2026. Written by Claude and checked by human.
+Six diagnostics to investigate why model case incidence (30--80/100k)
+falls short of the 100--250/100k South Africa target, and to understand
+the contribution of each age-structure addition made in February--March
+2026. Written by Claude and checked by human.
 
-**Note on analytical vs stochastic:** The analytical functions (`sim_analytic_over_sigma`)
-use `rho[age]` as a per-age scalar approximation, so they do not correctly propagate
-age-varying FOI through a person's full infection history. The stochastic approach
-(`sim_stoch`) handles this correctly via the survival PMF. Each diagnostic therefore
-includes both: analytical (fast; always runs) and stochastic (slower; `eval: FALSE`
-by default — set to `TRUE` to run).
+**Note on analytic vs stochastic:** The analytic functions
+(`sim_analytic_over_sigma`) use `rho[age]` as a per-age scalar
+approximation, so they do not correctly propagate age-varying FOI
+through a person's full infection history. The stochastic approach
+(`sim_stoch`) handles this correctly via the survival PMF. Each
+diagnostic therefore includes both: analytical (fast; always runs) and
+stochastic (slower; `eval: FALSE` by default — set to `TRUE` to run).
 
 ## 0. Setup
+
 ```{r}
 #| label: setup
 #| message: false
@@ -23,7 +29,6 @@ library(tidyverse)
 library(readxl)
 library(future.apply)
 library(progressr)
-library(countrycode)
 library(zoo)
 source('code/utils.R')
 plan(multisession, workers=8)
@@ -45,16 +50,18 @@ foi_names <- c("uniform4", "uniform6", "uniform10", "5888", "5102030", "5204050"
 foi_list  <- setNames(lapply(foi_names, define_foi_by_age), foi_names)
 ```
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 1: FOI inputs and infection timing
 
-**Question:** Where are infections being drawn relative to the eligible age window?
-If the FOI is high, most infections occur in childhood — meaning 18--49 year olds at
-trial entry mostly have *old* infections (slow progressors), not recent ones (fast
-progressors). This would suppress both recruitment efficiency and case incidence.
+**Question:** Where are infections being drawn relative to the eligible
+age window? If the FOI is high, most infections occur in childhood —
+meaning 18--49 year olds at trial entry mostly have *old* infections
+(slow progressors), not recent ones (fast progressors). This would
+suppress both recruitment efficiency and case incidence.
 
 *No simulation required: these are direct properties of the FOI inputs.*
+
 ```{r}
 #| label: diag1_survival
 
@@ -103,21 +110,25 @@ map_dfr(names(foi_list), function(nm) {
   caption   = "Diagnostic 1c: Where in the life-course do infections land?")
 ```
 
-**Interpretation guide:** A high `pct_before_18` means most people entering the trial
-window already have old LTBI and are nearly all slow progressors. `n_fast/n_overall`
-will be tiny and case incidence estimates will be low.
+**Interpretation guide:** A high `pct_before_18` means most people
+entering the trial window already have old LTBI and are nearly all slow
+progressors. `n_fast/n_overall` will be tiny and case incidence
+estimates will be low.
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 2: Population composition at trial entry
 
-**Question:** Of everyone drawn from the population (ages 18--49), what fraction falls
-into each category — uninfected, LTBI (old/TASA-), LTBI (recent/TASA+), symptomatic?
-Only the *LTBI (recent)* group are recruited by a TASA-type test (sigma=2).
+**Question:** Of everyone drawn from the population (ages 18--49), what
+fraction falls into each category — uninfected, LTBI (old/TASA-), LTBI
+(recent/TASA+), symptomatic? Only the *LTBI (recent)* group are
+recruited by a TASA-type test (sigma=2).
 
 ### 2a. Analytical — per-age composition (uniform FOI)
 
-*Analytical functions use rho[age] as a scalar; valid for uniform FOI only.*
+*Analytical functions use rho\[age\] as a scalar; valid for uniform FOI
+only.*
+
 ```{r}
 #| label: diag2a_analytic
 
@@ -163,55 +174,78 @@ comp_df %>%
 ### 2b. Stochastic — aggregate composition (any FOI)
 
 From a stochastic run the fractions can be recovered as:
-- P(symptomatic) ≈ `(n_overall - n_tested) / n_overall`
-- P(IGRA+) ≈ `n_recruited / n_overall` at sigma=80
-- P(TASA+) ≈ `n_recruited / n_overall` at sigma=2
-- P(LTBI old) ≈ P(IGRA+) − P(TASA+)
-- P(uninfected) ≈ `(n_tested - n_recruited) / n_overall` at sigma=80
 
-These are aggregate figures across ages 18--49, not per-age. Comparing these to the
-agedist-weighted means from 2a validates the analytical approximation — and unlike 2a,
-this works correctly for age-varying FOI scenarios too.
+\- P(symptomatic) ≈ `(n_overall - n_tested) / n_overall` *(symptomatics
+fail the pre-test symptom screen and are never IGRA-tested)*
+
+\- P(asymptomatic, IGRA+) ≈ `n_recruited / n_overall` at sigma=80
+*(note: symptomatics would also be IGRA+ but are excluded before
+testing)*
+
+\- P(asymptomatic, TASA+) ≈ `n_recruited / n_overall` at sigma=2
+
+\- P(LTBI old, asymptomatic) ≈ P(asymptomatic IGRA+) − P(asymptomatic
+TASA+)
+
+\- P(uninfected, asymptomatic) ≈ `(n_tested - n_recruited) / n_overall`
+at sigma=80
+
+These are aggregate figures across ages 18--49, not per-age. Running
+this stochastically for all FOI scenarios (including age-varying) is the
+main value of 2b — the analytical in 2a is only valid for uniform FOI,
+so the stochastic runs for "5888", "5102030" etc. are the only way to
+get composition estimates for those scenarios.
+
 ```{r}
 #| label: diag2b_stoch
-#| eval: FALSE  # set to TRUE to run (~1 minute)
+#| eval: FALSE  # set to TRUE to run (~2 minutes)
 
 pars_base_d2 <- list(minage=18, maxage=49, mu_slow=0.0001, mu_fast=1.5, p_slow=prog_uniform)
 
-# Run at sigma=2 and sigma=80 for each uniform FOI scenario
-stoch_comp_df <- map_dfr(uniform_foi_names, function(nm) {
+# Run at sigma=2 and sigma=80 for ALL FOI scenarios (including age-varying)
+stoch_comp_df <- map_dfr(foi_names, function(nm) {
   map_dfr(c(2, 80), function(sig) {
     pars <- c(pars_base_d2, list(rho=foi_list[[nm]], sigma=sig))
-    run  <- sim_stoch(pars=pars, fasttarget=50, agedist=agedist_uniform)
+    run  <- sim_stoch(pars=pars, fasttarget=50, agedist=agedist_ZAF)
     tibble(foi_structure=nm, sigma=sig,
-           sym_frac  = (run$n_overall - run$n_tested)   / run$n_overall,
-           uninf_frac= (run$n_tested  - run$n_recruited) / run$n_overall,
-           ltbi_frac = run$n_recruited                  / run$n_overall)
+           sym_frac     = (run$n_overall - run$n_tested)   / run$n_overall,
+           test_neg_frac= (run$n_tested  - run$n_recruited) / run$n_overall,
+           # NB: test_neg_frac = P(uninfected) at sigma=80, but
+           #     test_neg_frac = P(uninfected) + P(old LTBI) at sigma=2 —
+           #     only the sigma=80 value is used as "Uninfected" below.
+           test_pos_frac= run$n_recruited                  / run$n_overall)
+           # NB: test_pos_frac = P(any LTBI, asymptomatic) at sigma=80, but
+           #     test_pos_frac = P(recent LTBI, asymptomatic) at sigma=2 —
+           #     both values are used below (as ltbi_sigma80 and ltbi_sigma2).
   })
 })
 
 # Derive per-scenario composition (TASA+ from sigma=2 run; rest from sigma=80 run)
 stoch_comp_wide <- stoch_comp_df %>%
-  select(foi_structure, sigma, ltbi_frac) %>%
-  pivot_wider(names_from=sigma, values_from=ltbi_frac, names_prefix="ltbi_sigma") %>%
+  select(foi_structure, sigma, test_pos_frac) %>%
+  pivot_wider(names_from=sigma, values_from=test_pos_frac, names_prefix="test_pos_sigma") %>%
   left_join(stoch_comp_df %>% filter(sigma==80) %>%
-              select(foi_structure, sym_frac, uninf_frac), by="foi_structure") %>%
-  mutate(`LTBI (recent, TASA+)` = ltbi_sigma2,
-         `LTBI (old, TASA-)`    = ltbi_sigma80 - ltbi_sigma2,
-         Uninfected              = uninf_frac,
+              select(foi_structure, sym_frac, test_neg_frac), by="foi_structure") %>%
+  mutate(`LTBI (recent, TASA+)` = test_pos_sigma2,
+         `LTBI (old, TASA-)`    = test_pos_sigma80 - test_pos_sigma2,
+         Uninfected              = test_neg_frac,  # valid only at sigma=80
          Symptomatic             = sym_frac,
          approach                = "Stochastic") %>%
   select(foi_structure, approach, Symptomatic, `LTBI (old, TASA-)`, `LTBI (recent, TASA+)`, Uninfected)
 
-# Analytical aggregates (weighted by agedist over eligible ages)
+# Analytical aggregates for uniform scenarios only (weighted by agedist over eligible ages)
 analytic_comp_wide <- comp_df %>%
-  mutate(wt = agedist_uniform[as.character(age)]) %>%
+  mutate(wt = agedist_ZAF[as.character(age)]) %>%
   group_by(foi_structure) %>%
   summarise(across(c(Symptomatic, `LTBI (old, TASA-)`, `LTBI (recent, TASA+)`, Uninfected),
                    ~weighted.mean(.x, wt))) %>%
-  mutate(approach="Analytical")
+  mutate(approach="Analytic")
 
-bind_rows(analytic_comp_wide, stoch_comp_wide) %>%
+# Combined plot: stochastic for all scenarios; analytical overlay for uniform scenarios only
+bind_rows(
+  stoch_comp_wide,
+  analytic_comp_wide  # only covers uniform_foi_names, so won't appear for age-varying rows
+) %>%
   pivot_longer(c(Symptomatic, `LTBI (old, TASA-)`, `LTBI (recent, TASA+)`, Uninfected),
                names_to="category") %>%
   mutate(category = factor(category,
@@ -222,21 +256,23 @@ bind_rows(analytic_comp_wide, stoch_comp_wide) %>%
   scale_fill_manual(values=c("Uninfected"="lightgrey","LTBI (old, TASA-)"="steelblue",
                               "LTBI (recent, TASA+)"="orange","Symptomatic"="red")) +
   theme_classic() +
+  theme(axis.text.x=element_text(angle=20, hjust=1)) +
   labs(x=NULL, y="Proportion of population", fill=NULL,
-       title="Diagnostic 2b: Population composition — analytical vs stochastic",
-       subtitle="Stochastic correctly handles age-varying history; analytical uses rho[age] as proxy")
+       title="Diagnostic 2b: Population composition — stochastic + analytical")
 ```
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 3: Stepwise age-structure effects
 
-**Question:** Which of the three age-structure additions — (B) South Africa population,
-(C) Vynnycky age-varying p_slow, (D) age-varying FOI — changed model outputs the most?
+**Question:** Which of the three age-structure additions — (B) South
+Africa population, (C) Vynnycky age-varying p_slow, (D) age-varying FOI
+— changed model outputs the most?
 
-Four scenarios are built up one element at a time from the uniform baseline.
-The stochastic results are most important here: scenario D uses age-varying FOI
-which the analytical method only approximates.
+Four scenarios are built up one element at a time from the uniform
+baseline. The stochastic results are most important here: scenario D
+uses age-varying FOI which the analytical method only approximates.
+
 ```{r}
 #| label: diag3_setup
 
@@ -251,6 +287,7 @@ stoch_d3_df  <- NULL  # populated by stochastic chunk below if run
 ```
 
 ### 3a. Analytical
+
 ```{r}
 #| label: diag3a_analytic
 
@@ -259,11 +296,12 @@ analytic_d3_df <- map_dfr(names(scenarios_d3), function(nm) {
   pars <- c(pars_base_d3, list(rho=sc$foi, p_slow=sc$p_slow))
   sim_analytic_over_sigma(pars=pars, sigmavec=seq(0.5, 80, by=0.5),
                           fasttarget=50, agedist=sc$agedist) %>%
-    mutate(scenario=nm, approach="Analytical")
+    mutate(scenario=nm, approach="Analytic")
 })
 ```
 
 ### 3b. Stochastic
+
 ```{r}
 #| label: diag3b_stoch
 #| eval: FALSE  # set to TRUE to run (~5 minutes with 8 cores)
@@ -281,6 +319,7 @@ with_progress({
 ```
 
 ### 3c. Combined plots
+
 ```{r}
 #| label: diag3c_plots
 
@@ -292,7 +331,7 @@ fig_d3_recruited <- ggplot() +
                  size=0.8, alpha=0.4) } +
   geom_vline(xintercept=c(2, 80), linetype="dashed", alpha=0.4) +
   theme_classic() +
-  labs(x="Test span sigma (years)", y="N recruited (to achieve 50 fast progressors)",
+  labs(x="Test span sigma (years)", y="N recruited (to achieve 50 fasts)",
        title="Diagnostic 3: Stepwise age-structure effects on recruitment curve",
        subtitle="Lines = analytical; points = stochastic (where run)", col=NULL)
 fig_d3_recruited
@@ -321,24 +360,41 @@ analytic_d3_df %>%
     col.names = c("Scenario", "sigma", "N overall", "N screened", "N recruited",
                   "% fast among recruited", "Screens per recruit"),
     caption   = "Diagnostic 3: Analytical outputs at sigma=2 (TASA) and sigma=80 (IGRA)")
+
+# Summary table at sigma=2 and sigma=80 (stochastic, if run)
+if (!is.null(stoch_d3_df)) {
+  stoch_d3_df %>%
+    filter(sigma %in% c(2, 80)) %>%
+    mutate(pct_fast           = round(100 * n_fast / n_recruited, 1),
+           screens_per_recruit = round(n_tested / n_recruited, 1)) %>%
+    select(scenario, sigma, n_overall, n_tested, n_recruited, pct_fast, screens_per_recruit) %>%
+    arrange(sigma, scenario) %>%
+    knitr::kable(
+      col.names = c("Scenario", "sigma", "N overall", "N screened", "N recruited",
+                    "% fast among recruited", "Screens per recruit"),
+      caption   = "Diagnostic 3: Stochastic outputs at sigma=2 (TASA) and sigma=80 (IGRA)")
+}
 ```
 
-**Interpretation guide:** Compare rows within the same sigma to isolate each addition.
-A→B is population age structure; B→C is p_slow by age; C→D is FOI by age.
-Stochastic estimates for scenario D are the more reliable figures.
+**Interpretation guide:** Compare rows within the same sigma to isolate
+each addition. A→B is population age structure; B→C is p_slow by age;
+C→D is FOI by age. Stochastic estimates for scenario D are the more
+reliable figures.
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 4: Case incidence decomposition — fast vs slow contribution
 
-**Question:** Is the gap with the 100--250/100k target driven by (a) too few fast
-progressors, (b) too low a reactivation rate (mu_slow), or (c) both?
+**Question:** Is the gap with the 100--250/100k target driven by (a) too
+few fast progressors, (b) too low a reactivation rate (mu_slow), or (c)
+both?
 
 The case incidence formula is:
 `incidence = (n_fast + n_slow * mu_slow * trial_length) / (n_overall * trial_length)`
 
-The analytical result uses the rho[age] approximation for age-varying FOI; the stochastic
-result is correct for all scenarios.
+The analytical result uses the rho\[age\] approximation for age-varying
+FOI; the stochastic result is correct for all scenarios.
+
 ```{r}
 #| label: diag4_setup
 
@@ -348,6 +404,7 @@ stoch_d4_df  <- NULL  # populated by stochastic chunk below if run
 ```
 
 ### 4a. Analytical
+
 ```{r}
 #| label: diag4a_analytic
 
@@ -362,7 +419,7 @@ analytic_d4_df <- map_dfr(names(foi_list), function(nm) {
          slow_per_100k  = round(res$n_slow * pars$mu_slow / res$n_overall * 1e5, 2),
          total_per_100k = round(((res$n_fast / res$n_overall) / pars$trial_length +
                                   res$n_slow * pars$mu_slow / res$n_overall) * 1e5, 2),
-         approach       = "Analytical")
+         approach       = "Analytic")
 })
 
 analytic_d4_df %>%
@@ -371,10 +428,11 @@ analytic_d4_df %>%
   knitr::kable(
     col.names = c("FOI", "N overall", "N fast", "N slow",
                   "Fast (/100k/y)", "Slow (/100k/y)", "Total (/100k/y)", "% from fast"),
-    caption   = "Diagnostic 4a: Analytical case incidence decomposition (sigma=80, Vynnycky p_slow, SA pop)")
+    caption   = "Diagnostic 4a: Analytic case incidence decomposition (sigma=80, Vynn p_slow, SA pop)")
 ```
 
 ### 4b. Stochastic
+
 ```{r}
 #| label: diag4b_stoch
 #| eval: FALSE  # set to TRUE to run (~3 minutes)
@@ -394,6 +452,7 @@ with_progress({
 ```
 
 ### 4c. Combined plot
+
 ```{r}
 #| label: diag4c_plot
 
@@ -401,9 +460,9 @@ with_progress({
 analytic_d4_long <- analytic_d4_df %>%
   select(foi_structure, fast_per_100k, slow_per_100k) %>%
   pivot_longer(-foi_structure, names_to="source", values_to="cases_per_100k") %>%
-  mutate(source = recode(source,
-    fast_per_100k = "Fast progressors",
-    slow_per_100k = "Slow progressors (reactivation)"))
+  mutate(source = case_match(source,
+    "fast_per_100k" ~ "Fast progressors",
+    "slow_per_100k" ~ "Slow progressors"))
 
 fig_d4 <- ggplot() +
   geom_col(data=analytic_d4_long,
@@ -419,21 +478,24 @@ fig_d4 <- ggplot() +
   theme_classic() +
   theme(axis.text.x=element_text(angle=30, hjust=1)) +
   labs(x="FOI scenario", y="Cases per 100k per year",
-       title="Diagnostic 4: Case incidence — fast vs slow (bars=analytical, crosses=stochastic)",
+       title="Diagnostic 4: Case incidence — fast vs slow (bars=analytic, x=stochastic)",
        fill=NULL)
 fig_d4
 ```
 
-**Interpretation guide:** If fast progressors dominate and total is still far from target,
-the bottleneck is the rarity of recent infections (see Diagnostic 1). If slow progressors
-are negligible, Diagnostic 5 explores whether mu_slow is the missing lever.
+**Interpretation guide:** If fast progressors dominate and total is
+still far from target, the bottleneck is the rarity of recent infections
+(see Diagnostic 1). If slow progressors are negligible, Diagnostic 5
+explores whether mu_slow is the missing lever.
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 5: Sensitivity to mu_slow — what reactivation rate closes the gap?
 
-**Question:** mu_slow is currently 0.0001/year. How large would it need to be to reach
-100--250 cases/100k? This reveals whether mu_slow alone could close the gap.
+**Question:** mu_slow is currently 0.0001/year. How large would it need
+to be to reach 100--250 cases/100k? This reveals whether mu_slow alone
+could close the gap.
+
 ```{r}
 #| label: diag5_setup
 
@@ -443,6 +505,7 @@ stoch_d5_df  <- NULL  # populated by stochastic chunk below if run
 ```
 
 ### 5a. Analytical
+
 ```{r}
 #| label: diag5a_analytic
 
@@ -461,6 +524,7 @@ analytic_d5_df <- map_dfr(foi_for_d5, function(nm) {
 ```
 
 ### 5b. Stochastic
+
 ```{r}
 #| label: diag5b_stoch
 #| eval: FALSE  # set to TRUE to run (~4 minutes)
@@ -482,6 +546,7 @@ with_progress({
 ```
 
 ### 5c. Combined plot
+
 ```{r}
 #| label: diag5c_plot
 
@@ -498,8 +563,8 @@ fig_d5 <- ggplot() +
   scale_x_log10(labels=scales::label_scientific()) +
   theme_classic() +
   labs(x="mu_slow — annual reactivation rate (log scale)", y="Cases per 100k per year",
-       title="Diagnostic 5: How high must mu_slow be to reach target incidence?",
-       subtitle="Lines = analytical; points = stochastic (where run)",
+       title="Diagnostic 5: How high must mu_slow be to reach target case incidence?",
+       subtitle="Lines = analytic; points = stochastic (where run)",
        col="FOI scenario")
 fig_d5
 
@@ -516,20 +581,22 @@ analytic_d5_df %>%
     caption   = "Diagnostic 5: Required reactivation rate to hit case incidence targets")
 ```
 
-**Interpretation guide:** If the required mu_slow far exceeds published LTBI reactivation
-estimates (~0.001--0.005/year), the gap cannot be closed by reactivation alone and
-points to missing components (e.g. HIV co-infection, re-infection, or a more complex
-progression model).
+**Interpretation guide:** If the required mu_slow far exceeds published
+LTBI reactivation estimates, the gap cannot be
+closed by reactivation alone and points to missing components (e.g. HIV
+co-infection, re-infection, or a more complex progression model).
 
----
+------------------------------------------------------------------------
 
 ## Diagnostic 6: Time since infection at enrollment — who are the recruits?
 
-**Question:** For a stochastic run (sigma=80), what is the distribution of time-since-infection
-among recruited participants? If most recruits were infected decades ago, this confirms
-why `n_fast/n_recruited` is small and why modelled incidence is low.
+**Question:** For a stochastic run (sigma=80), what is the distribution
+of time-since-infection among recruited participants? If most recruits
+were infected decades ago, this confirms why `n_fast/n_recruited` is
+small and why modelled incidence is low.
 
 *This diagnostic is entirely stochastic — no analytical version exists.*
+
 ```{r}
 #| label: diag6_stoch
 
@@ -555,7 +622,7 @@ fig_d6a <- rec_d6 %>%
   annotate("text", x=2.3, y=Inf, label="TASA\nwindow", vjust=1.5, hjust=0, size=3) +
   theme_classic() +
   labs(x="Time since infection at enrollment (years)", y="Count",
-       title="Diagnostic 6a: Age of infection at trial entry (sigma=80, uniform4 FOI, Vynnycky p_slow)",
+       title="Diagnostic 6a: Time since infection at enrollment (sigma=80, uniform4 FOI, Vynnycky p_slow)",
        subtitle="Left of dashed line = would be TASA-recruited; right = IGRA-only",
        fill="Progressor type")
 fig_d6a
@@ -580,7 +647,8 @@ rec_d6 %>%
   knitr::kable(caption="Diagnostic 6c: Composition of recruited cohort by recency and progressor type")
 ```
 
-**Interpretation guide:** Fast progressors cluster near zero time-since-infection (they
-progress quickly so must have been infected very recently to still be asymptomatic). Slow
-progressors span a wide range of old infections. The ratio of fast-to-total directly
-determines `n_fast/n_overall` and hence the ceiling on modelled case incidence.
+**Interpretation guide:** Fast progressors cluster near zero
+time-since-infection (they progress quickly so must have been infected
+very recently to still be asymptomatic). Slow progressors span a wide
+range of old infections. The ratio of fast-to-total directly determines
+`n_fast/n_overall` and hence the ceiling on modelled case incidence.
