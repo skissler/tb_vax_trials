@@ -652,3 +652,221 @@ time-since-infection (they progress quickly so must have been infected
 very recently to still be asymptomatic). Slow progressors span a wide
 range of old infections. The ratio of fast-to-total directly determines
 `n_fast/n_overall` and hence the ceiling on modelled case incidence.
+
+---
+
+## Diagnostic 7: Wood 2010 FOI calibration and alternative mu_slow values
+
+**Task 1:** Calibrate a new FOI scenario (`wood2010`) to match the cumulative
+infection prevalences reported by Wood et al. (2010) in South Africa — 26% by
+age 24, 31% by age 34, 45% by age 44, plateauing thereafter. Examine how this
+shifts ARTI, infection prevalence, and case incidence relative to existing scenarios.
+
+**Task 2:** Test three alternative `mu_slow` values from the literature:
+0.0002/year (Saskatchewan 1971), 0.00084/year (Shea et al. 2014), and the value
+implying ~10% lifetime TB risk (Haley et al.). Evaluate each task separately,
+then together.
+
+*Infection prevalence and ARTI (7b) are deterministic — no stochastic counterpart.
+Case incidence (7c–d) follows the standard analytical + optional stochastic pattern.*
+
+### 7a. Setup
+```{r}
+#| label: diag7_setup
+
+# ---- Task 1: Wood 2010-calibrated FOI ----
+# Cumulative infection prevalences from Wood 2010 Table 2:
+#   P(24) = 0.26,  P(34) = 0.31,  P(44) = 0.45,  P(45+) ~ 0.45 (plateau)
+# Cumulative hazard H(a) = -log(1 - P(a)); derive piecewise-constant rho by decade.
+H24 <- -log(1 - 0.26)
+H34 <- -log(1 - 0.31)
+H44 <- -log(1 - 0.45)
+
+foi_wood2010 <- as.list(setNames(c(
+  rep(H24 / 24,           24),   # ages  1-24:  ~1.25%/yr ARTI
+  rep((H34 - H24) / 10,   10),   # ages 25-34:  ~0.70%/yr ARTI
+  rep((H44 - H34) / 10,   10),   # ages 35-44:  ~2.27%/yr ARTI
+  rep(1e-4,                56)    # ages 45-100: near-zero (prevalence plateau)
+), as.character(1:100)))
+
+foi_d7 <- c(foi_list, list(wood2010 = foi_wood2010))
+
+# ---- Task 2: alternative mu_slow values ----
+# Haley ~10% lifetime TB risk:
+#   P(TB | infected) = p_fast*1 + (1-p_fast)*(1 - exp(-mu_slow*T)) = 0.10
+#   Solved using mean p_fast from prog_vynn over ages 18-49, T = 70 years.
+#   Note: if p_fast_avg >= 0.10 the target is already met by fast progressors
+#   alone and mu_slow_haley will be NA.
+p_fast_avg    <- mean(1 - sapply(as.character(18:49), function(a) prog_vynn[[a]]))
+mu_slow_haley <- if (0.10 > p_fast_avg) {
+  -log(1 - (0.10 - p_fast_avg) / (1 - p_fast_avg)) / 70
+} else {
+  NA_real_
+}
+
+mu_slow_d7 <- c(
+  `current (1e-4)`       = 1e-4,
+  `Saskatchewan (2e-4)`  = 2e-4,
+  `Shea 2014 (8.4e-4)`   = 8.4e-4,
+  `Haley ~10%`           = mu_slow_haley
+)
+names(mu_slow_d7)[4] <- if (!is.na(mu_slow_haley)) {
+  sprintf("Haley ~10%% (%.5f)", mu_slow_haley)
+} else {
+  "Haley ~10% (NA: p_fast >= 0.10)"
+}
+
+cat(sprintf(
+  "Wood 2010 FOI (rho/yr):  ages 1-24 = %.4f  |  25-34 = %.4f  |  35-44 = %.4f  |  45+ ~ 0\n",
+  H24/24, (H34-H24)/10, (H44-H34)/10))
+cat(sprintf("Mean p_fast ages 18-49 (Vynnycky): %.3f\n", p_fast_avg))
+cat("mu_slow values (per year):\n"); print(round(mu_slow_d7, 6))
+
+stoch_d7_df <- NULL  # populated by stochastic chunk if run
+```
+
+### 7b. Task 1 — Infection prevalence and ARTI
+
+*Purely deterministic: no stochastic counterpart needed.*
+```{r}
+#| label: diag7b_prev_arti
+
+wood_obs <- tibble(age = c(24, 34, 44), prevalence = c(0.26, 0.31, 0.45))
+
+prev_df <- map_dfr(names(foi_d7), function(nm) {
+  sv <- compute_survival_fn(foi_d7[[nm]])
+  tibble(foi_structure = nm, age = 1:100,
+         prevalence = 1 - sv$survival_fn,
+         highlight  = (nm == "wood2010"))
+})
+
+fig_d7_prev <- ggplot(prev_df,
+    aes(x = age, y = prevalence, col = foi_structure, linewidth = highlight)) +
+  geom_line() +
+  geom_point(data = wood_obs, aes(x = age, y = prevalence),
+             inherit.aes = FALSE, shape = 4, size = 4, stroke = 1.5) +
+  annotate("text", x = 26, y = 0.22, label = "Wood 2010", size = 3) +
+  annotate("rect", xmin = 18, xmax = 49, ymin = -Inf, ymax = Inf,
+           alpha = 0.07, fill = "steelblue") +
+  scale_linewidth_manual(values = c("FALSE" = 0.5, "TRUE" = 1.5), guide = "none") +
+  theme_classic() +
+  labs(x = "Age", y = "P(ever infected by age a)",
+       title = "Diagnostic 7a: Cumulative infection prevalence — Wood 2010 calibration",
+       subtitle = "Crosses = Wood 2010 observed; thick line = wood2010 FOI; blue = ages 18-49",
+       col = "FOI scenario")
+fig_d7_prev
+
+arti_df <- map_dfr(names(foi_d7), function(nm) {
+  tibble(foi_structure = nm, age = 1:100,
+         arti = 100 * (1 - exp(
+           -sapply(as.character(1:100), function(a) foi_d7[[nm]][[a]]))))
+})
+
+fig_d7_arti <- ggplot(arti_df, aes(x = age, y = arti, col = foi_structure)) +
+  geom_line() +
+  annotate("rect", xmin = 18, xmax = 49, ymin = -Inf, ymax = Inf,
+           alpha = 0.07, fill = "steelblue") +
+  theme_classic() +
+  labs(x = "Age", y = "ARTI (%)",
+       title = "Diagnostic 7b: Annual risk of TB infection (ARTI) by FOI scenario",
+       subtitle = "Blue = trial-eligible ages 18-49",
+       col = "FOI scenario")
+fig_d7_arti
+```
+
+### 7c. Case incidence — mu_slow sweep (analytical)
+```{r}
+#| label: diag7c_incidence
+
+# Continuous mu_slow sweep for three focal FOI scenarios
+foi_sweep_d7 <- c("uniform4", "5102030", "wood2010")
+mu_vec_d7    <- exp(seq(log(5e-5), log(5e-3), length.out = 60))
+
+sweep_d7 <- map_dfr(foi_sweep_d7, function(foi_nm) {
+  map_dfr(mu_vec_d7, function(mu_s) {
+    pars <- list(minage = 18, maxage = 49, rho = foi_d7[[foi_nm]],
+                 p_slow = prog_vynn, mu_slow = mu_s,
+                 mu_fast = 1.5, ve = 0.55, trial_length = 3)
+    res  <- sim_analytic_over_sigma(pars = pars, sigmavec = 80,
+                                    fasttarget = 50, agedist = agedist_ZAF)
+    tibble(foi_structure = foi_nm, mu_slow = mu_s,
+           total_per_100k = ((res$n_fast / res$n_overall) / pars$trial_length +
+                              res$n_slow * mu_s / res$n_overall) * 1e5)
+  })
+})
+
+fig_d7c <- ggplot(sweep_d7, aes(x = mu_slow, y = total_per_100k, col = foi_structure)) +
+  geom_line() +
+  { if (!is.null(stoch_d7_df))
+      geom_point(data = stoch_d7_df %>% filter(foi_structure %in% foi_sweep_d7),
+                 aes(x = mu_slow, y = total_per_100k, col = foi_structure),
+                 size = 1.5, alpha = 0.5) } +
+  geom_vline(xintercept = unname(mu_slow_d7), linetype = "dotted", alpha = 0.6) +
+  geom_hline(yintercept = c(100, 250), linetype = "dashed", col = "darkred") +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 100, ymax = 250,
+           alpha = 0.07, fill = "darkred") +
+  scale_x_log10(labels = scales::label_scientific()) +
+  theme_classic() +
+  labs(x = "mu_slow — annual reactivation rate (log scale)",
+       y = "Cases per 100k per year",
+       title = "Diagnostic 7c: Case incidence vs mu_slow for focal FOI scenarios",
+       subtitle = "Dotted verticals = four literature values; target 100-250/100k shaded; points = stochastic (where run)",
+       col = "FOI scenario")
+fig_d7c
+```
+
+### 7d. Stochastic (optional)
+```{r}
+#| label: diag7d_stoch
+#| eval: FALSE  # set to TRUE to run (~6 minutes with 8 cores)
+
+with_progress({
+  stoch_d7_df <- map_dfr(c("uniform4", "wood2010"), function(foi_nm) {
+    map_dfr(names(mu_slow_d7), function(mu_nm) {
+      mu_s <- mu_slow_d7[[mu_nm]]
+      if (is.na(mu_s)) return(tibble())
+      pars <- list(minage = 18, maxage = 49, rho = foi_d7[[foi_nm]],
+                   p_slow = prog_vynn, mu_slow = mu_s,
+                   mu_fast = 1.5, ve = 0.55, trial_length = 3, sigma = 80)
+      sim_stoch_over_sigma(pars = pars, sigmavec = 80, fasttarget = 50,
+                           agedist = agedist_ZAF, reps = 10) %>%
+        mutate(foi_structure = foi_nm, mu_slow_label = mu_nm, mu_slow = mu_s,
+               total_per_100k = ((n_fast / n_overall) / pars$trial_length +
+                                  n_slow * mu_s / n_overall) * 1e5)
+    })
+  })
+})
+```
+
+### 7e. Summary table — all FOI × four mu_slow values
+```{r}
+#| label: diag7e_table
+
+incidence_d7 <- map_dfr(names(foi_d7), function(foi_nm) {
+  map_dfr(names(mu_slow_d7), function(mu_nm) {
+    mu_s <- mu_slow_d7[[mu_nm]]
+    if (is.na(mu_s)) return(tibble(foi_structure = foi_nm,
+                                   mu_slow_label = mu_nm, total_per_100k = NA_real_))
+    pars <- list(minage = 18, maxage = 49, rho = foi_d7[[foi_nm]],
+                 p_slow = prog_vynn, mu_slow = mu_s,
+                 mu_fast = 1.5, ve = 0.55, trial_length = 3)
+    res  <- sim_analytic_over_sigma(pars = pars, sigmavec = 80,
+                                    fasttarget = 50, agedist = agedist_ZAF)
+    tibble(foi_structure = foi_nm, mu_slow_label = mu_nm,
+           total_per_100k = round(
+             ((res$n_fast / res$n_overall) / pars$trial_length +
+              res$n_slow * mu_s / res$n_overall) * 1e5, 1))
+  })
+})
+
+incidence_d7 %>%
+  pivot_wider(names_from = mu_slow_label, values_from = total_per_100k) %>%
+  knitr::kable(
+    col.names = c("FOI scenario", names(mu_slow_d7)),
+    caption   = paste("Diagnostic 7e: Case incidence (/100k/y) — all FOI × mu_slow",
+                      "(sigma=80, SA pop, Vynnycky p_slow, analytical). Target: 100–250."))
+```
+
+**Interpretation guide:** Read across a row to see the effect of mu_slow alone (Task 2);
+read down a column to see the effect of FOI alone (Task 1); the `wood2010` row at
+non-default mu_slow values shows both effects combined.
