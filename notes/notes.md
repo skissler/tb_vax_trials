@@ -239,7 +239,7 @@ Key takeaways from adding age structure and other model developments (12th March
 
 -   Changing from uniform to age-varying ARTI in the South Africa Wood-2010 example made little effect on model outputs, but note the Wood data is similar (on average) to the uniform 4% that was used previously. There are now 7 different age-varying ARTI data sets that can be used (2 for South Africa, and 1 for each of The Gambia, Saudi Arabia, Vietnam, Tanzania, Greenland).
 
--   Lastly, the probability of being a fast progressor now also changes with age. Vynnycky-1997 assumes a probability of 4% for ages 0-10, 9% for age 15, and 14% for ages 20+ (with straight line interpolation between ages 10 and 20). This is higher overall than the uniform 5% assumed previously. This did affect model outputs significantly, reducing number recruited to one third of its original value (30,000 cf. 80,000) and number screened and overall to less than half their original values (\~50,000 cf. 125,000). Note that we should consider whether we want to use these Vynnycky estimates – estimates come from modelling published in 1997 but it is widely cited in present day.
+-   Lastly, the probability of being a fast progressor now also changes with age. Vynnycky-1997 estimates a probability of 4% for ages 0-10, 9% for age 15, and 14% for ages 20+ (with straight line interpolation between ages 10 and 20) - Table 3. This is higher overall than the uniform 5% assumed previously. This did affect model outputs significantly, reducing number recruited to one third of its original value (30,000 cf. 80,000) and number screened and overall to less than half their original values (\~50,000 cf. 125,000). Note that we should consider whether we want to use these Vynnycky estimates – estimates come from modelling published in 1997 but it is widely cited in present day.
 
 # 6th March 2026 (LH)
 
@@ -384,7 +384,7 @@ Changed ARTI -\> foi in code. Wrote a quick function to estimate infection preva
 
 Thoughts:
 
--   Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all adults in South Africa to be infected, so this seems plausible.
+-   Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all? adults in South Africa to be infected, so this seems plausible.
 -   ARTI is perhaps a bit low when using uniform 4% force of infection. (We also do not expect force of infection to be at all uniform).
 -   The non-uniform force of infection scenarios ("5,a,b,c") use 5% for ages 0-19, then a% for ages 20-39, b% for ages 40-79, and c% for ages 80+. The final scenario gives an average ARTI which is a bit too large.
 -   The foi values for age \> 49 years are probably not being used at all - since these individuals are not in the eligible age range of the trial.
@@ -406,11 +406,35 @@ Claude-assisted diagnostics were run on the whole codebase. Some free-flowing ob
 
         -   Fig 3 shows estimated infection prevalence by age (whole regions). ![](images/clipboard-3299014433.png){width="343"}
 
-        -   In AFRO region, this plot suggests approx 15% infected by age 20, approx 35% infected by age 40, approx 65% infected by age 80, and approx 70% thereafter. (Although note this includes some recovery so later ages likely a bit low). I should try to get my foi to produce similar survival_pmf values to this [TASK 1].
+        -   In AFRO region, this plot suggests approx 15% infected by age 20, approx 35% infected by age 40, approx 65% infected by age 80, and approx 70% thereafter. (Although note this includes some recovery so later ages likely a bit low). I should try to get my foi to produce similar survival_pmf values to this or other literature [TASK 1].
 
         -   Note that other studies for South Africa give a slightly different picture. Wood Table 2 has infection prevalence of approx 26% by age 24, 31% by age 34, 45% by age 44, and 45% thereafter. Ncayiyana Table 2 (Latent TBI) estimates 67% by age 20, 77% by age 30, and 69% at age 40 (it is unclear if symptomatics are included here). Wood has ARTI estimates of 4-5% while Ncayiyana is much lower at 1-3%.
 
 -   A high '% infected before 18y' means most people entering the trial window already have infections and are nearly all slow progressors. Hence `n_fast/n_overall` will be tiny and case incidence estimates will be low.
+
+Diagnostic table 1c for our model is as follows: Where in the life-course do infections land?
+
++--------------+-------------------+--------------------+------------------+-------------------+
+| FOI scenario | \% infected \<18y | \% infected 18–49y | \% infected 50+y | \% never infected |
++:=============+==================:+===================:+=================:+==================:+
+| uniform4     | 51.3              | 35.1               | 11.7             | 1.8               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| uniform6     | 66.0              | 29.0               | 4.7              | 0.2               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| uniform10    | 83.5              | 15.9               | 0.7              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-8-8-8      | 59.3              | 37.3               | 3.3              | 0.1               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-10-20-30   | 59.3              | 40.0               | 0.7              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-20-40-50   | 59.3              | 40.6               | 0.0              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-25-50-70   | 59.3              | 40.7               | 0.0              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 3-3-5-10     | 41.7              | 40.0               | 17.7             | 0.6               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 1-5-10-15    | 16.5              | 72.4               | 11.1             | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
 
 **Diagnostic 2: Population composition at trial entry**
 
@@ -440,13 +464,17 @@ Let's recheck what mu_slow should be from the literature:
 
         -   Horsburgh 2010 estimates 0.0004-0.00058 per year in Florida (<https://doi.org/10.1164/rccm.200909-1355OC>).
 
-        -   Haley states a lifetime risk (for slow progressors) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23.
+        -   Haley states a lifetime risk (for slow progressors) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23. Several other studies use this same guiding assumption.
 
         -   Ekramnia 2024 estimates 0.00072 per years in the US (<https://pubmed.ncbi.nlm.nih.gov/38290139/>).
 
         -   From Menzies Supplementary table s3, some model structures publish their fitted parameter value c: 0.0134, 0.000848, 0.000594, 0.00337, 0.000594, 0.0134 ([https://doi.org/10.1016/S1473-3099(18)30134-8](https://doi.org/10.1016/S1473-3099(18)30134-8){.uri}).
 
-        -   Could also check Vynnycky&Fine 1997, Blower 1995, and Dye 1998.
+        -   Could also check Vynnycky&Fine 1997, Blower 1995, and Dye 1998. Useful term is 'endogenous reactivation' (of the latent infection).
+
+        -   Blower 1995 uses a progression rate to TB of 0.00256-0.00527 (<https://www.nature.com/articles/nm0895-815.pdf>) - unclear if this number includes fast progressors too.
+
+        -   Vynnycky&Fine 1997 - from a closer look, this modelling paper estimates both p_fast by age (already included in my model) and risk of developing endogenous disease by age (i.e. mu_slow). Their best estimates are annual risk of developing slow disease of 9.82e-8 [9.03e-9 - 1.52e-3] for ages 0-10years, 0.0150 [0.0144-0.0159] for age 15, and 0.0299 [0.0288-0.0307] for ages 20+. Ages are *current age*, not age of infection. Endogenous disease is defined as disease onset five or more years after initial infection or the most recent reinfection. Note these estimates are way higher than our current mu_slow. After lots of reading, I think this is the best study to go with.
 
 **Diagnostic 6: Time since infection for recruits**
 
@@ -454,6 +482,16 @@ Plot 6b is interesting, but perhaps more useful to look at cumulative prevalence
 
 ![](images/clipboard-3492178341.png)
 
-# 2nd April
+# 7th April (LH)
 
 Based on yesterday's diagnostics, lets try to alter foi to match observed infection prevalence by age in South Africa Wood 2010 study [TASK 1], and to explore other mu_slow values from the literature [TASK 2].
+
+**Task 1:** Try a set of piecewise-constant FOI scenarios (four age bands: 0–19y, 20–39y, 40–79y, 80y+) and compare the resulting infection prevalence by age and ARTI against three empirical benchmarks:
+
+1.  **Wood 2010** (South Africa): 26% by age 24, 31% by age 34, 45% by age 44, plateau thereafter.
+2.  **Ncayiyana 2016** (South Africa, Table 2): 67% at age 20, 77% at age 30, 69% at age 40. This is LTBI prevalence — unclear if fasts are included.
+3.  **Houben & Dodd 2016** (AFRO region, Figure 3): \~15% at age 20, \~35% at age 40, \~65% at age 80, \~70% thereafter. Note that this is for the whole AFRO region, and also may include recovery.
+
+![](images/clipboard-1297407612.png)
+
+**Task 2:** Test four alternative `mu_slow` values from the literature: 0.0002/year (Saskatchewan 1971), 0.0004/year and 0.00084/year (Shea et al. 2014), and the value implying 10% lifetime TB risk (Haley et al.) e.g. approx 0.001/year, and Vynnycky&Fine's age-varying mu_slow.

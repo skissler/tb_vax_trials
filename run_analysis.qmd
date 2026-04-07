@@ -156,7 +156,7 @@ Note: run code snippets 1-3 first.
 ```{r}
 #| label: parameter_fit
 
-foi_structures <- c("uniform4", "uniform6", "5888", "5102030", "5204050", "5255070")  # (apologies for terrible naming) 
+foi_structures <- c("uniform4", "uniform6", "5888", "5102030", "5204050", "5255070", "33510", "151015")  # (apologies for terrible naming) 
 summary_table <- tibble()
 for (foi_structure in foi_structures) {
   # Redefine parameter which is looped
@@ -164,7 +164,7 @@ for (foi_structure in foi_structures) {
   pars_lit_igra$rho <- foi
   
   # Simulate stochastic and analytic approaches
-  reps <- 100
+  reps <- 1
   with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
   analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.1), fasttarget=50, agedist=agedist)
   

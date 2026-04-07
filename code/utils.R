@@ -190,6 +190,10 @@ define_foi_by_age <- function(method){
     foi <- c(rep(0.05,20), rep(0.20,20), rep(0.40,40), rep(0.50,20))  # age 0-19, 20-39, 40-79, 80+
   } else if (method=="5255070") {
     foi <- c(rep(0.05,20), rep(0.25,20), rep(0.50,40), rep(0.70,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="33510") {
+    foi <- c(rep(0.03,20), rep(0.03,20), rep(0.05,40), rep(0.10,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="151015") {
+    foi <- c(rep(0.01,20), rep(0.05,20), rep(0.10,40), rep(0.15,20))  # age 0-19, 20-39, 40-79, 80+
   }
   
   names(foi) <- 0:99
