@@ -408,7 +408,7 @@ Claude-assisted diagnostics were run on the whole codebase. Some free-flowing ob
 
         -   In AFRO region, this plot suggests approx 15% infected by age 20, approx 35% infected by age 40, approx 65% infected by age 80, and approx 70% thereafter. (Although note this includes some recovery so later ages likely a bit low). I should try to get my foi to produce similar survival_pmf values to this or other literature [TASK 1].
 
-        -   Note that other studies for South Africa give a slightly different picture. Wood Table 2 has infection prevalence of approx 26% by age 24, 31% by age 34, 45% by age 44, and 45% thereafter. Ncayiyana Table 2 (Latent TBI) estimates 67% by age 20, 77% by age 30, and 69% at age 40 (it is unclear if symptomatics are included here). Wood has ARTI estimates of 4-5% while Ncayiyana is much lower at 1-3%.
+        -   Note that other studies for South Africa give a slightly different picture. Wood Table 2/Figure 3 (Latent TBI) estimates 67% at age 20, 77% at age 30, and 69% at age 40 in a crowded township. Ncayiyana Table 2 has infection prevalence of approx 26% at age 20, 31% at age 30, 45% at age 40, and 45% for ages 45y+, again for a crowded township. Wood has ARTI estimates of 4-5% while Ncayiyana is much lower at 1-3%.
 
 -   A high '% infected before 18y' means most people entering the trial window already have infections and are nearly all slow progressors. Hence `n_fast/n_overall` will be tiny and case incidence estimates will be low.
 
@@ -476,6 +476,8 @@ Let's recheck what mu_slow should be from the literature:
 
         -   Vynnycky&Fine 1997 - from a closer look, this modelling paper estimates both p_fast by age (already included in my model) and risk of developing endogenous disease by age (i.e. mu_slow). Their best estimates are annual risk of developing slow disease of 9.82e-8 [9.03e-9 - 1.52e-3] for ages 0-10years, 0.0150 [0.0144-0.0159] for age 15, and 0.0299 [0.0288-0.0307] for ages 20+. Ages are *current age*, not age of infection. Endogenous disease is defined as disease onset five or more years after initial infection or the most recent reinfection. Note these estimates are way higher than our current mu_slow. After lots of reading, I think this is the best study to go with.
 
+        -   Sutherland 1982 estimates annual risk of disease for individuals infected more than 5 years ago as 0.023% per year i.e. 0.00023 ([https://doi.org/10.1016/S0041-3879(82)80013-5](https://doi.org/10.1016/S0041-3879(82)80013-5){.uri}).
+
 **Diagnostic 6: Time since infection for recruits**
 
 Plot 6b is interesting, but perhaps more useful to look at cumulative prevalence by age from the model if we can?
@@ -488,10 +490,34 @@ Based on yesterday's diagnostics, lets try to alter foi to match observed infect
 
 **Task 1:** Try a set of piecewise-constant FOI scenarios (four age bands: 0–19y, 20–39y, 40–79y, 80y+) and compare the resulting infection prevalence by age and ARTI against three empirical benchmarks:
 
-1.  **Wood 2010** (South Africa): 26% by age 24, 31% by age 34, 45% by age 44, plateau thereafter.
-2.  **Ncayiyana 2016** (South Africa, Table 2): 67% at age 20, 77% at age 30, 69% at age 40. This is LTBI prevalence — unclear if fasts are included.
+1.  **Ncayiyana 2016** (South Africa, Table 2): 26% at age 20, 31% at age 30, 45% at age 40, plateau thereafter 45% for ages 45+. This study samples crowded townships of Cape Town where HIV prevalence and TB notification is very high - only HIV-negatives sampled.
+2.  **Wood 2010** (South Africa, Table 2/Figure 3): 67% at age 20, 77% at age 30, 69% at age 40. This is LTBI prevalence — unclear if fasts are included. On a quick check of the sample population, this study also focuses on a crowded township - an informal settlement with high crowding and one of the poorest in Johannesburg.
 3.  **Houben & Dodd 2016** (AFRO region, Figure 3): \~15% at age 20, \~35% at age 40, \~65% at age 80, \~70% thereafter. Note that this is for the whole AFRO region, and also may include recovery.
 
 ![](images/clipboard-1297407612.png)
 
 **Task 2:** Test four alternative `mu_slow` values from the literature: 0.0002/year (Saskatchewan 1971), 0.0004/year and 0.00084/year (Shea et al. 2014), and the value implying 10% lifetime TB risk (Haley et al.) e.g. approx 0.001/year, and Vynnycky&Fine's age-varying mu_slow.
+
+# 9th April (LH)
+
+Thinking further about plausible range for force of infection, pulling theory from Vynnycky&White textbook. Some thoughts:
+
+For average foi, 5% per year is described as low and 25% per year as high (e.g. measles in Ethiopia early 2000s) (p107).
+
+Using a simple catalytic model for time to infection (ever infected) as we do, the following plot shows proportion susceptible over time for different annual foi values. This is using $s(a) = e^{-\lambda a}$:
+
+![Comparing to the Wood infection prevalence estimates, I think we want an average force of infection of approx 5-10% per year. Or perhaps 5-10% per year for children/adolescents.](images/clipboard-68303055.jpeg)
+
+We can also investigate whether foi should be age-varying by looking at -ln(s(a)) plot. E.g. prevalence by age estimates from Wood are as follows:
+
+![](images/clipboard-1227381116.png)
+
+From a quick plot digitiser, the plot of -ln(s(a)) is as follows:
+
+```{r}
+plot_digitizer <- read.csv(file = "data/Wood-prevalence-plot-data_plotdigitizer.csv") %>% mutate(s_a = 1 - y)
+plot_digitizer
+plot(x=plot_digitizer$x, y=-log(plot_digitizer$s_a))
+```
+
+![We see that this data should have an age-varying force of infection, perhaps piecewise constant (up to age 25y, 25-30y, and 30y+). The gradient is segment 1 is approx (1.4-0.4)/(25-10) = 0.067 i.e. 7% force of infection. Yay.](images/clipboard-2131373533.png)
