@@ -456,27 +456,33 @@ Let's recheck what mu_slow should be from the literature:
 
 -   Rechecking Stephen's notes on parameter values from the literature (27jul), it looks as if we assume an annual rate of 0.0001 of progressing to active disease, and Menzies 2018 states that "for individuals with long-established infection, the annual risk of active tb is low; empirical estimates are on the order of 10-20 per 100k individuals.3"
 
-    -   Note that ref 3 is for a paper on Saskatchewan from 1971 and not publicly available.
+    -   Note that ref 3 is for a paper on Saskatchewan from 1971 (Barnett) and not publicly available.
 
     -   Do we have a slight mismatch between risks and rates again here? And does 10-20 per 100k seem to be supported anywhere else in the literature (I can't find many papers that publish a rate of progression to disease for slow progressors). If any other empirical estimates available, try running the model with these. [TASK 2]
 
         -   Shea 2014 estimates 0.00084 per year in the US (<https://doi.org/10.1093/aje/kwt246>).
 
-        -   Horsburgh 2010 estimates 0.0004-0.00058 per year in Florida (<https://doi.org/10.1164/rccm.200909-1355OC>).
-
-        -   Haley states a lifetime risk (for slow progressors) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23. Several other studies use this same guiding assumption.
+        -   Many studies Hayley, Sutherland etc state a lifetime risk (NB: this is fast+slow) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23. Several other studies use this same guiding assumption.
 
         -   Ekramnia 2024 estimates 0.00072 per years in the US (<https://pubmed.ncbi.nlm.nih.gov/38290139/>).
 
-        -   From Menzies Supplementary table s3, some model structures publish their fitted parameter value c: 0.0134, 0.000848, 0.000594, 0.00337, 0.000594, 0.0134 ([https://doi.org/10.1016/S1473-3099(18)30134-8](https://doi.org/10.1016/S1473-3099(18)30134-8){.uri}).
+        -   From Menzies Supplementary table s3, some model structures publish their fitted parameter value c (Sutherland 1968): 0.000848, 0.000594, structure K 0.001 at year 5 tending to 0.0001 at year \~15 and 0.00001 by year 40, structure L 0.0009 at year 5 but tending to 0.00056 from year \~9 onwards ([https://doi.org/10.1016/S1473-3099(18)30134-8](https://doi.org/10.1016/S1473-3099(18)30134-8){.uri}). This list excludes structures A, D, J, and E, which had poor fit to empirical data. Our model is most similar to structure F.
 
         -   Could also check Vynnycky&Fine 1997, Blower 1995, and Dye 1998. Useful term is 'endogenous reactivation' (of the latent infection).
 
-        -   Blower 1995 uses a progression rate to TB of 0.00256-0.00527 (<https://www.nature.com/articles/nm0895-815.pdf>) - unclear if this number includes fast progressors too.
+        -   Blower 1995 uses a progression rate to TB for latent individuals of 0.00256-0.00527 (<https://www.nature.com/articles/nm0895-815.pdf>).
 
         -   Vynnycky&Fine 1997 - from a closer look, this modelling paper estimates both p_fast by age (already included in my model) and risk of developing endogenous disease by age (i.e. mu_slow). Their best estimates are annual risk of developing slow disease of 9.82e-8 [9.03e-9 - 1.52e-3] for ages 0-10years, 0.0150 [0.0144-0.0159] for age 15, and 0.0299 [0.0288-0.0307] for ages 20+. Ages are *current age*, not age of infection. Endogenous disease is defined as disease onset five or more years after initial infection or the most recent reinfection. Note these estimates are way higher than our current mu_slow. After lots of reading, I think this is the best study to go with.
 
         -   Sutherland 1982 estimates annual risk of disease for individuals infected more than 5 years ago as 0.023% per year i.e. 0.00023 ([https://doi.org/10.1016/S0041-3879(82)80013-5](https://doi.org/10.1016/S0041-3879(82)80013-5){.uri}).
+
+        -   Dowdy (wishlist paper) 2014 states that estimations of the reactivation rate after remote infection vary by an order of magnitude, from 0.03 to 0.1 per 100 person-years. i.e. from 0.0003 to 0.001 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC4041555/pdf/nihms584157.pdf>).
+
+        -   Horsburgh 2010 population skin-test survey in US estimated rate of reactivation among persons with LTBI as 0.0004 - 0.00058 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC2921602/pdf/AJRCCM1823420.pdf>).
+
+        -   Let's summarise in a table:
+
+            ![](images/clipboard-4182915370.png)
 
 **Diagnostic 6: Time since infection for recruits**
 

@@ -37,7 +37,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-foi_structure <- "uniform4"  # works for "uniform4", "uniform6", 
+foi_structure <- "uniform4"  # works for "uniform4", "uniform6", ...
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
