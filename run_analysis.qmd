@@ -156,29 +156,48 @@ Note: run code snippets 1-3 first.
 ```{r}
 #| label: parameter_fit
 
-foi_structures <- c("uniform4", "uniform6", "5888", "5102030", "5204050", "5255070", "33510", "151015")  # (apologies for terrible naming) 
+foi_structures <- c("base", "min", "max", "incr", "decr")
+progression_structures <- c("uniform", "Vynnycky-1997")
+slow_structures <- c("base", "min", "max") #, "Vynnycky" )
 summary_table <- tibble()
-for (foi_structure in foi_structures) {
+reps <- 1
+
+for (progression_structure in progression_structures) {
   # Redefine parameter which is looped
-  foi <- define_foi_by_age(foi_structure)  # force of infection by age
-  pars_lit_igra$rho <- foi
+  prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being slow
+  pars_lit_igra$p_slow <- prog
   
-  # Simulate stochastic and analytic approaches
-  reps <- 1
-  with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
-  analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.1), fasttarget=50, agedist=agedist)
+  for (slow_structure in slow_structures) {
+    # Redefine parameter which is looped
+    mu_slow <- define_mu_slow(slow_structure)  # rate of progression to disease for slow progressors
+    pars_lit_igra$mu_slow <- mu_slow
+    
+    for (foi_structure in foi_structures) {
+    # Redefine parameter which is looped
+    foi <- define_foi_by_age(foi_structure)  # force of infection by age
+    pars_lit_igra$rho <- foi
   
-  # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
-  from_model <- tibble()
-  cases2 <- estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
-  ARTI_and_prev2 <- estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
-  for (i in 1:reps) {
-    cases1 <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-    ARTI_and_prev1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-    from_model <- bind_rows(from_model, tibble(i = i, infection_prevalence1 = ARTI_and_prev1["infection_prevalence"], ARTI1 = ARTI_and_prev1["ARTI"], cases1= cases1))
+    # Simulate stochastic and analytic approaches
+    with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
+    analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.1), fasttarget=50, agedist=agedist)
+  
+    # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
+    from_model <- tibble()
+    cases2 <- estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)  # 1=stochastic, 2=analytic
+    ARTI2 <- estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
+    infection_prevalence1 <- estimate_inf_prev_from_model(foi)
+    for (i in 1:reps) {
+      cases1 <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      from_model <- bind_rows(from_model, tibble(i = i, ARTI1 = ARTI1["ARTI"], cases1= cases1))
+    }
+    summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, foi_structure=foi_structure, 
+                                                     as_tibble_row(infection_prevalence1), ARTI1=median(from_model$ARTI1),
+                                                     cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1), ARTI2=ARTI2["ARTI"], cases2=cases2))
+    }
   }
-  summary_table <- bind_rows(summary_table, tibble(foi_structure=foi_structure, infection_prevalence1=median(from_model$infection_prevalence1), 
-                                                 ARTI1=median(from_model$ARTI1), cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1),
-                                                 infection_prevalence2=ARTI_and_prev2["infection_prevalence"], ARTI2=ARTI_and_prev2["ARTI"], cases2=cases2))
 }
+summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, 0.57, 0.77) & between(inf_prev_age30, 0.67, 0.92) &
+                                             inf_prev_age40 > 0.59 & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
+write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
 ```

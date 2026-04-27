@@ -194,10 +194,32 @@ define_foi_by_age <- function(method){
     foi <- c(rep(0.03,20), rep(0.03,20), rep(0.05,40), rep(0.10,20))  # age 0-19, 20-39, 40-79, 80+
   } else if (method=="151015") {
     foi <- c(rep(0.01,20), rep(0.05,20), rep(0.10,40), rep(0.15,20))  # age 0-19, 20-39, 40-79, 80+
+  } else if (method=="base") {
+    foi <- c(rep(0.07,25), rep(0.07,5), rep(0.07,20), rep(0.07,50))  # age 0-24, 25-29, 30-49, 50+
+  } else if (method=="min") {
+    foi <- c(rep(0.05,25), rep(0.01,5), rep(0.01,20), rep(0.01,50))  # age 0-24, 25-29, 30-49, 50+
+  } else if (method=="max") {
+    foi <- c(rep(0.10,25), rep(0.10,5), rep(0.10,20), rep(0.10,50))  # age 0-24, 25-29, 30-49, 50+
+  } else if (method=="incr") {
+    foi <- c(rep(0.07,25), rep(0.08,5), rep(0.09,20), rep(0.10,50))  # age 0-24, 25-29, 30-49, 50+
+  } else if (method=="decr") {
+    foi <- c(rep(0.07,25), rep(0.05,5), rep(0.03,20), rep(0.01,50))  # age 0-24, 25-29, 30-49, 50+
   }
   
   names(foi) <- 0:99
   return(foi)
+}
+
+define_mu_slow <- function(method) {
+  if (method=="base") {
+    mu_slow=0.001
+  } else if (method=="min") {
+    mu_slow=0.0001
+  } else if (method=="max") {
+    mu_slow=0.00527
+  } else if (method=="Vynnycky") {
+    print("Functionality not yet added for Vynnycky (i.e. age-varying mu_slow)")
+  }
 }
 
 # Utility functions
@@ -276,7 +298,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	capacity <- 1e6
 	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
 
-	# Pre-compute survival function pmf
+	# Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
 	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
 	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
 	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
@@ -445,10 +467,17 @@ estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # c
   return(incidence*100000)
 }
 
+estimate_inf_prev_from_model <- function(foi, ages = c(20, 30, 40, 60)) {
+  # P(ever infected by age a) = 1 - S(a), derived directly from the FOI
+  sv <- compute_survival_fn(foi)
+  inf_prev <- 1 - sv$survival_fn  # index i = age i (survival_fn[1] = P(not infected by age 1))
+  setNames(inf_prev[ages], paste0("inf_prev_age", ages))
+}
+
 estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   model_run <- df %>% filter(sigma==sig) %>% unlist()
-  infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # infection prevalence at start of trial (for eligible ages)
+  infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
   meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
   ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
   return(c(infection_prevalence = infection_prevalence, ARTI = ARTI))

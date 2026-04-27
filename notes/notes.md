@@ -2,33 +2,33 @@
 
 Personal recap of the meeting this week with Kristin and Tyler:
 
--   **Aim 1:** How might a test for recency of TB infection (e.g., TASA) improve our ability to do the things listed below, beyond what's possible with existing diagnostics (e.g., IGRA)?
-    -   Assessing risk of infection
-    -   Measuring incidence/prevalence (more accurately, with less lag)
-    -   Vaccine trials (measuring community-level transmission)
-    -   Compare to Styblo approach
-    -   Can we specify the sensitivity, specificity, and timing of a recency test to be maximally useful for these applications?
--   **Aim 2:** How might a test for TB infectiousness (CASS, facemasks) improve our ability to control TB?
-    -   There's confounding between supershedders and super-contacters. How can we account for this? In which contact contexts might an indicator of biological infectiousness be helpful?
-    -   Tools like CASS have been sidelined because they're not "effective" enough... but could this be a feature, not a bug? if they can only detect people with extremely high infectiousness, could this be exactly what we want?
-    -   What kind of sensitivity and specificity -- in terms of predicting the number of secondary cases -- would we want from an infectiousness test? Can we specify the test parameters we'd want for it to be a useful outbreak control tool?
+- **Aim 1:** How might a test for recency of TB infection (e.g., TASA) improve our ability to do the things listed below, beyond what's possible with existing diagnostics (e.g., IGRA)?
+  - Assessing risk of infection
+  - Measuring incidence/prevalence (more accurately, with less lag)
+  - Vaccine trials (measuring community-level transmission)
+  - Compare to Styblo approach
+  - Can we specify the sensitivity, specificity, and timing of a recency test to be maximally useful for these applications?
+- **Aim 2:** How might a test for TB infectiousness (CASS, facemasks) improve our ability to control TB?
+  - There's confounding between supershedders and super-contacters. How can we account for this? In which contact contexts might an indicator of biological infectiousness be helpful?
+  - Tools like CASS have been sidelined because they're not "effective" enough... but could this be a feature, not a bug? if they can only detect people with extremely high infectiousness, could this be exactly what we want?
+  - What kind of sensitivity and specificity -- in terms of predicting the number of secondary cases -- would we want from an infectiousness test? Can we specify the test parameters we'd want for it to be a useful outbreak control tool?
 
 I'd like to code up some initial sims. I want to see if I've got the right ideas in mind, and we might be able to use some of the output for preliminary data.
 
 Some code architecture:
 
--   Simulate an epidemic curve
--   Simulate sampling at various points in time, with different tests
--   Show estimates of incidence and prevalence over time
+- Simulate an epidemic curve
+- Simulate sampling at various points in time, with different tests
+- Show estimates of incidence and prevalence over time
 
 Before diving in, I want to look at existing TB models. Some useful resources:
 
--   [Guidance for country-level TB modelling](https://researchonline.lshtm.ac.uk/id/eprint/4653000/1/gomez_etal_2019_guidance_for_country-level_tb_modelling.pdf) (led by Nick Menzies)
--   [Progression from latent infection to active disease in dynamic tuberculosis transmission models: a systematic review of the validity of modelling assumptions](https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(18)30134-8/abstract) (Menzies ... Cohen)
--   [Prospects for Tuberculosis Elimination in the United States: Results of a Transmission Dynamic Model](https://academic.oup.com/aje/article-abstract/187/9/2011/4995883) (Menzies, Cohen ... Salomon)
--   [Comparative Modeling of Tuberculosis Epidemiology and Policy Outcomes in California](https://www.atsjournals.org/doi/full/10.1164/rccm.201907-1289OC) (Menzies ... Shete)
--   [The Impact of Realistic Age Structure in Simple Models of Tuberculosis Transmission](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0008479) (Brooks-Pollock, Cohen, Murray)
--   [Interferon-Gamma Release Assays versus Tuberculin Skin Testing for the Diagnosis of Latent Tuberculosis Infection: An Overview of the Evidence](https://onlinelibrary.wiley.com/doi/10.1155/2013/601737) (Trajman, Steffen, Menzies)
+- [Guidance for country-level TB modelling](https://researchonline.lshtm.ac.uk/id/eprint/4653000/1/gomez_etal_2019_guidance_for_country-level_tb_modelling.pdf) (led by Nick Menzies)
+- [Progression from latent infection to active disease in dynamic tuberculosis transmission models: a systematic review of the validity of modelling assumptions](https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(18)30134-8/abstract) (Menzies ... Cohen)
+- [Prospects for Tuberculosis Elimination in the United States: Results of a Transmission Dynamic Model](https://academic.oup.com/aje/article-abstract/187/9/2011/4995883) (Menzies, Cohen ... Salomon)
+- [Comparative Modeling of Tuberculosis Epidemiology and Policy Outcomes in California](https://www.atsjournals.org/doi/full/10.1164/rccm.201907-1289OC) (Menzies ... Shete)
+- [The Impact of Realistic Age Structure in Simple Models of Tuberculosis Transmission](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0008479) (Brooks-Pollock, Cohen, Murray)
+- [Interferon-Gamma Release Assays versus Tuberculin Skin Testing for the Diagnosis of Latent Tuberculosis Infection: An Overview of the Evidence](https://onlinelibrary.wiley.com/doi/10.1155/2013/601737) (Trajman, Steffen, Menzies)
 
 # 16 July 2025
 
@@ -36,10 +36,10 @@ Aim 3 -- if you could collect some bare minimum info on contacts, would that be 
 
 Some questions:
 
--   We now have two aims pages -- just tests for recent infection, or both tests for recency and tests for infectiousness?
-    -   if we do scope it down to two aims: are those substantive enough to sustain two full aims?
-    -   probably yes -- let's maybe just keep it with the two aims.
--   A potential [collaborator](https://wikitia.com/wiki/Claudia_Denkinger)
+- We now have two aims pages -- just tests for recent infection, or both tests for recency and tests for infectiousness?
+  - if we do scope it down to two aims: are those substantive enough to sustain two full aims?
+  - probably yes -- let's maybe just keep it with the two aims.
+- A potential [collaborator](https://wikitia.com/wiki/Claudia_Denkinger)
 
 Scheduling -- deadline Oct 12 (Sun), internal deadline Oct 6-7. Sep 29 for admin documents.
 
@@ -67,7 +67,7 @@ Look out for rough schedule to get us to submission. Review, give comments.
 
 Some goals for preliminary data modelling:
 
--   Simulate a clinical trial, or do some sample size calculations for a trial, under different rates of progression to TB. Consider using a test to (a) determine eligibility for a trial and (b) refine sample size estimates by getting better notion of incidence in a community.
+- Simulate a clinical trial, or do some sample size calculations for a trial, under different rates of progression to TB. Consider using a test to (a) determine eligibility for a trial and (b) refine sample size estimates by getting better notion of incidence in a community.
 
 Let's start there. A second aim would be similar to what I was working on above: how might a test for recency of infection reveal changes in incidence/prevalence that would be obscured with an IGRA-style test?
 
@@ -103,16 +103,16 @@ I did some useful work on the probability expressions to figure out the probabil
 
 The idea: imagine drawing a single random person from the population, one at a time. For each person, I'll draw:
 
--   their age
--   their progression type (fast or slow)
--   the timing of their infection (which could exceed their age, in which case the person isn't infected at the time of sampling)
--   the time at which they develop symptoms
+- their age
+- their progression type (fast or slow)
+- the timing of their infection (which could exceed their age, in which case the person isn't infected at the time of sampling)
+- the time at which they develop symptoms
 
 I want to track:
 
--   Do we test the person? (We do this if they're asymptomatic; symptomatic people don't get tested and are rejected from the study outright)
--   Do we recruit the person into the study? (we do this if they're asymptomatic but test positive, i.e. if they're asymptomatic and infected within the last $\sigma$ years -- where $\sigma$ is equal to their age for IGRA, and might be something like 2 years for TASA)
--   How many people do we test? How many people do we recruit? What's the fraction of these?
+- Do we test the person? (We do this if they're asymptomatic; symptomatic people don't get tested and are rejected from the study outright)
+- Do we recruit the person into the study? (we do this if they're asymptomatic but test positive, i.e. if they're asymptomatic and infected within the last $\sigma$ years -- where $\sigma$ is equal to their age for IGRA, and might be something like 2 years for TASA)
+- How many people do we test? How many people do we recruit? What's the fraction of these?
 
 Also: I need to think clearly through how we're doing the ultimate inference on vaccine ffectiveness. There are some issues here with a naive approach: if we follow up for five years and compare the number of progressions in the vaccinated vs. unvaccinated group, we'll get no difference, because even if vaccination makes it so that you take twice as long to progress, the fast progressors will all still generally progress within five years. Similarly -- if we just use a simple gamma exponential rate estimation with censoring, ther eare so many people who are censored that it completely washes out the information from the people who did progress. So, we might want something like a mixtur emodel, where we estimate whether a person is a slow or fast progressor, and then separately estimate their progression rate. This might make sense, because anyone who hasn't converted asfter five years is likely a slow progressor anyway, and they're not going to contribute much information -- and in fact we might not even care about them much, since slow progressors generally aren't as influential for disease transmission.
 
@@ -130,8 +130,8 @@ This lets us simulate trial recruitment straightforwardly: if we test an asympto
 
 Now, I want to do something a little more thoughtful: given an age distribution, can we simulate recruitment? Here's the idea:
 
--   Draw a person of age $a$ from the population's age distribution, possibly restricting to [18, 50) to align with other trials
--   Given that person's age, calculate the joint probability that they're (a) infected in the past $\sigma$ years, (b) asymptomatic, and (c) a fast (slow) progressor. I think we should be able to do this using quantities I've already derived.
+- Draw a person of age $a$ from the population's age distribution, possibly restricting to [18, 50) to align with other trials
+- Given that person's age, calculate the joint probability that they're (a) infected in the past $\sigma$ years, (b) asymptomatic, and (c) a fast (slow) progressor. I think we should be able to do this using quantities I've already derived.
 
 The reason we want this last thing is because, then, given a person's age, we can estimate the probability that we (a) test them and (b) what the outcome of that test is.
 
@@ -165,11 +165,11 @@ Dealing with varying hazard rates for time to infection (sim_stoch() function). 
 
 In short, my conclusion is to use a general survival function with empirically-specified hazard rate (inc_by_age). The general survival function collapses to exponential when the hazard rate is constant (which is what we want).
 
--   S(a) = exp(−∫₀ᵃ ρ(u) du) for age-specific incidence rho
+- S(a) = exp(−∫₀ᵃ ρ(u) du) for age-specific incidence rho
 
--   This expression collapses to the exponential survival function when rho is constant
+- This expression collapses to the exponential survival function when rho is constant
 
--   Discrete version: ∫₀ᵃ ρ(u) du = Σ (ρ(aᵢ) · Δaᵢ) i.e. adding up the cumulative incidence up to age a, for discrete age bands of width Δaᵢ.
+- Discrete version: ∫₀ᵃ ρ(u) du = Σ (ρ(aᵢ) · Δaᵢ) i.e. adding up the cumulative incidence up to age a, for discrete age bands of width Δaᵢ.
 
 See <https://en.wikipedia.org/wiki/Failure_rate#Conversion_to_cumulative_failure_rate> for a derivation of the equation relating S and rho (comes from solving a differential eqn).
 
@@ -233,13 +233,13 @@ Age-varying ARTI can be calculated from *infection prevalence* estimates, using 
 
 Key takeaways from adding age structure and other model developments (12th March 2026):
 
--   Adding population age distribution made small but not significant overall effects e.g. in the South Africa example. Any UN country population can now be used, in addition to the original `uniform` pop.
+- Adding population age distribution made small but not significant overall effects e.g. in the South Africa example. Any UN country population can now be used, in addition to the original `uniform` pop.
 
--   Correcting case incidence to be ARTI in calculation of tinf made significant differences to model outputs. Overall and screened now expected to be around \~125,000 in the lit case rather than the very high estimate of 700,000 before. More than 5x lower.
+- Correcting case incidence to be ARTI in calculation of tinf made significant differences to model outputs. Overall and screened now expected to be around \~125,000 in the lit case rather than the very high estimate of 700,000 before. More than 5x lower.
 
--   Changing from uniform to age-varying ARTI in the South Africa Wood-2010 example made little effect on model outputs, but note the Wood data is similar (on average) to the uniform 4% that was used previously. There are now 7 different age-varying ARTI data sets that can be used (2 for South Africa, and 1 for each of The Gambia, Saudi Arabia, Vietnam, Tanzania, Greenland).
+- Changing from uniform to age-varying ARTI in the South Africa Wood-2010 example made little effect on model outputs, but note the Wood data is similar (on average) to the uniform 4% that was used previously. There are now 7 different age-varying ARTI data sets that can be used (2 for South Africa, and 1 for each of The Gambia, Saudi Arabia, Vietnam, Tanzania, Greenland).
 
--   Lastly, the probability of being a fast progressor now also changes with age. Vynnycky-1997 estimates a probability of 4% for ages 0-10, 9% for age 15, and 14% for ages 20+ (with straight line interpolation between ages 10 and 20) - Table 3. This is higher overall than the uniform 5% assumed previously. This did affect model outputs significantly, reducing number recruited to one third of its original value (30,000 cf. 80,000) and number screened and overall to less than half their original values (\~50,000 cf. 125,000). Note that we should consider whether we want to use these Vynnycky estimates – estimates come from modelling published in 1997 but it is widely cited in present day.
+- Lastly, the probability of being a fast progressor now also changes with age. Vynnycky-1997 estimates a probability of 4% for ages 0-10, 9% for age 15, and 14% for ages 20+ (with straight line interpolation between ages 10 and 20) - Table 3. This is higher overall than the uniform 5% assumed previously. This did affect model outputs significantly, reducing number recruited to one third of its original value (30,000 cf. 80,000) and number screened and overall to less than half their original values (\~50,000 cf. 125,000). Note that we should consider whether we want to use these Vynnycky estimates – estimates come from modelling published in 1997 but it is widely cited in present day.
 
 # 6th March 2026 (LH)
 
@@ -314,26 +314,26 @@ Currently our age-varying ARTI for South Africa (Wood et al) is as follows (firs
 
 Using the intuition from the above notes (12th-16th March), I imagine we want to concentrate our infections in the ages of the trial population, to increase % of individuals who are recently infected, thus increasing % who are fast.
 
--   What happens if we just double the SA ARTI curve throughout (e.g. rho\<-rho\*2)? Again this concentrates infections in the young which is not what we want.
+- What happens if we just double the SA ARTI curve throughout (e.g. rho\<-rho\*2)? Again this concentrates infections in the young which is not what we want.
 
--   Consider increasing ARTI *only* in ages \~20-40 (around the eligible age range for the trial). Set `ARTI[20:40] <- ARTI[20:40]*5`. Call this 'stretched peak'. Better - case incidence is now \~68 cases per 100k per year. Still not the range we are looking for though.
+- Consider increasing ARTI *only* in ages \~20-40 (around the eligible age range for the trial). Set `ARTI[20:40] <- ARTI[20:40]*5`. Call this 'stretched peak'. Better - case incidence is now \~68 cases per 100k per year. Still not the range we are looking for though.
 
 After discussing with Stephen (20th March), we conclude the following:
 
--   Conclusion : we think that ARTI is not what we want for rho.
-    -   As defined, we now think rho should be **force of infection.** 
+- Conclusion : we think that ARTI is not what we want for rho.
+  - As defined, we now think rho should be **force of infection.** 
 
-        -   We are simulating infection to a steady state with hazard of infection rho (exponentially distributed). Low hazard rate - things happen late. High hazard rate - things happen early.
+    - We are simulating infection to a steady state with hazard of infection rho (exponentially distributed). Low hazard rate - things happen late. High hazard rate - things happen early.
 
-        -   rho is a rate, so its not quite ARTI (which is a risk). Stephen thinks that for the physical processes we are representing here, rho should be force of infection.
+    - rho is a rate, so its not quite ARTI (which is a risk). Stephen thinks that for the physical processes we are representing here, rho should be force of infection.
 
-    -   Now the preliminary results question is: What values of age-varying foi rho give plausible ARTI? (Calculating ARTI outside of the model like I am for cases).
+  - Now the preliminary results question is: What values of age-varying foi rho give plausible ARTI? (Calculating ARTI outside of the model like I am for cases).
 
-        -   Investigate this numerically. E.g. maybe four values foi at age 0, 20, 40, 80. See what ARTI the model produces (and subsequently what cases the model produces).
+    - Investigate this numerically. E.g. maybe four values foi at age 0, 20, 40, 80. See what ARTI the model produces (and subsequently what cases the model produces).
 
-        -   We think foi should grow massively with age (because very few susceptibles left in adulthood).
+    - We think foi should grow massively with age (because very few susceptibles left in adulthood).
 
-        -   Nb: ignore Wood et al 2010 foi estimates - their definition of foi does not align with our interpretation.
+    - Nb: ignore Wood et al 2010 foi estimates - their definition of foi does not align with our interpretation.
 
 # 27th-30th March 2026 (LH)
 
@@ -363,11 +363,11 @@ Changed ARTI -\> foi in code. Wrote a quick function to estimate infection preva
 
 Thoughts:
 
--   Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all? adults in South Africa to be infected, so this seems plausible.
--   ARTI is perhaps a bit low when using uniform 4% force of infection. (We also do not expect force of infection to be at all uniform).
--   The non-uniform force of infection scenarios ("5,a,b,c") use 5% for ages 0-19, then a% for ages 20-39, b% for ages 40-79, and c% for ages 80+. The final scenario gives an average ARTI which is a bit too large.
--   The foi values for age \> 49 years are probably not being used at all - since these individuals are not in the eligible age range of the trial.
--   Middle scenarios seem somewhat ok but we still aren't getting anywhere near the case numbers we would expect.
+- Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all? adults in South Africa to be infected, so this seems plausible.
+- ARTI is perhaps a bit low when using uniform 4% force of infection. (We also do not expect force of infection to be at all uniform).
+- The non-uniform force of infection scenarios ("5,a,b,c") use 5% for ages 0-19, then a% for ages 20-39, b% for ages 40-79, and c% for ages 80+. The final scenario gives an average ARTI which is a bit too large.
+- The foi values for age \> 49 years are probably not being used at all - since these individuals are not in the eligible age range of the trial.
+- Middle scenarios seem somewhat ok but we still aren't getting anywhere near the case numbers we would expect.
 
 # 1st April (LH)
 
@@ -375,21 +375,21 @@ Claude-assisted diagnostics were run on the whole codebase. Some free-flowing ob
 
 **Diagnostic 1: foi inputs and infection timing**
 
--   Plots of survival fn and survival pmf. Survival pmf gives the probability that an individual is infected during year a (by definition). This is equivalent to plotting 'age distribution of first infection'. My current foi functions give a huge peak in early 20s due to the step up in foi at age 20.
+- Plots of survival fn and survival pmf. Survival pmf gives the probability that an individual is infected during year a (by definition). This is equivalent to plotting 'age distribution of first infection'. My current foi functions give a huge peak in early 20s due to the step up in foi at age 20.
 
--   Table 1c. Where in the life-course do infections land? Currently with just 5% foi for ages 0-19, this is creating a huge amount of infections in individuals younger than the trial ages (59%). Perhaps I want to reduce this. From a mean age of infection plot that I saw in the literature last week, approx 50% of infections occur by age \~45 in AFRO region – currently my model has a mean age of infection of less than 18!
+- Table 1c. Where in the life-course do infections land? Currently with just 5% foi for ages 0-19, this is creating a huge amount of infections in individuals younger than the trial ages (59%). Perhaps I want to reduce this. From a mean age of infection plot that I saw in the literature last week, approx 50% of infections occur by age \~45 in AFRO region – currently my model has a mean age of infection of less than 18!
 
-    -   Check the mean age of infection literature:
+  - Check the mean age of infection literature:
 
-        -   Houben and Dodd 2016 (<https://doi.org/10.1371/journal.pmed.1002152>). Two modellers from LSHTM TB modelling group.
+    - Houben and Dodd 2016 (<https://doi.org/10.1371/journal.pmed.1002152>). Two modellers from LSHTM TB modelling group.
 
-        -   Fig 3 shows estimated infection prevalence by age (whole regions). ![](images/clipboard-3299014433.png){width="343"}
+    - Fig 3 shows estimated infection prevalence by age (whole regions). ![](images/clipboard-3299014433.png){width="343"}
 
-        -   In AFRO region, this plot suggests approx 15% infected by age 20, approx 35% infected by age 40, approx 65% infected by age 80, and approx 70% thereafter. (Although note this includes some recovery so later ages likely a bit low). I should try to get my foi to produce similar survival_pmf values to this or other literature [TASK 1].
+    - In AFRO region, this plot suggests approx 15% infected by age 20, approx 35% infected by age 40, approx 65% infected by age 80, and approx 70% thereafter. (Although note this includes some recovery so later ages likely a bit low). I should try to get my foi to produce similar survival_pmf values to this or other literature [TASK 1].
 
-        -   Note that other studies for South Africa give a slightly different picture. Wood Table 2/Figure 3 (Latent TBI) estimates 67% at age 20, 77% at age 30, and 69% at age 40 in a crowded township. Ncayiyana Table 2 has infection prevalence of approx 26% at age 20, 31% at age 30, 45% at age 40, and 45% for ages 45y+, again for a crowded township. Wood has ARTI estimates of 4-5% while Ncayiyana is much lower at 1-3%.
+    - Note that other studies for South Africa give a slightly different picture. Wood Table 2/Figure 3 (Latent TBI) estimates 67% at age 20, 77% at age 30, and 69% at age 40 in a crowded township. Ncayiyana Table 2 has infection prevalence of approx 26% at age 20, 31% at age 30, 45% at age 40, and 45% for ages 45y+, again for a crowded township. Wood has ARTI estimates of 4-5% while Ncayiyana is much lower at 1-3%.
 
--   A high '% infected before 18y' means most people entering the trial window already have infections and are nearly all slow progressors. Hence `n_fast/n_overall` will be tiny and case incidence estimates will be low.
+- A high '% infected before 18y' means most people entering the trial window already have infections and are nearly all slow progressors. Hence `n_fast/n_overall` will be tiny and case incidence estimates will be low.
 
 Diagnostic table 1c for our model is as follows: Where in the life-course do infections land?
 
@@ -423,37 +423,37 @@ mu_slow is currently 0.0001. We would need mu_slow to be at least 0.001 i.e 10 t
 
 Let's recheck what mu_slow should be from the literature:
 
--   Rechecking Stephen's notes on parameter values from the literature (27jul), it looks as if we assume an annual rate of 0.0001 of progressing to active disease, and Menzies 2018 states that "for individuals with long-established infection, the annual risk of active tb is low; empirical estimates are on the order of 10-20 per 100k individuals.3"
+- Rechecking Stephen's notes on parameter values from the literature (27jul), it looks as if we assume an annual rate of 0.0001 of progressing to active disease, and Menzies 2018 states that "for individuals with long-established infection, the annual risk of active tb is low; empirical estimates are on the order of 10-20 per 100k individuals.3"
 
-    -   Note that ref 3 is for a paper on Saskatchewan from 1971 (Barnett) and not publicly available.
+  - Note that ref 3 is for a paper on Saskatchewan from 1971 (Barnett) and not publicly available.
 
-    -   Do we have a slight mismatch between risks and rates again here? And does 10-20 per 100k seem to be supported anywhere else in the literature (I can't find many papers that publish a rate of progression to disease for slow progressors). If any other empirical estimates available, try running the model with these. [TASK 2]
+  - Do we have a slight mismatch between risks and rates again here? And does 10-20 per 100k seem to be supported anywhere else in the literature (I can't find many papers that publish a rate of progression to disease for slow progressors). If any other empirical estimates available, try running the model with these. [TASK 2]
 
-        -   Shea 2014 estimates 0.00084 per year in the US (<https://doi.org/10.1093/aje/kwt246>).
+    - Shea 2014 estimates 0.00084 per year in the US (<https://doi.org/10.1093/aje/kwt246>).
 
-        -   Many studies Hayley, Sutherland etc state a lifetime risk (NB: this is fast+slow) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23. Several other studies use this same guiding assumption.
+    - Many studies Hayley, Sutherland etc state a lifetime risk (NB: this is fast+slow) of developing disease of approx 10% (<http://dx.doi.org/10.1128/microbiolspec.TNMI7-0039-2016>). Refs 8,13,21-23. Several other studies use this same guiding assumption.
 
-        -   Ekramnia 2024 estimates 0.00072 per years in the US (<https://pubmed.ncbi.nlm.nih.gov/38290139/>).
+    - Ekramnia 2024 estimates 0.00072 per years in the US (<https://pubmed.ncbi.nlm.nih.gov/38290139/>).
 
-        -   From Menzies Supplementary table s3, some model structures publish their fitted parameter value c (Sutherland 1968): 0.000848, 0.000594, structure K 0.001 at year 5 tending to 0.0001 at year \~15 and 0.00001 by year 40, structure L 0.0009 at year 5 but tending to 0.00056 from year \~9 onwards ([https://doi.org/10.1016/S1473-3099(18)30134-8](https://doi.org/10.1016/S1473-3099(18)30134-8){.uri}). This list excludes structures A, D, J, and E, which had poor fit to empirical data. Our model is most similar to structure F.
+    - From Menzies Supplementary table s3, some model structures publish their fitted parameter value c (Sutherland 1968): 0.000848, 0.000594, structure K 0.001 at year 5 tending to 0.0001 at year \~15 and 0.00001 by year 40, structure L 0.0009 at year 5 but tending to 0.00056 from year \~9 onwards ([https://doi.org/10.1016/S1473-3099(18)30134-8](https://doi.org/10.1016/S1473-3099(18)30134-8){.uri}). This list excludes structures A, D, J, and E, which had poor fit to empirical data. Our model is most similar to structure F.
 
-        -   Could also check Vynnycky&Fine 1997, Blower 1995, and Dye 1998. Useful term is 'endogenous reactivation' (of the latent infection).
+    - Could also check Vynnycky&Fine 1997, Blower 1995, and Dye 1998. Useful term is 'endogenous reactivation' (of the latent infection).
 
-        -   Blower 1995 uses a progression rate to TB for latent individuals of 0.00256-0.00527 (<https://www.nature.com/articles/nm0895-815.pdf>).
+    - Blower 1995 uses a progression rate to TB for latent individuals of 0.00256-0.00527 (<https://www.nature.com/articles/nm0895-815.pdf>).
 
-        -   Vynnycky&Fine 1997 - from a closer look, this modelling paper estimates both p_fast by age (already included in my model) and risk of developing endogenous disease by age (i.e. mu_slow). Their best estimates are annual risk of developing slow disease of 9.82e-8 [9.03e-9 - 1.52e-3] for ages 0-10years, 0.0150 [0.0144-0.0159] for age 15, and 0.0299 [0.0288-0.0307] for ages 20+. Ages are *current age*, not age of infection. Endogenous disease is defined as disease onset five or more years after initial infection or the most recent reinfection. Note these estimates are way higher than our current mu_slow. After lots of reading, I think this is the best study to go with.
+    - Vynnycky&Fine 1997 - from a closer look, this modelling paper estimates both p_fast by age (already included in my model) and risk of developing endogenous disease by age (i.e. mu_slow). Their best estimates are annual risk of developing slow disease of 9.82e-8 [9.03e-9 - 1.52e-3] for ages 0-10years, 0.0150 [0.0144-0.0159] for age 15, and 0.0299 [0.0288-0.0307] for ages 20+. Ages are *current age*, not age of infection. Endogenous disease is defined as disease onset five or more years after initial infection or the most recent reinfection. Note these estimates are way higher than our current mu_slow. After lots of reading, I think this is the best study to go with.
 
-        -   Sutherland 1982 estimates annual risk of disease for individuals infected more than 5 years ago as 0.023% per year i.e. 0.00023 ([https://doi.org/10.1016/S0041-3879(82)80013-5](https://doi.org/10.1016/S0041-3879(82)80013-5){.uri}).
+    - Sutherland 1982 estimates annual risk of disease for individuals infected more than 5 years ago as 0.023% per year i.e. 0.00023 ([https://doi.org/10.1016/S0041-3879(82)80013-5](https://doi.org/10.1016/S0041-3879(82)80013-5){.uri}).
 
-        -   Dowdy (wishlist paper) 2014 states that estimations of the reactivation rate after remote infection vary by an order of magnitude, from 0.03 to 0.1 per 100 person-years. i.e. from 0.0003 to 0.001 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC4041555/pdf/nihms584157.pdf>).
+    - Dowdy (wishlist paper) 2014 states that estimations of the reactivation rate after remote infection vary by an order of magnitude, from 0.03 to 0.1 per 100 person-years. i.e. from 0.0003 to 0.001 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC4041555/pdf/nihms584157.pdf>).
 
-        -   Horsburgh 2010 population skin-test survey in US estimated rate of reactivation among persons with LTBI as 0.0004 - 0.00058 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC2921602/pdf/AJRCCM1823420.pdf>).
+    - Horsburgh 2010 population skin-test survey in US estimated rate of reactivation among persons with LTBI as 0.0004 - 0.00058 per year (<https://pmc.ncbi.nlm.nih.gov/articles/PMC2921602/pdf/AJRCCM1823420.pdf>).
 
-        -   Let's summarise in a table:
+    - Let's summarise in a table:
 
-            ![](images/clipboard-4182915370.png)
+      ![](images/clipboard-4182915370.png)
 
-            We will use mu_slow=0.001 as the baseline and the range shown and also age-varying Vynnycky as alternatives.
+      We will use mu_slow=0.001 as the baseline and the range shown and also age-varying Vynnycky as alternatives.
 
 **Diagnostic 6: Time since infection for recruits**
 
@@ -497,4 +497,4 @@ plot_digitizer
 plot(x=plot_digitizer$x, y=-log(plot_digitizer$s_a))
 ```
 
-![We see that this data should have an age-varying force of infection, perhaps piecewise constant (up to age 25y, 25-30y, and 30y+). The gradient is segment 1 is approx (1.4-0.4)/(25-10) = 0.067 i.e. 7% force of infection. Yay.](images/clipboard-2131373533.png)
+![We see that this data should have an age-varying force of infection, perhaps piecewise constant (up to age 25y, 25-30y, and 30y+). The gradient in segment 1 is approx (1.4-0.4)/(25-10) = 0.067 i.e. 7% force of infection. Yay.](images/clipboard-2131373533.png)
