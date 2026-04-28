@@ -39,7 +39,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 foi_structure <- "base"  # works for "uniform4", "uniform6", ...
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
-slow_structure <- "base"
+slow_structure <- "max"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 rho_lit <- define_foi_by_age(foi_structure)  # force of infection by age
@@ -60,8 +60,10 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure
 ```{r}
 #| label: define_params
 
-rho_m72IIb <- rep(0.0275,100)  # *uniform in pars_m72 for now*
+rho_m72IIb <- rho_lit
+names(rho_m72IIb) <- 0:99
 p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
+names(p_slow_m72IIb) <- 0:99
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
@@ -93,11 +95,11 @@ pars_lit_igra <- list(
 ## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
 ```{r}
 #| label: simulate_with_m72IIb
-#| eval: FALSE
+#| eval: TRUE
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -111,10 +113,6 @@ fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb,
 	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
 fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
-
-#' Optional: estimate case incidence per 100k from model 
-estimate_case_incidence_from_model(stochastic_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
-estimate_case_incidence_from_model(analytical_df_m72IIb, pars=pars_m72IIb_igra, sig=80)
 ```
 
 ## 5. simulate trials under literature conditions (analytical and stochastic approaches)
@@ -144,11 +142,10 @@ for (i in 1:2) {
   cases <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   #estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  from_model <- bind_rows(from_model, tibble(i = i, infection_prevalence = ARTI_and_prev["infection_prevalence"], ARTI = ARTI_and_prev["ARTI"], cases= cases))
+  from_model <- bind_rows(from_model, tibble(i = i, ARTI = ARTI_and_prev["ARTI"], cases= cases))
 }
-#summary_table <- tibble()
-summary_table <- bind_rows(summary_table, tibble(foi_structure=foi_structure, infection_prevalence=median(from_model$infection_prevalence), 
-                                                 ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
+#summary_tab <- tibble()
+summary_tab <- bind_rows(summary_tab, tibble(foi_structure=foi_structure, ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
 ```
 
 # 6. (Optional) Parameter fitting: simulate trials under literature conditions, for different foi's

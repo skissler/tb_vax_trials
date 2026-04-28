@@ -534,7 +534,11 @@ plot(x=plot_digitizer$x, y=-log(plot_digitizer$s_a))
 
 # 27th April (LH)
 
-Ran many sims to explore different values of the foi (parameter_fit code snippet). Saved in `outputs/parameter_fit_results.csv`. Interesting results. Appended a column at the end to highlight which parameter combinations meet all our conditions i.e. infection prevalence at age 20, 30, and 40 matching close to Wood et al (technically our model has 'ever infected' not 'infection prevalence'), and ARTI close to Wood et al, and cases \> 200 per 100k per year.
+Ran many sims to explore different values of the foi (parameter_fit code snippet). Values tried for foi are as follows:
+
+![](images/clipboard-1804890011.png){width="263"}
+
+Parameter fit results are saved in `outputs/parameter_fit_results.csv`. Interesting results. Appended a column at the end to highlight which parameter combinations meet all our conditions i.e. infection prevalence at age 20, 30, and 40 matching close to Wood et al (technically our model has 'ever infected' not 'infection prevalence'), and ARTI close to Wood et al, and cases \> 200 per 100k per year.
 
 ![](images/clipboard-2428758807.png)
 
@@ -543,3 +547,5 @@ We have \~6 sets of parameter combinations that satisfy all our criteria. Key re
 # 28th April (LH)
 
 Now thinking about the trial emulated model run.
+
+The m72IIb trial screened 7851 participants (excluding those who withdrew or moved house) and enrolled 3575 (<https://www.nejm.org/doi/full/10.1056/NEJMoa1909953>). After 3 years, they would have seen approx 52 cases in the absence of vaccination (e.g. doubling the number of cases reported in the placebo arm).
