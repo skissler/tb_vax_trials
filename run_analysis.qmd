@@ -37,17 +37,19 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-foi_structure <- "uniform4"  # works for "uniform4", "uniform6", ...
+foi_structure <- "base"  # works for "uniform4", "uniform6", ...
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
+slow_structure <- "base"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-foi <- define_foi_by_age(foi_structure)  # force of infection by age
-prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
+rho_lit <- define_foi_by_age(foi_structure)  # force of infection by age
+p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
+mu_slow_lit <- define_mu_slow(slow_structure)
 
 #' shorthand names for plots
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") "unif"
-fig_name <- paste0(iso3_agestructure,"_",foi_structure,"_",shorthand_progstructure)  # pattern is agedist method _ tinf method _ p_slow method
+fig_name <- paste0(iso3_agestructure,"_",foi_structure,"_",shorthand_progstructure, "_", slow_structure)  # pattern is agedist method _ foi _ p_slow method _ mu_slow
 fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure,"; p_slow = ",shorthand_progstructure)
 ```
 
@@ -59,16 +61,14 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure
 #| label: define_params
 
 rho_m72IIb <- rep(0.0275,100)  # *uniform in pars_m72 for now*
-rho_lit <- foi
 p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor in pars_m72 for now*
-p_slow_lit <- prog
 
 pars_m72IIb_igra <- list(
 	minage=18,  # from trial
 	maxage=49,  # from trial (up to 50.0y)
 	rho=rho_m72IIb,  #0.0275  # modelled value (range considered thus far: ~0.002-0.03 e.g. up to an order of mag greater than old lit)
 	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
-	mu_slow=0.0001,  # assumed, informed by lit - could play around with this
+	mu_slow=mu_slow_lit,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55,  # from trial (technically 54% VE)
@@ -81,7 +81,7 @@ pars_lit_igra <- list(
 	maxage=49, # taken from above
 	rho=rho_lit,  # from lit, with choice of tinf method (foi_structure)
 	p_slow=p_slow_lit,  # from lit
-	mu_slow=0.0001,  # from lit
+	mu_slow=mu_slow_lit,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above, currently unused
@@ -198,6 +198,6 @@ for (progression_structure in progression_structures) {
   }
 }
 summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, 0.57, 0.77) & between(inf_prev_age30, 0.67, 0.92) &
-                                             inf_prev_age40 > 0.59 & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
-write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
+                                             between(inf_prev_age40, 0.59, 0.95) & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
+#write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
 ```
