@@ -176,7 +176,11 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
 }
 
 define_foi_by_age <- function(method){
-  if (method=="uniform4") {
+  if (method=="uniform1") {
+    foi <- rep(0.01,100)
+  } else if (method=="uniform2") {
+    foi <- rep(0.02,100)
+  } else if (method=="uniform4") {
     foi <- rep(0.04,100)
   } else if (method=="uniform6") {
     foi <- rep(0.06,100)
@@ -367,6 +371,62 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	})
 }
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
+
+sim_trial <- function(pars, enrol_target, agedist) {
+  # Like sim_stoch but stops when enrol_target recruits are reached rather than fasttarget fast progressors.
+  with(as.list(pars), {
+
+    n_tested    <- 0
+    n_recruited <- 0
+    n_fast      <- 0
+    n_overall   <- 0
+
+    capacity       <- enrol_target * 20
+    recruited_list <- vector("list", capacity)
+
+    survival_fn  <- exp(-cumsum(rho[1:100]))
+    survival_pmf <- c(1, survival_fn[-100]) - survival_fn
+    survival_pmf <- c(survival_pmf, survival_fn[100])
+
+    eligible_ages  <- minage:maxage
+    eligible_probs <- agedist[as.character(eligible_ages)]
+    prog_types     <- c("slow", "fast")
+
+    while (n_recruited < enrol_target) {
+      age  <- sample(eligible_ages, size=1, prob=eligible_probs)
+      tinf <- sample(0:100, size=1, prob=survival_pmf)
+      if (tinf < 100) {
+        tinf <- tinf + runif(1)
+      } else {
+        tinf <- 100 + rexp(1, rho[100])
+      }
+
+      prog_probs      <- if (tinf < 100) c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1]) else c(p_slow[100], 1-p_slow[100])
+      progressor_type <- sample(prog_types, size=1, prob=prog_probs)
+      tsymp           <- tinf + rexp(1, if (progressor_type=="slow") mu_slow else mu_fast)
+
+      if (tsymp > age) {
+        n_tested <- n_tested + 1
+        if ((tinf >= age - sigma) && (tinf <= age)) {
+          n_recruited <- n_recruited + 1
+          if (progressor_type == "fast") n_fast <- n_fast + 1
+          if (n_recruited > capacity) { capacity <- capacity * 2; length(recruited_list) <- capacity }
+          recruited_list[[n_recruited]] <- list(
+            id=n_recruited, age=age, progressor_type=progressor_type, tinf=tinf
+          )
+        }
+      }
+      n_overall <- n_overall + 1
+    }
+
+    recruited_df <- bind_rows(recruited_list[1:n_recruited])
+
+    out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast,
+                n_overall=n_overall, recruited_df=recruited_df)
+    return(out)
+  })
+}
+sim_trial <- compiler::cmpfun(sim_trial)  # R bytecode compiler (for speed)
 
 sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
 	grid <- expand.grid(sigma=sigmavec, rep=1:reps)  # expand.grid is faster than nested for loops

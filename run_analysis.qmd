@@ -92,10 +92,10 @@ pars_lit_igra <- list(
 #pars_lit_tasa$sigma <- 2
 ```
 
-## 4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
+## 4. simulate trials under m72IIb conditions (analytic and stochastic approaches)
 ```{r}
 #| label: simulate_with_m72IIb
-#| eval: TRUE
+#| eval: FALSE
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
@@ -115,7 +115,87 @@ fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
 ```
 
-## 5. simulate trials under literature conditions (analytical and stochastic approaches)
+## 4b. parameter fitting: simulate trial at full enrolment scale
+Rather than stopping at fasttarget=50 fast progressors and scaling up, `sim_trial` recruit until enrol_target is reached.
+```{r}
+#| label: simulate_with_m72IIb_fit
+#| eval: FALSE
+
+target_enrolled <- 3289
+target_cases    <- 52
+
+foi_structures_m72IIb  <- c("base", "min", "max", "incr", "decr")
+slow_structures_m72IIb <- c("base", "min", "max")
+p_slow_m72IIb_vals     <- seq(0.5, 1.0, by=0.05)
+p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
+reps <- 10
+
+# Build a flat grid of all parameter combinations x reps
+uniform_grid <- expand.grid(
+  slow_structure = slow_structures_m72IIb,
+  foi_structure  = foi_structures_m72IIb,
+  p_slow_label   = paste0("uniform_", seq(0.5, 0.95, by=0.05)),
+  rep            = 1:reps,
+  stringsAsFactors = FALSE
+)
+vynnycky_grid <- expand.grid(
+  slow_structure = slow_structures_m72IIb,
+  foi_structure  = foi_structures_m72IIb,
+  p_slow_label   = "Vynnycky-1997",
+  rep            = 1:reps,
+  stringsAsFactors = FALSE
+)
+param_grid <- bind_rows(uniform_grid, vynnycky_grid)
+
+with_progress({
+  p <- progressr::progressor(steps=nrow(param_grid))
+  trial_results_list <- future.apply::future_lapply(1:nrow(param_grid), function(i) {
+    pars_fit         <- pars_m72IIb_igra
+    pars_fit$mu_slow <- define_mu_slow(param_grid$slow_structure[i])
+    pars_fit$rho     <- define_foi_by_age(param_grid$foi_structure[i])
+    pars_fit$p_slow <- if (param_grid$p_slow_label[i] == "Vynnycky-1997") {
+      p_slow_lit 
+      } else {
+        val <- as.numeric(sub("uniform_", "", param_grid$p_slow_label[i]))
+        setNames(rep(val, 100), 0:99)
+      }
+    out <- sim_trial(pars_fit, enrol_target=target_enrolled, agedist=agedist)
+    p()
+    tibble(
+      p_slow_structure= param_grid$p_slow_label[i],
+      mu_slow        = pars_fit$mu_slow,
+      foi_structure  = param_grid$foi_structure[i],
+      rep            = param_grid$rep[i],
+      n_overall      = out$n_overall,
+      n_recruited    = out$n_recruited,
+      n_fast         = out$n_fast,
+      n_slow         = out$n_slow,
+      exp_cases      = out$n_fast + out$n_slow * pars_fit$mu_slow * pars_fit$trial_length
+    )
+  }, future.seed=TRUE)
+})
+
+trial_results <- bind_rows(trial_results_list)
+
+#' Summarise over reps
+m72IIb_fit_trial <- trial_results %>%
+  group_by(p_slow_structure, mu_slow, foi_structure) %>%
+  summarise(
+    n_fast_med    = round(median(n_fast)),
+    n_slow_med    = round(median(n_slow)),
+    n_overall_med = round(median(n_overall)),
+    exp_cases_med = round(median(exp_cases), 1),
+    exp_cases_lo  = round(quantile(exp_cases, 0.1), 1),
+    exp_cases_hi  = round(quantile(exp_cases, 0.9), 1),
+    .groups       = "drop"
+  ) %>%
+  mutate(conditions_met = between(exp_cases_med, target_cases * 0.8, target_cases * 1.2))
+
+head(m72IIb_fit_trial)
+#write.csv(m72IIb_fit_trial, file="output/m72IIb_fit_results.csv", row.names=FALSE)
+```
+
+## 5. simulate trials under literature conditions (analytic and stochastic approaches)
 ```{r}
 #| label: simulate_with_lit
 #| eval: FALSE
@@ -152,6 +232,7 @@ summary_tab <- bind_rows(summary_tab, tibble(foi_structure=foi_structure, ARTI=m
 Note: run code snippets 1-3 first.
 ```{r}
 #| label: parameter_fit
+#| eval: FALSE
 
 foi_structures <- c("base", "min", "max", "incr", "decr")
 progression_structures <- c("uniform", "Vynnycky-1997")
@@ -197,4 +278,117 @@ for (progression_structure in progression_structures) {
 summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, 0.57, 0.77) & between(inf_prev_age30, 0.67, 0.92) &
                                              between(inf_prev_age40, 0.59, 0.95) & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
 #write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
+```
+
+
+# 7. (Scenarios)
+Note: run code snippets 1-3 first.
+
+## 7a. Varied vaccine trial sites
+Compare trial recruitment requirements across three country populations (South Africa, India, Kenya)
+under a range of FOI structures. Parameters held constant: minage, maxage, sigma range, trial_length,
+mu_fast, mu_slow (base), p_slow (Vynnycky-1997). Age distribution and FOI vary by scenario.
+```{r}
+#| label: 7a_varied_sites
+
+plan(multisession, workers=8)  # reset worker pool in case of stale state from previous run
+
+countries_7a      <- c("South Africa", "India", "Kenya")
+foi_structures_7a <- c("min", "base", "max", "uniform2", "uniform1")
+p_slow_7a         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
+mu_slow_7a        <- define_mu_slow("base")
+
+# Pre-compute age distributions — keeps unwpp out of the future_lapply workers
+agedists_7a <- setNames(lapply(countries_7a, function(c) extract_age_distribution(unwpp, c)), countries_7a)
+
+# Build base parameter list (shared across all scenarios)
+pars_7a <- pars_lit_igra
+pars_7a$p_slow  <- p_slow_7a
+pars_7a$mu_slow <- mu_slow_7a
+
+# Flat grid over all combinations: country x FOI x sigma x rep
+sim_grid_7a <- expand.grid(
+  country       = countries_7a,
+  foi_structure = foi_structures_7a,
+  sigma         = c(1:10, seq(15, 80, by=5)),
+  rep           = 1:10,
+  stringsAsFactors = FALSE
+)
+
+# Single flat future_lapply — avoids nested parallelism and memory spikes
+with_progress({
+  p <- progressr::progressor(steps=nrow(sim_grid_7a))
+  stoch_list_7a <- future.apply::future_lapply(1:nrow(sim_grid_7a), function(i) {
+    pars_i        <- pars_7a
+    pars_i$rho    <- define_foi_by_age(sim_grid_7a$foi_structure[i])
+    pars_i$sigma  <- sim_grid_7a$sigma[i]
+    agedist_i     <- agedists_7a[[sim_grid_7a$country[i]]]
+    out           <- sim_stoch(pars_i, fasttarget=50, agedist=agedist_i)
+    p()
+    tibble(country=sim_grid_7a$country[i], foi_structure=sim_grid_7a$foi_structure[i],
+           sigma=sim_grid_7a$sigma[i], rep=sim_grid_7a$rep[i],
+           n_tested=out$n_tested, n_recruited=out$n_recruited,
+           n_fast=out$n_fast, n_slow=out$n_slow, n_overall=out$n_overall)
+  }, future.seed=TRUE)
+})
+
+stoch_df_7a <- bind_rows(stoch_list_7a)
+
+#' 3x2 panel plot: rows = n_recruited / n_tested, columns = country, colour = FOI structure
+stoch_df_7a_long <- stoch_df_7a %>%
+  mutate(country = factor(country, levels=countries_7a)) %>%
+  select(country, foi_structure, sigma, rep, n_recruited, n_tested) %>%
+  pivot_longer(cols=c(n_recruited, n_tested), names_to="metric", values_to="value") %>%
+  mutate(metric = case_when(metric=="n_recruited"~"Recruited", metric=="n_tested"~"Screened")) %>%
+  mutate(metric = factor(metric, levels=c("Recruited", "Screened")))
+
+median_df_7a <- stoch_df_7a_long %>%
+  group_by(country, foi_structure, sigma, metric) %>%
+  summarise(value = median(value), .groups="drop")
+
+fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure)) +
+  geom_point(size=0.4, alpha=0.2) +
+  geom_line(data=median_df_7a, linewidth=0.7) +
+  facet_grid(metric ~ country, scales="free_y") +
+  scale_colour_brewer(palette="Set1") +
+  theme_classic() +
+  theme(strip.background=element_blank()) +
+  labs(x="Test span (years)", y="Number (per 50 fast progressors)", col="Force of infection")
+fig_7a
+ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=10, height=10/1.6)
+
+#' Epidemiological benchmarks: infection prevalence at ages 20/30/40, ARTI, case incidence
+#' Computed analytically from FOI (infection prevalence) and stochastic output at sigma=80 (ARTI, cases)
+combos_7a <- sim_grid_7a %>% distinct(country, foi_structure)
+benchmarks_7a <- tibble()
+for (i in 1:nrow(combos_7a)) {
+  pars_i     <- pars_7a
+  pars_i$rho <- define_foi_by_age(combos_7a$foi_structure[i])
+
+  # Filter full stoch output to this country/FOI at sigma=80, all reps
+  stoch_i <- stoch_df_7a %>%
+    filter(country==combos_7a$country[i], foi_structure==combos_7a$foi_structure[i]) %>%
+    select(sigma, rep, n_tested, n_recruited, n_fast, n_slow, n_overall)
+
+  inf_prev <- estimate_inf_prev_from_model(pars_i$rho)
+  reps_i   <- unique(stoch_i$rep)
+  cases_vec <- sapply(reps_i, function(r) estimate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
+  ARTI_vec  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["ARTI"])
+
+  benchmarks_7a <- bind_rows(benchmarks_7a, tibble(
+    country       = combos_7a$country[i],
+    foi_structure = combos_7a$foi_structure[i],
+    as_tibble_row(inf_prev),
+    ARTI          = median(ARTI_vec),
+    cases_per100k = median(cases_vec)
+  ))
+}
+
+benchmarks_7a <- benchmarks_7a %>%
+  mutate(conditions_met = TRUE)  # TODO: fill in country-specific conditions, e.g.:
+  # South Africa: between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
+  # India:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
+  # Kenya:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
+
+#write.csv(benchmarks_7a, file="output/varied_sites.csv", row.names=FALSE)
 ```

@@ -548,4 +548,4 @@ We have \~6 sets of parameter combinations that satisfy all our criteria. Key re
 
 Now thinking about the trial emulated model run.
 
-The m72IIb trial screened 7851 participants (excluding those who withdrew or moved house) and enrolled 3575 (<https://www.nejm.org/doi/full/10.1056/NEJMoa1909953>). After 3 years, they would have seen approx 52 cases in the absence of vaccination (e.g. doubling the number of cases reported in the placebo arm).
+The m72IIb trial enrolled 3575 (<https://www.nejm.org/doi/full/10.1056/NEJMoa1909953>). After 3 years, they would have seen approx 52 cases in the absence of vaccination (e.g. doubling the number of cases reported in the placebo arm).
