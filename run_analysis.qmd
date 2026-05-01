@@ -39,7 +39,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 foi_structure <- "base"  # works for "uniform4", "uniform6", ...
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
-slow_structure <- "max"
+slow_structure <- "base"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
 rho_lit <- define_foi_by_age(foi_structure)  # force of infection by age
@@ -202,13 +202,12 @@ head(m72IIb_fit_trial)
 
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=2)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=10)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
-analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
 
 #' Plot all results
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 

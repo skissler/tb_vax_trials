@@ -1,0 +1,10 @@
+name: shiny
+title:
+username: mina-tb-model-draft
+account: mina-tb-model-draft
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17274397
+bundleId: 11934593
+url: https://mina-tb-model-draft.shinyapps.io/shiny/
+version: 1
