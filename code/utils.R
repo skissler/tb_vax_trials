@@ -182,6 +182,12 @@ define_foi_by_age <- function(method){
     foi <- rep(0.02,100)
   } else if (method=="uniform4") {
     foi <- rep(0.04,100)
+  } else if (method=="uniform25") {
+    foi <- rep(0.25,100)
+  } else if (method=="uniform50") {
+    foi <- rep(0.50,100)
+  } else if (method=="uniform75") {
+    foi <- rep(0.75,100)
   } else if (method=="uniform6") {
     foi <- rep(0.06,100)
   } else if (method=="uniform10") {
@@ -372,6 +378,84 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 }
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
+sim_stoch_notest <- function(pars, fasttarget=50, agedist){
+  with(as.list(pars), {
+    
+    # Initialize tracking variables
+    n_recruited <- 0
+    n_fast <- 0
+    n_overall <- 0
+    n_infected <- 0  # only used for calculating ARTI
+    
+    # capacity <- 1e6
+    # recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
+    
+    # Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
+    survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
+    survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
+    survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
+    
+    # Pre-compute some of the sampling vectors
+    eligible_ages  <- minage:maxage
+    eligible_probs <- agedist[as.character(eligible_ages)]
+    prog_types     <- c("slow","fast")
+    
+    while(n_fast < fasttarget){
+      # Grab their age from the age distribution
+      age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
+      
+      # Simulate their time to infection, using survival_pmf probabilities
+      tinf <- sample(0:100, size=1, prob=survival_pmf)
+      if (tinf < 100) {
+        tinf <- tinf + runif(1)  # continuous within that year
+      } else {
+        tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
+      }
+      
+      # Grab their (tinf-dependent) progression status 
+      if (tinf < 100) {
+        prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
+      } else {
+        prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
+      }
+      progressor_type <- sample(prog_types, size=1, prob=prog_probs)
+      
+      # Simulate their time to symptoms
+      tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
+      
+      # ELIGIBILITY
+      if(tsymp > age){
+        # They are asymptomatic, so let's recruit them: 
+        n_recruited <- n_recruited + 1
+        # If they are fast, add 1 to n_fast:
+        if(progressor_type=="fast") {n_fast <- n_fast + 1}
+        # # Expand list if needed
+        # if (n_recruited > capacity) {
+        #   capacity <- capacity * 2
+        #   length(recruited_list) <- capacity  
+        # }
+        # # Record key info for those who were recruited
+        # recruited_list[[n_recruited]] <- list(
+        #   id=n_recruited,
+        #   age=age,
+        #   progressor_type=progressor_type,
+        #   tinf=tinf)  # only recording tinf values for those who were recruited
+      }
+      n_overall <- n_overall + 1
+      
+      # Also record those from n_overall who would have been positive if tested (only used in ARTI calculations)
+      if (tinf < age) n_infected <- n_infected + 1
+    }
+    
+    # recruited_df <- bind_rows(recruited_list[1:(n_recruited)])  # bind_rows outside of the while loop is much faster
+    
+    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, n_infected=n_infected)
+    
+    return(out)
+  })
+}
+sim_stoch_notest <- compiler::cmpfun(sim_stoch_notest)  # R bytecode compiler (for speed)
+
 sim_trial <- function(pars, enrol_target, agedist) {
   # Like sim_stoch but stops when enrol_target recruits are reached rather than fasttarget fast progressors.
   with(as.list(pars), {
@@ -522,7 +606,8 @@ pull_mean <- function(x, life_exp=99){
 # Functions outside the model
 estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
-  model_run <- df %>% filter(sigma==sig) %>% unlist()
+  if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
+  model_run <- df %>% unlist()
   incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
   return(incidence*100000)
 }
@@ -536,9 +621,14 @@ estimate_inf_prev_from_model <- function(foi, ages = c(20, 30, 40, 60)) {
 
 estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
-  model_run <- df %>% filter(sigma==sig) %>% unlist()
-  infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+  if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
+  model_run <- df %>% unlist()
+  if ("n_tested" %in% names(df)) {
+    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+  } else {
+    infection_prevalence <- unname(model_run["n_infected"] / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+  }
   meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
   ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
-  return(c(infection_prevalence = infection_prevalence, ARTI = ARTI))
+  return(c(ARTI = ARTI))
   }

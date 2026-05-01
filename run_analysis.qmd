@@ -392,3 +392,158 @@ benchmarks_7a <- benchmarks_7a %>%
 
 #write.csv(benchmarks_7a, file="output/varied_sites.csv", row.names=FALSE)
 ```
+
+## 7b. Non-test enrolment scenarios
+Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (15-34), and
+household contacts (6-99, high FOI). No sigma dimension — one output per (scenario, country, FOI, rep).
+```{r}
+#| label: 7b_notest_scenarios
+
+plan(multisession, workers=8)
+
+countries_7b      <- c("South Africa", "India", "Kenya")
+foi_structures_7b <- c("min", "base", "max", "uniform2", "uniform1")
+foi_household_7b  <- c("uniform25", "uniform50", "uniform75")
+p_slow_7b         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
+mu_slow_7b        <- define_mu_slow("base")
+agedists_7b       <- setNames(lapply(countries_7b, function(c) extract_age_distribution(unwpp, c)), countries_7b)
+
+# Build base parameter list
+pars_7b <- pars_lit_igra
+pars_7b$p_slow  <- p_slow_7b
+pars_7b$mu_slow <- mu_slow_7b
+
+# Flat grid: scenario x country x FOI x rep
+standard_grid <- expand.grid(
+  scenario      = "no test standard",
+  country       = countries_7b,
+  foi_structure = foi_structures_7b,
+  rep           = 1:10,
+  stringsAsFactors = FALSE
+)
+younger_grid <- expand.grid(
+  scenario      = "no test young",
+  country       = countries_7b,
+  foi_structure = foi_structures_7b,
+  rep           = 1:10,
+  stringsAsFactors = FALSE
+)
+household_grid <- expand.grid(
+  scenario      = "no test household",
+  country       = countries_7b,
+  foi_structure = foi_household_7b,
+  rep           = 1:10,
+  stringsAsFactors = FALSE
+)
+sim_grid_7b <- bind_rows(standard_grid, younger_grid, household_grid)
+
+with_progress({
+  p <- progressr::progressor(steps=nrow(sim_grid_7b))
+  notest_list_7b <- future.apply::future_lapply(1:nrow(sim_grid_7b), function(i) {
+    pars_i        <- pars_7b
+    pars_i$rho    <- define_foi_by_age(sim_grid_7b$foi_structure[i])
+    pars_i$minage <- switch(sim_grid_7b$scenario[i],
+                            "no test standard"  = 18,
+                            "no test young"     = 15,
+                            "no test household" = 6)
+    pars_i$maxage <- switch(sim_grid_7b$scenario[i],
+                            "no test standard"  = 49,
+                            "no test young"     = 34,
+                            "no test household" = 99)
+    agedist_i     <- agedists_7b[[sim_grid_7b$country[i]]]
+    out           <- sim_stoch_notest(pars_i, fasttarget=50, agedist=agedist_i)
+    p()
+    tibble(
+      scenario      = sim_grid_7b$scenario[i],
+      country       = sim_grid_7b$country[i],
+      foi_structure = sim_grid_7b$foi_structure[i],
+      rep           = sim_grid_7b$rep[i],
+      n_recruited   = out$n_recruited,
+      n_fast        = out$n_fast,
+      n_slow        = out$n_slow,
+      n_overall     = out$n_overall,
+      n_infected    = out$n_infected
+    )
+  }, future.seed=TRUE)
+})
+
+notest_df_7b <- bind_rows(notest_list_7b)
+
+#' Summarise over reps: median + 10th/90th percentile
+notest_summary_7b <- notest_df_7b %>%
+  group_by(scenario, country, foi_structure) %>%
+  summarise(
+    n_recruited_med = median(n_recruited),
+    n_recruited_lo  = quantile(n_recruited, 0.1),
+    n_recruited_hi  = quantile(n_recruited, 0.9),
+    n_overall_med   = median(n_overall),
+    n_overall_lo    = quantile(n_overall, 0.1),
+    n_overall_hi    = quantile(n_overall, 0.9),
+    .groups = "drop"
+  )
+
+#' Plot: collapse FOI into a range, x = scenario, facet = country
+#' Point = median across FOI structures and reps; errorbar = min/max across FOI structures
+foi_range_7b <- notest_df_7b %>%
+  group_by(scenario, country, foi_structure) %>%
+  summarise(n_recruited_med = median(n_recruited), .groups="drop") %>%
+  group_by(scenario, country) %>%
+  summarise(
+    n_recruited_mid = median(n_recruited_med),
+    n_recruited_lo  = min(n_recruited_med),
+    n_recruited_hi  = max(n_recruited_med),
+    .groups = "drop"
+  ) %>%
+  mutate(country  = factor(country, levels=countries_7b),
+         scenario = factor(scenario, levels=c("no test standard", "no test young", "no test household")))
+
+fig_7b <- ggplot(foi_range_7b, aes(x=scenario, y=n_recruited_mid, ymin=n_recruited_lo, ymax=n_recruited_hi)) +
+  geom_point(size=2) +
+  geom_errorbar(width=0.25) +
+  facet_wrap(~country, nrow=1) +
+  theme_classic() +
+  theme(strip.background=element_blank(), axis.text.x=element_text(angle=25, hjust=1)) +
+  labs(x=NULL, y="Recruited (per 50 fast progressors)")
+fig_7b
+ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
+
+#' Epidemiological benchmarks
+combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure)
+benchmarks_7b <- tibble()
+for (i in 1:nrow(combos_7b)) {
+  pars_i        <- pars_7b
+  pars_i$rho    <- define_foi_by_age(combos_7b$foi_structure[i])
+  pars_i$minage <- switch(combos_7b$scenario[i],
+                          "no test standard"  = 18,
+                          "no test young"     = 15,
+                          "no test household" = 6)
+  pars_i$maxage <- switch(combos_7b$scenario[i],
+                          "no test standard"  = 49,
+                          "no test young"     = 34,
+                          "no test household" = 99)
+
+  stoch_i  <- notest_df_7b %>%
+    filter(scenario==combos_7b$scenario[i], country==combos_7b$country[i], foi_structure==combos_7b$foi_structure[i]) %>%
+    select(rep, n_fast, n_slow, n_overall, n_infected)
+
+  inf_prev   <- estimate_inf_prev_from_model(pars_i$rho)
+  reps_i     <- unique(stoch_i$rep)
+  cases_vec  <- sapply(reps_i, function(r) estimate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r))
+  ARTI_vec   <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r))
+
+  benchmarks_7b <- bind_rows(benchmarks_7b, tibble(
+    scenario      = combos_7b$scenario[i],
+    country       = combos_7b$country[i],
+    foi_structure = combos_7b$foi_structure[i],
+    as_tibble_row(inf_prev),
+    ARTI          = median(ARTI_vec),
+    cases_per100k = median(cases_vec)
+  ))
+}
+
+benchmarks_7b <- benchmarks_7b %>%
+  mutate(conditions_met = TRUE)  # TODO: fill in conditions per scenario/country
+
+benchmarks_7b
+#write.csv(benchmarks_7b, file="output/notest_scenarios.csv", row.names=FALSE)
+```
