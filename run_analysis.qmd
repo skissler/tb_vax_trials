@@ -290,6 +290,7 @@ under a range of FOI structures. Parameters held constant: minage, maxage, sigma
 mu_fast, mu_slow (base), p_slow (Vynnycky-1997). Age distribution and FOI vary by scenario.
 ```{r}
 #| label: 7a_varied_sites
+#| eval: FALSE
 
 plan(multisession, workers=8)  # reset worker pool in case of stale state from previous run
 
@@ -345,6 +346,7 @@ stoch_df_7a_long <- stoch_df_7a %>%
 median_df_7a <- stoch_df_7a_long %>%
   group_by(country, foi_structure, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
+#write.csv(median_df_7a, file="output/variedsite_scenarios.csv", row.names=FALSE)
 
 fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure)) +
   geom_point(size=0.4, alpha=0.2) +
@@ -390,7 +392,7 @@ benchmarks_7a <- benchmarks_7a %>%
   # India:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
   # Kenya:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
 
-#write.csv(benchmarks_7a, file="output/varied_sites.csv", row.names=FALSE)
+#write.csv(benchmarks_7a, file="output/variedsite_benchmarks.csv", row.names=FALSE)
 ```
 
 ## 7b. Non-test enrolment scenarios
@@ -418,21 +420,21 @@ standard_grid <- expand.grid(
   scenario      = "no test standard",
   country       = countries_7b,
   foi_structure = foi_structures_7b,
-  rep           = 1:10,
+  rep           = 1:5,
   stringsAsFactors = FALSE
 )
 younger_grid <- expand.grid(
   scenario      = "no test young",
   country       = countries_7b,
   foi_structure = foi_structures_7b,
-  rep           = 1:10,
+  rep           = 1:5,
   stringsAsFactors = FALSE
 )
 household_grid <- expand.grid(
   scenario      = "no test household",
   country       = countries_7b,
   foi_structure = foi_household_7b,
-  rep           = 1:10,
+  rep           = 1:5,
   stringsAsFactors = FALSE
 )
 sim_grid_7b <- bind_rows(standard_grid, younger_grid, household_grid)
@@ -481,10 +483,12 @@ notest_summary_7b <- notest_df_7b %>%
     n_overall_hi    = quantile(n_overall, 0.9),
     .groups = "drop"
   )
+#write.csv(notest_summary_7b, file="output/notest_scenarios.csv", row.names=FALSE)
 
 #' Plot: collapse FOI into a range, x = scenario, facet = country
 #' Point = median across FOI structures and reps; errorbar = min/max across FOI structures
-foi_range_7b <- notest_df_7b %>%
+foi_range_7b <- notest_df_7b %>% 
+  filter(scenario!="no test household") %>%  ## household scenario is currently unrealistic
   group_by(scenario, country, foi_structure) %>%
   summarise(n_recruited_med = median(n_recruited), .groups="drop") %>%
   group_by(scenario, country) %>%
@@ -495,7 +499,7 @@ foi_range_7b <- notest_df_7b %>%
     .groups = "drop"
   ) %>%
   mutate(country  = factor(country, levels=countries_7b),
-         scenario = factor(scenario, levels=c("no test standard", "no test young", "no test household")))
+         scenario = factor(scenario, levels=c("no test standard", "no test young"))) #, "no test household")))
 
 fig_7b <- ggplot(foi_range_7b, aes(x=scenario, y=n_recruited_mid, ymin=n_recruited_lo, ymax=n_recruited_hi)) +
   geom_point(size=2) +
@@ -508,7 +512,7 @@ fig_7b
 ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 
 #' Epidemiological benchmarks
-combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure)
+combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure) 
 benchmarks_7b <- tibble()
 for (i in 1:nrow(combos_7b)) {
   pars_i        <- pars_7b
@@ -544,6 +548,5 @@ for (i in 1:nrow(combos_7b)) {
 benchmarks_7b <- benchmarks_7b %>%
   mutate(conditions_met = TRUE)  # TODO: fill in conditions per scenario/country
 
-benchmarks_7b
-#write.csv(benchmarks_7b, file="output/notest_scenarios.csv", row.names=FALSE)
+#write.csv(benchmarks_7b, file="output/notest_benchmarks.csv", row.names=FALSE)
 ```
