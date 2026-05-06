@@ -395,8 +395,8 @@ benchmarks_7a <- benchmarks_7a %>%
 ```
 
 ## 7b. Non-test enrolment scenarios
-Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (15-34), and
-household contacts (6-99, high FOI). No sigma dimension — one output per (scenario, country, FOI, rep).
+Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (12-34), and
+household contacts (6-99, high instantaneous FOI if not already infected). No sigma dimension — one output per (scenario, country, FOI, rep).
 ```{r}
 #| label: 7b_notest_scenarios
 
@@ -404,7 +404,6 @@ plan(multisession, workers=8)
 
 countries_7b      <- c("South Africa", "India", "Kenya")
 foi_structures_7b <- c("min", "base", "max", "uniform2", "uniform1")
-foi_household_7b  <- c("uniform25", "uniform50", "uniform75")
 p_slow_7b         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
 mu_slow_7b        <- define_mu_slow("base")
 agedists_7b       <- setNames(lapply(countries_7b, function(c) extract_age_distribution(unwpp, c)), countries_7b)
@@ -445,7 +444,7 @@ with_progress({
     pars_i$rho    <- define_foi_by_age(sim_grid_7b$foi_structure[i])
     pars_i$minage <- switch(sim_grid_7b$scenario[i],
                             "no test standard"  = 18,
-                            "no test young"     = 15,
+                            "no test young"     = 12,
                             "no test household" = 6)
     pars_i$maxage <- switch(sim_grid_7b$scenario[i],
                             "no test standard"  = 49,
@@ -487,7 +486,6 @@ notest_summary_7b <- notest_df_7b %>%
 #' Plot: collapse FOI into a range, x = scenario, facet = country
 #' Point = median across FOI structures and reps; errorbar = min/max across FOI structures
 foi_range_7b <- notest_df_7b %>% 
-  filter(scenario!="no test household") %>%  ## household scenario is currently unrealistic
   group_by(scenario, country, foi_structure) %>%
   summarise(n_recruited_med = median(n_recruited), .groups="drop") %>%
   group_by(scenario, country) %>%
@@ -518,7 +516,7 @@ for (i in 1:nrow(combos_7b)) {
   pars_i$rho    <- define_foi_by_age(combos_7b$foi_structure[i])
   pars_i$minage <- switch(combos_7b$scenario[i],
                           "no test standard"  = 18,
-                          "no test young"     = 15,
+                          "no test young"     = 12,
                           "no test household" = 6)
   pars_i$maxage <- switch(combos_7b$scenario[i],
                           "no test standard"  = 49,

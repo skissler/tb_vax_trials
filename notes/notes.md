@@ -564,4 +564,4 @@ Constructing the household contacts model scenario. Much discussion with Stephen
 
 - The idea is that household contacts have this large instantaenous foi at their current age BUT that's only realised if they aren't already infected (step 1). We do not consider reinfection / boosting in our model.
 
-- Note that we assume individuals of all ages are equally likely to live in an exposed household (because we are drawinf from the general population age distribution). Multigenerational households appear to be increasingly common in South Africa (<https://www.statssa.gov.za/?p=18066>).
+- Note that we assume individuals of all ages are equally likely to live in an exposed household (because we are drawing from the general population age distribution). Multigenerational households appear to be increasingly common in South Africa (<https://www.statssa.gov.za/?p=18066>).
