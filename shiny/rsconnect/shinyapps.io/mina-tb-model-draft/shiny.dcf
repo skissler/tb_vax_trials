@@ -5,6 +5,6 @@ account: mina-tb-model-draft
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17274397
-bundleId: 11934593
+bundleId: 11952008
 url: https://mina-tb-model-draft.shinyapps.io/shiny/
 version: 1
