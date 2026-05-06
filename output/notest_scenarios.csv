@@ -1,40 +1,46 @@
 "scenario","country","foi_structure","n_recruited_med","n_recruited_lo","n_recruited_hi","n_overall_med","n_overall_lo","n_overall_hi"
-"no test household","India","uniform25",32108,22764.8,33099.4,34446,24465.6,35557
-"no test household","India","uniform50",279184,229017.2,297340.6,300218,246324,319477
-"no test household","India","uniform75",1359927,1213825.4,1619781.6,1462714,1306196,1742630.8
-"no test household","Kenya","uniform25",20654,17706.4,21107.2,21990,18935.4,22520
-"no test household","Kenya","uniform50",171229,161478,176472.6,183034,172545.6,188484.4
-"no test household","Kenya","uniform75",781250,674927.4,879323.8,835541,721811.2,940186.6
-"no test household","South Africa","uniform25",31013,27833,32933.6,33220,29960.2,35330.8
-"no test household","South Africa","uniform50",269188,245261,319916.8,289508,263769.4,344089.6
-"no test household","South Africa","uniform75",1424220,1142098,1579958.8,1531623,1228641.4,1699864.4
-"no test standard","India","base",2614,2325.6,2850.4,2847,2515.8,3085.4
-"no test standard","India","max",5256,4673.4,6140.4,5643,5046,6624
-"no test standard","India","min",1088,994.8,1196.2,1160,1062.2,1286.4
-"no test standard","India","uniform1",476,453.2,526.2,489,467.6,536.4
-"no test standard","India","uniform2",620,578.2,783.8,645,603.4,817
-"no test standard","Kenya","base",2493,2056.8,2662.4,2712,2210.4,2887
-"no test standard","Kenya","max",5016,4494.8,5253.2,5367,4857.8,5656.2
-"no test standard","Kenya","min",1195,1159.2,1286.4,1269,1227.6,1371.6
-"no test standard","Kenya","uniform1",527,434,530,533,442.2,544.2
-"no test standard","Kenya","uniform2",628,564.2,689.4,660,592.2,727.8
-"no test standard","South Africa","base",2517,2125.2,3039.8,2704,2305.2,3285.4
-"no test standard","South Africa","max",5198,3901.8,5833.6,5611,4236,6302.2
-"no test standard","South Africa","min",1126,983,1370,1206,1035.2,1457.6
-"no test standard","South Africa","uniform1",483,454.8,548.4,492,466.4,567
-"no test standard","South Africa","uniform2",680,557.4,741.6,720,585.8,786
-"no test young","India","base",1490,1219.8,1941.4,1586,1298.4,2063.6
-"no test young","India","max",3066,2555.6,3425.6,3266,2711,3636.2
-"no test young","India","min",1099,965.6,1180.8,1152,1023,1243
-"no test young","India","uniform1",421,354,468.8,430,358.4,477.2
-"no test young","India","uniform2",588,548.6,689.2,615,566.4,715
-"no test young","Kenya","base",1683,1468.2,1952.4,1770,1547.8,2069
-"no test young","Kenya","max",2807,2274.6,3252,2984,2421,3455
-"no test young","Kenya","min",1005,884.8,1160.6,1057,927,1217.6
-"no test young","Kenya","uniform1",416,327.6,468,423,331.4,473
-"no test young","Kenya","uniform2",560,427.4,704.2,577,443,723.8
-"no test young","South Africa","base",1653,1506,1913.2,1745,1602.6,2037.8
-"no test young","South Africa","max",2983,2682.8,3276.8,3198,2858.6,3510.8
-"no test young","South Africa","min",993,874.8,1056.6,1040,918.8,1110.2
-"no test young","South Africa","uniform1",484,442.8,533.4,491,449.2,541.8
-"no test young","South Africa","uniform2",569,502.8,725.4,592,522.8,750.6
+"no test household","India","base",7800,6653.4,9326.6,8432,7145.8,10031.6
+"no test household","India","max",14198,12566.6,17819.8,15293,13563,19195
+"no test household","India","min",4217,3664.4,4968.4,4498,3877.2,5292.8
+"no test household","India","uniform1",1895,1767.8,2083.8,1951,1829.4,2144.4
+"no test household","India","uniform2",2405,2080.6,2680.8,2527,2186.2,2817.6
+"no test household","Kenya","base",6822,5845.4,7834.4,7257,6224.8,8357.2
+"no test household","Kenya","max",11644,9837,14098,12385,10501.4,15060
+"no test household","Kenya","min",3843,3549.8,4959.4,4047,3740,5229.4
+"no test household","Kenya","uniform1",1835,1519.6,2127,1879,1554,2178.8
+"no test household","Kenya","uniform2",2325,2161.8,2918.8,2412,2246.6,3022.2
+"no test household","South Africa","base",8687,7696,10066.8,9352,8282,10840.4
+"no test household","South Africa","max",14914,12548.6,17866.8,16042,13529.2,19264.4
+"no test household","South Africa","min",4147,3531.6,5175.2,4431,3773.8,5499.6
+"no test household","South Africa","uniform1",1823,1573.6,2116.8,1890,1630.6,2190.2
+"no test household","South Africa","uniform2",2448,2163.6,2955.6,2577,2273,3111.8
+"no test standard","India","base",55201,47390,63040,59380,51010.4,67827.8
+"no test standard","India","max",77572,61881.6,89192.8,83468,66573.2,96139.2
+"no test standard","India","min",66699,51508.4,75104.4,70851,54783.6,79835.4
+"no test standard","India","uniform1",76217,55070.2,84385.2,78257,56551.2,86668.8
+"no test standard","India","uniform2",47071,40535.4,54873.6,49207,42303.2,57402.6
+"no test standard","Kenya","base",46950,39679.8,57725.2,50322,42480.2,61902.2
+"no test standard","Kenya","max",67391,57798.2,83510.4,72263,62067,89626.2
+"no test standard","Kenya","min",59420,50296.8,67178,62884,53209.6,71097.2
+"no test standard","Kenya","uniform1",74054,59961.8,87713.6,75880,61417.8,89783.4
+"no test standard","Kenya","uniform2",46602,41207.8,59979.2,48431,42884.4,62474.2
+"no test standard","South Africa","base",53019,45275.8,56964.2,57096,48812.6,61388.4
+"no test standard","South Africa","max",79070,60011.8,91169,85266,64648,98463.2
+"no test standard","South Africa","min",70851,59222.8,84871.4,75364,62924.2,90237.4
+"no test standard","South Africa","uniform1",78524,64739.8,84091,80605,66486.6,86367.8
+"no test standard","South Africa","uniform2",47109,41771.6,56186,49243,43642.8,58676.4
+"no test young","India","base",38365,32994.2,47207.2,40599,34903.8,49906.6
+"no test young","India","max",50815,43477.8,57605.8,53935,46166.8,61237.4
+"no test young","India","min",49699,44123.8,56489.8,52071,46223.2,59172.8
+"no test young","India","uniform1",78421,58948,88837,79716,59941.4,90328.6
+"no test young","India","uniform2",47147,38543,55017,48520,39645.6,56610.8
+"no test young","Kenya","base",37266,31521.6,44553.8,39263,33205.6,46974.6
+"no test young","Kenya","max",52007,42911.6,62242.6,55031,45426,65847.2
+"no test young","Kenya","min",47998,37940.8,55011.4,50190,39676.8,57509.8
+"no test young","Kenya","uniform1",78740,65784.6,93026.2,79931,66817.8,94449.4
+"no test young","Kenya","uniform2",47620,41687.2,57225.8,48972,42828.4,58784.4
+"no test young","South Africa","base",40097,34408,46063.2,42474,36434.6,48744
+"no test young","South Africa","max",51685,47300.2,63166.2,55053,50221,67179
+"no test young","South Africa","min",51240,43431.8,63279,53751,45607.4,66343
+"no test young","South Africa","uniform1",76523,60184.2,94135.8,77822,61177.4,95717
+"no test young","South Africa","uniform2",48487,39798.6,58396.8,49966,40979,60125.6

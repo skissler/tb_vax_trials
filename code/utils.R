@@ -182,12 +182,6 @@ define_foi_by_age <- function(method){
     foi <- rep(0.02,100)
   } else if (method=="uniform4") {
     foi <- rep(0.04,100)
-  } else if (method=="uniform25") {
-    foi <- rep(0.25,100)
-  } else if (method=="uniform50") {
-    foi <- rep(0.50,100)
-  } else if (method=="uniform75") {
-    foi <- rep(0.75,100)
   } else if (method=="uniform6") {
     foi <- rep(0.06,100)
   } else if (method=="uniform10") {
@@ -394,10 +388,11 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
     # Initialize tracking variables
     n_recruited <- 0
     n_fast <- 0
+    n_slow <- 0
     n_overall <- 0
     n_infected <- 0  # only used for calculating ARTI
     
-    # capacity <- 1e6
+    capacity <- 1e6
     
     # Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
     survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
@@ -446,21 +441,19 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
       if(tsymp > age){
         # They are asymptomatic, so let's recruit them: 
         n_recruited <- n_recruited + 1
-        # If they are fast, add 1 to n_fast:
-        if(progressor_type=="fast") {n_fast <- n_fast + 1}
-        # # Expand list if needed
-        # if (n_recruited > capacity) {
-        #   capacity <- capacity * 2
-        #   length(recruited_list) <- capacity  
-        # }
+        # If they are fast (and actually infected), add 1 to n_fast:
+        if (tinf <= age) {
+          (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
+        }
       }
+
       n_overall <- n_overall + 1
       
       # Also record those from n_overall who would have been positive if tested (only used in ARTI calculations)
       if (tinf <= age) n_infected <- n_infected + 1
     }
     
-    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, n_infected=n_infected)
+    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_slow, n_overall=n_overall, n_infected=n_infected)
     
     return(out)
   })

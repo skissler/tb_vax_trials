@@ -1,0 +1,721 @@
+"country","foi_structure","sigma","metric","value"
+"South Africa","base",1,"Recruited",702
+"South Africa","base",1,"Screened",68144.5
+"South Africa","base",2,"Recruited",1153
+"South Africa","base",2,"Screened",56697.5
+"South Africa","base",3,"Recruited",1632
+"South Africa","base",3,"Screened",51037.5
+"South Africa","base",4,"Recruited",2233.5
+"South Africa","base",4,"Screened",49952
+"South Africa","base",5,"Recruited",3159.5
+"South Africa","base",5,"Screened",56151.5
+"South Africa","base",6,"Recruited",3881
+"South Africa","base",6,"Screened",54376
+"South Africa","base",7,"Recruited",4512
+"South Africa","base",7,"Screened",52501
+"South Africa","base",8,"Recruited",5571
+"South Africa","base",8,"Screened",53918
+"South Africa","base",9,"Recruited",6228
+"South Africa","base",9,"Screened",52245
+"South Africa","base",10,"Recruited",7270
+"South Africa","base",10,"Screened",51739
+"South Africa","base",15,"Recruited",14396
+"South Africa","base",15,"Screened",55922
+"South Africa","base",20,"Recruited",20502.5
+"South Africa","base",20,"Screened",52989
+"South Africa","base",25,"Recruited",27891.5
+"South Africa","base",25,"Screened",54223
+"South Africa","base",30,"Recruited",33963
+"South Africa","base",30,"Screened",54005.5
+"South Africa","base",35,"Recruited",34983
+"South Africa","base",35,"Screened",48320
+"South Africa","base",40,"Recruited",43000.5
+"South Africa","base",40,"Screened",53887.5
+"South Africa","base",45,"Recruited",43913
+"South Africa","base",45,"Screened",52444
+"South Africa","base",50,"Recruited",43916
+"South Africa","base",50,"Screened",51871
+"South Africa","base",55,"Recruited",45269.5
+"South Africa","base",55,"Screened",53401.5
+"South Africa","base",60,"Recruited",49207.5
+"South Africa","base",60,"Screened",58062.5
+"South Africa","base",65,"Recruited",46301
+"South Africa","base",65,"Screened",54758
+"South Africa","base",70,"Recruited",43519.5
+"South Africa","base",70,"Screened",51332
+"South Africa","base",75,"Recruited",43217.5
+"South Africa","base",75,"Screened",50971.5
+"South Africa","base",80,"Recruited",47693.5
+"South Africa","base",80,"Screened",56324
+"South Africa","max",1,"Recruited",757
+"South Africa","max",1,"Screened",103457.5
+"South Africa","max",2,"Recruited",1130
+"South Africa","max",2,"Screened",76441
+"South Africa","max",3,"Recruited",1826.5
+"South Africa","max",3,"Screened",78170
+"South Africa","max",4,"Recruited",2544.5
+"South Africa","max",4,"Screened",77132.5
+"South Africa","max",5,"Recruited",3572.5
+"South Africa","max",5,"Screened",82383.5
+"South Africa","max",6,"Recruited",4254
+"South Africa","max",6,"Screened",75755
+"South Africa","max",7,"Recruited",5227
+"South Africa","max",7,"Screened",78421.5
+"South Africa","max",8,"Recruited",6178.5
+"South Africa","max",8,"Screened",76040.5
+"South Africa","max",9,"Recruited",7493
+"South Africa","max",9,"Screened",77447.5
+"South Africa","max",10,"Recruited",8994.5
+"South Africa","max",10,"Screened",79000.5
+"South Africa","max",15,"Recruited",18261.5
+"South Africa","max",15,"Screened",77663.5
+"South Africa","max",20,"Recruited",28790
+"South Africa","max",20,"Screened",76012
+"South Africa","max",25,"Recruited",40906
+"South Africa","max",25,"Screened",78649
+"South Africa","max",30,"Recruited",49696
+"South Africa","max",30,"Screened",76068
+"South Africa","max",35,"Recruited",61056
+"South Africa","max",35,"Screened",79334.5
+"South Africa","max",40,"Recruited",70207
+"South Africa","max",40,"Screened",81885.5
+"South Africa","max",45,"Recruited",68987.5
+"South Africa","max",45,"Screened",75767
+"South Africa","max",50,"Recruited",74770
+"South Africa","max",50,"Screened",80734
+"South Africa","max",55,"Recruited",70585.5
+"South Africa","max",55,"Screened",76118
+"South Africa","max",60,"Recruited",72775.5
+"South Africa","max",60,"Screened",78529.5
+"South Africa","max",65,"Recruited",71468
+"South Africa","max",65,"Screened",77093.5
+"South Africa","max",70,"Recruited",74706.5
+"South Africa","max",70,"Screened",80624
+"South Africa","max",75,"Recruited",67524.5
+"South Africa","max",75,"Screened",72983.5
+"South Africa","max",80,"Recruited",67187
+"South Africa","max",80,"Screened",72551
+"South Africa","min",1,"Recruited",765
+"South Africa","min",1,"Screened",94069
+"South Africa","min",2,"Recruited",1165
+"South Africa","min",2,"Screened",71748
+"South Africa","min",3,"Recruited",1758
+"South Africa","min",3,"Screened",69659.5
+"South Africa","min",4,"Recruited",2838
+"South Africa","min",4,"Screened",82431.5
+"South Africa","min",5,"Recruited",3408.5
+"South Africa","min",5,"Screened",74555.5
+"South Africa","min",6,"Recruited",3882.5
+"South Africa","min",6,"Screened",67998.5
+"South Africa","min",7,"Recruited",4955.5
+"South Africa","min",7,"Screened",70568.5
+"South Africa","min",8,"Recruited",5744
+"South Africa","min",8,"Screened",69787
+"South Africa","min",9,"Recruited",6614
+"South Africa","min",9,"Screened",68815
+"South Africa","min",10,"Recruited",8315
+"South Africa","min",10,"Screened",73705
+"South Africa","min",15,"Recruited",13788
+"South Africa","min",15,"Screened",65700.5
+"South Africa","min",20,"Recruited",21143
+"South Africa","min",20,"Screened",66901.5
+"South Africa","min",25,"Recruited",29760
+"South Africa","min",25,"Screened",70536
+"South Africa","min",30,"Recruited",34515
+"South Africa","min",30,"Screened",66829.5
+"South Africa","min",35,"Recruited",41310.5
+"South Africa","min",35,"Screened",69467.5
+"South Africa","min",40,"Recruited",47745.5
+"South Africa","min",40,"Screened",73992
+"South Africa","min",45,"Recruited",47310
+"South Africa","min",45,"Screened",69494
+"South Africa","min",50,"Recruited",49590
+"South Africa","min",50,"Screened",72128.5
+"South Africa","min",55,"Recruited",45794.5
+"South Africa","min",55,"Screened",66421.5
+"South Africa","min",60,"Recruited",50384.5
+"South Africa","min",60,"Screened",73175.5
+"South Africa","min",65,"Recruited",48619.5
+"South Africa","min",65,"Screened",70706
+"South Africa","min",70,"Recruited",46748.5
+"South Africa","min",70,"Screened",67917.5
+"South Africa","min",75,"Recruited",47801
+"South Africa","min",75,"Screened",69631.5
+"South Africa","min",80,"Recruited",47049.5
+"South Africa","min",80,"Screened",68304.5
+"South Africa","uniform1",1,"Recruited",679
+"South Africa","uniform1",1,"Screened",99739.5
+"South Africa","uniform1",2,"Recruited",1090.5
+"South Africa","uniform1",2,"Screened",78415
+"South Africa","uniform1",3,"Recruited",1501.5
+"South Africa","uniform1",3,"Screened",70470
+"South Africa","uniform1",4,"Recruited",2037
+"South Africa","uniform1",4,"Screened",74921.5
+"South Africa","uniform1",5,"Recruited",2536.5
+"South Africa","uniform1",5,"Screened",74220
+"South Africa","uniform1",6,"Recruited",2850.5
+"South Africa","uniform1",6,"Screened",68613
+"South Africa","uniform1",7,"Recruited",3354.5
+"South Africa","uniform1",7,"Screened",69313
+"South Africa","uniform1",8,"Recruited",4278.5
+"South Africa","uniform1",8,"Screened",76602.5
+"South Africa","uniform1",9,"Recruited",4710.5
+"South Africa","uniform1",9,"Screened",75573
+"South Africa","uniform1",10,"Recruited",5330.5
+"South Africa","uniform1",10,"Screened",74750
+"South Africa","uniform1",15,"Recruited",8124.5
+"South Africa","uniform1",15,"Screened",74530
+"South Africa","uniform1",20,"Recruited",11111.5
+"South Africa","uniform1",20,"Screened",76844.5
+"South Africa","uniform1",25,"Recruited",13576.5
+"South Africa","uniform1",25,"Screened",76140.5
+"South Africa","uniform1",30,"Recruited",15454.5
+"South Africa","uniform1",30,"Screened",76392.5
+"South Africa","uniform1",35,"Recruited",15606
+"South Africa","uniform1",35,"Screened",70158
+"South Africa","uniform1",40,"Recruited",16898
+"South Africa","uniform1",40,"Screened",71950.5
+"South Africa","uniform1",45,"Recruited",19243.5
+"South Africa","uniform1",45,"Screened",79303
+"South Africa","uniform1",50,"Recruited",17783.5
+"South Africa","uniform1",50,"Screened",72546.5
+"South Africa","uniform1",55,"Recruited",17781
+"South Africa","uniform1",55,"Screened",73187.5
+"South Africa","uniform1",60,"Recruited",18568
+"South Africa","uniform1",60,"Screened",76752
+"South Africa","uniform1",65,"Recruited",17866
+"South Africa","uniform1",65,"Screened",73476.5
+"South Africa","uniform1",70,"Recruited",17654
+"South Africa","uniform1",70,"Screened",72567
+"South Africa","uniform1",75,"Recruited",16081.5
+"South Africa","uniform1",75,"Screened",66335.5
+"South Africa","uniform1",80,"Recruited",18436.5
+"South Africa","uniform1",80,"Screened",75733
+"South Africa","uniform2",1,"Recruited",756
+"South Africa","uniform2",1,"Screened",67979
+"South Africa","uniform2",2,"Recruited",1076
+"South Africa","uniform2",2,"Screened",50650.5
+"South Africa","uniform2",3,"Recruited",1543
+"South Africa","uniform2",3,"Screened",49368
+"South Africa","uniform2",4,"Recruited",2087.5
+"South Africa","uniform2",4,"Screened",49039
+"South Africa","uniform2",5,"Recruited",2524.5
+"South Africa","uniform2",5,"Screened",46984
+"South Africa","uniform2",6,"Recruited",2968
+"South Africa","uniform2",6,"Screened",45972
+"South Africa","uniform2",7,"Recruited",3740.5
+"South Africa","uniform2",7,"Screened",48602
+"South Africa","uniform2",8,"Recruited",4252
+"South Africa","uniform2",8,"Screened",48786.5
+"South Africa","uniform2",9,"Recruited",4672
+"South Africa","uniform2",9,"Screened",48053
+"South Africa","uniform2",10,"Recruited",5799.5
+"South Africa","uniform2",10,"Screened",51569.5
+"South Africa","uniform2",15,"Recruited",9365.5
+"South Africa","uniform2",15,"Screened",53284
+"South Africa","uniform2",20,"Recruited",12333
+"South Africa","uniform2",20,"Screened",50263.5
+"South Africa","uniform2",25,"Recruited",16112.5
+"South Africa","uniform2",25,"Screened",53699
+"South Africa","uniform2",30,"Recruited",17659.5
+"South Africa","uniform2",30,"Screened",50867
+"South Africa","uniform2",35,"Recruited",18441
+"South Africa","uniform2",35,"Screened",48197.5
+"South Africa","uniform2",40,"Recruited",19184.5
+"South Africa","uniform2",40,"Screened",47025.5
+"South Africa","uniform2",45,"Recruited",20696
+"South Africa","uniform2",45,"Screened",48987
+"South Africa","uniform2",50,"Recruited",20674
+"South Africa","uniform2",50,"Screened",48490.5
+"South Africa","uniform2",55,"Recruited",19760.5
+"South Africa","uniform2",55,"Screened",46517
+"South Africa","uniform2",60,"Recruited",17170.5
+"South Africa","uniform2",60,"Screened",40495.5
+"South Africa","uniform2",65,"Recruited",20742.5
+"South Africa","uniform2",65,"Screened",48874
+"South Africa","uniform2",70,"Recruited",20976
+"South Africa","uniform2",70,"Screened",48911
+"South Africa","uniform2",75,"Recruited",21839
+"South Africa","uniform2",75,"Screened",51317
+"South Africa","uniform2",80,"Recruited",19894.5
+"South Africa","uniform2",80,"Screened",46457
+"India","base",1,"Recruited",706.5
+"India","base",1,"Screened",66477
+"India","base",2,"Recruited",1128
+"India","base",2,"Screened",53192
+"India","base",3,"Recruited",1783
+"India","base",3,"Screened",53254
+"India","base",4,"Recruited",2445
+"India","base",4,"Screened",53953.5
+"India","base",5,"Recruited",3168
+"India","base",5,"Screened",53730
+"India","base",6,"Recruited",3693.5
+"India","base",6,"Screened",50999
+"India","base",7,"Recruited",4754
+"India","base",7,"Screened",53702
+"India","base",8,"Recruited",5707
+"India","base",8,"Screened",54037.5
+"India","base",9,"Recruited",7140
+"India","base",9,"Screened",58897
+"India","base",10,"Recruited",7718
+"India","base",10,"Screened",53825
+"India","base",15,"Recruited",13973
+"India","base",15,"Screened",53008.5
+"India","base",20,"Recruited",22565.5
+"India","base",20,"Screened",56508
+"India","base",25,"Recruited",27373
+"India","base",25,"Screened",52698
+"India","base",30,"Recruited",31980
+"India","base",30,"Screened",50802.5
+"India","base",35,"Recruited",37123
+"India","base",35,"Screened",51583.5
+"India","base",40,"Recruited",38500
+"India","base",40,"Screened",49051
+"India","base",45,"Recruited",42310
+"India","base",45,"Screened",51030
+"India","base",50,"Recruited",44548
+"India","base",50,"Screened",52730
+"India","base",55,"Recruited",42972
+"India","base",55,"Screened",51079
+"India","base",60,"Recruited",40234
+"India","base",60,"Screened",47713
+"India","base",65,"Recruited",43944
+"India","base",65,"Screened",52174
+"India","base",70,"Recruited",42538.5
+"India","base",70,"Screened",50511
+"India","base",75,"Recruited",45545.5
+"India","base",75,"Screened",53888.5
+"India","base",80,"Recruited",43856.5
+"India","base",80,"Screened",52014.5
+"India","max",1,"Recruited",715
+"India","max",1,"Screened",95958.5
+"India","max",2,"Recruited",1177.5
+"India","max",2,"Screened",74437
+"India","max",3,"Recruited",1870.5
+"India","max",3,"Screened",77199
+"India","max",4,"Recruited",2495
+"India","max",4,"Screened",71862.5
+"India","max",5,"Recruited",3480.5
+"India","max",5,"Screened",78011
+"India","max",6,"Recruited",4757.5
+"India","max",6,"Screened",82484
+"India","max",7,"Recruited",5491.5
+"India","max",7,"Screened",78536.5
+"India","max",8,"Recruited",6086.5
+"India","max",8,"Screened",72280.5
+"India","max",9,"Recruited",7449
+"India","max",9,"Screened",72389.5
+"India","max",10,"Recruited",8978
+"India","max",10,"Screened",74546
+"India","max",15,"Recruited",18001.5
+"India","max",15,"Screened",73640
+"India","max",20,"Recruited",30525.5
+"India","max",20,"Screened",77760
+"India","max",25,"Recruited",38728.5
+"India","max",25,"Screened",72798.5
+"India","max",30,"Recruited",48647.5
+"India","max",30,"Screened",73856.5
+"India","max",35,"Recruited",52827.5
+"India","max",35,"Screened",68992
+"India","max",40,"Recruited",62729
+"India","max",40,"Screened",73832
+"India","max",45,"Recruited",67187
+"India","max",45,"Screened",74220
+"India","max",50,"Recruited",71388.5
+"India","max",50,"Screened",77346
+"India","max",55,"Recruited",66296.5
+"India","max",55,"Screened",71801
+"India","max",60,"Recruited",68806
+"India","max",60,"Screened",74527.5
+"India","max",65,"Recruited",68572.5
+"India","max",65,"Screened",74314.5
+"India","max",70,"Recruited",66290.5
+"India","max",70,"Screened",71840.5
+"India","max",75,"Recruited",69663
+"India","max",75,"Screened",75469.5
+"India","max",80,"Recruited",70065
+"India","max",80,"Screened",75963.5
+"India","min",1,"Recruited",747
+"India","min",1,"Screened",91040
+"India","min",2,"Recruited",1148
+"India","min",2,"Screened",66295
+"India","min",3,"Recruited",1928
+"India","min",3,"Screened",72602
+"India","min",4,"Recruited",2559
+"India","min",4,"Screened",69323
+"India","min",5,"Recruited",3202.5
+"India","min",5,"Screened",67455.5
+"India","min",6,"Recruited",4196.5
+"India","min",6,"Screened",69243.5
+"India","min",7,"Recruited",5100.5
+"India","min",7,"Screened",70196
+"India","min",8,"Recruited",6528
+"India","min",8,"Screened",74214
+"India","min",9,"Recruited",6579.5
+"India","min",9,"Screened",64972
+"India","min",10,"Recruited",7845
+"India","min",10,"Screened",65753
+"India","min",15,"Recruited",13560.5
+"India","min",15,"Screened",62267.5
+"India","min",20,"Recruited",21924
+"India","min",20,"Screened",66851.5
+"India","min",25,"Recruited",27985.5
+"India","min",25,"Screened",65087
+"India","min",30,"Recruited",34987.5
+"India","min",30,"Screened",67529
+"India","min",35,"Recruited",40730.5
+"India","min",35,"Screened",69105
+"India","min",40,"Recruited",44756
+"India","min",40,"Screened",69576
+"India","min",45,"Recruited",49049.5
+"India","min",45,"Screened",72573.5
+"India","min",50,"Recruited",43018
+"India","min",50,"Screened",63095
+"India","min",55,"Recruited",43749
+"India","min",55,"Screened",63859
+"India","min",60,"Recruited",47405.5
+"India","min",60,"Screened",69211.5
+"India","min",65,"Recruited",43022.5
+"India","min",65,"Screened",62785.5
+"India","min",70,"Recruited",44784
+"India","min",70,"Screened",65415
+"India","min",75,"Recruited",45293.5
+"India","min",75,"Screened",66042.5
+"India","min",80,"Recruited",46262.5
+"India","min",80,"Screened",67505.5
+"India","uniform1",1,"Recruited",677.5
+"India","uniform1",1,"Screened",95344.5
+"India","uniform1",2,"Recruited",1099
+"India","uniform1",2,"Screened",77162.5
+"India","uniform1",3,"Recruited",1674.5
+"India","uniform1",3,"Screened",80330.5
+"India","uniform1",4,"Recruited",2062.5
+"India","uniform1",4,"Screened",74620.5
+"India","uniform1",5,"Recruited",2276.5
+"India","uniform1",5,"Screened",64376
+"India","uniform1",6,"Recruited",3104
+"India","uniform1",6,"Screened",75335.5
+"India","uniform1",7,"Recruited",3646
+"India","uniform1",7,"Screened",74702
+"India","uniform1",8,"Recruited",4220.5
+"India","uniform1",8,"Screened",75698
+"India","uniform1",9,"Recruited",4752
+"India","uniform1",9,"Screened",74526
+"India","uniform1",10,"Recruited",5338.5
+"India","uniform1",10,"Screened",75625
+"India","uniform1",15,"Recruited",8869.5
+"India","uniform1",15,"Screened",82096.5
+"India","uniform1",20,"Recruited",11243
+"India","uniform1",20,"Screened",77161
+"India","uniform1",25,"Recruited",12518
+"India","uniform1",25,"Screened",71280
+"India","uniform1",30,"Recruited",16307.5
+"India","uniform1",30,"Screened",81607
+"India","uniform1",35,"Recruited",15457
+"India","uniform1",35,"Screened",70772.5
+"India","uniform1",40,"Recruited",18501.5
+"India","uniform1",40,"Screened",79675
+"India","uniform1",45,"Recruited",18964.5
+"India","uniform1",45,"Screened",79714
+"India","uniform1",50,"Recruited",18759
+"India","uniform1",50,"Screened",78111
+"India","uniform1",55,"Recruited",16702
+"India","uniform1",55,"Screened",69607.5
+"India","uniform1",60,"Recruited",17210.5
+"India","uniform1",60,"Screened",71783.5
+"India","uniform1",65,"Recruited",17446.5
+"India","uniform1",65,"Screened",72713.5
+"India","uniform1",70,"Recruited",17533
+"India","uniform1",70,"Screened",72947
+"India","uniform1",75,"Recruited",17371
+"India","uniform1",75,"Screened",71993
+"India","uniform1",80,"Recruited",19634
+"India","uniform1",80,"Screened",81490.5
+"India","uniform2",1,"Recruited",628.5
+"India","uniform2",1,"Screened",58034.5
+"India","uniform2",2,"Recruited",1196
+"India","uniform2",2,"Screened",56194
+"India","uniform2",3,"Recruited",1554.5
+"India","uniform2",3,"Screened",49049.5
+"India","uniform2",4,"Recruited",2031
+"India","uniform2",4,"Screened",48048.5
+"India","uniform2",5,"Recruited",2387
+"India","uniform2",5,"Screened",44444
+"India","uniform2",6,"Recruited",3077.5
+"India","uniform2",6,"Screened",47158
+"India","uniform2",7,"Recruited",3767.5
+"India","uniform2",7,"Screened",49377.5
+"India","uniform2",8,"Recruited",4661
+"India","uniform2",8,"Screened",51577.5
+"India","uniform2",9,"Recruited",4850.5
+"India","uniform2",9,"Screened",47344.5
+"India","uniform2",10,"Recruited",5402.5
+"India","uniform2",10,"Screened",47553.5
+"India","uniform2",15,"Recruited",8184
+"India","uniform2",15,"Screened",45468
+"India","uniform2",20,"Recruited",11575.5
+"India","uniform2",20,"Screened",47092.5
+"India","uniform2",25,"Recruited",13854.5
+"India","uniform2",25,"Screened",45691
+"India","uniform2",30,"Recruited",16371
+"India","uniform2",30,"Screened",47532
+"India","uniform2",35,"Recruited",19567.5
+"India","uniform2",35,"Screened",51405
+"India","uniform2",40,"Recruited",19221.5
+"India","uniform2",40,"Screened",47369
+"India","uniform2",45,"Recruited",18469.5
+"India","uniform2",45,"Screened",44094.5
+"India","uniform2",50,"Recruited",21510
+"India","uniform2",50,"Screened",50868.5
+"India","uniform2",55,"Recruited",20526.5
+"India","uniform2",55,"Screened",48399.5
+"India","uniform2",60,"Recruited",20596
+"India","uniform2",60,"Screened",48772
+"India","uniform2",65,"Recruited",18997
+"India","uniform2",65,"Screened",44908
+"India","uniform2",70,"Recruited",18580
+"India","uniform2",70,"Screened",43904
+"India","uniform2",75,"Recruited",20580
+"India","uniform2",75,"Screened",48480.5
+"India","uniform2",80,"Recruited",20488
+"India","uniform2",80,"Screened",48342.5
+"Kenya","base",1,"Recruited",753.5
+"Kenya","base",1,"Screened",64510
+"Kenya","base",2,"Recruited",1207.5
+"Kenya","base",2,"Screened",49843.5
+"Kenya","base",3,"Recruited",1829.5
+"Kenya","base",3,"Screened",50355
+"Kenya","base",4,"Recruited",2389
+"Kenya","base",4,"Screened",46328.5
+"Kenya","base",5,"Recruited",3178.5
+"Kenya","base",5,"Screened",47195.5
+"Kenya","base",6,"Recruited",3709
+"Kenya","base",6,"Screened",44852.5
+"Kenya","base",7,"Recruited",4907.5
+"Kenya","base",7,"Screened",48859.5
+"Kenya","base",8,"Recruited",5621
+"Kenya","base",8,"Screened",45943
+"Kenya","base",9,"Recruited",6879
+"Kenya","base",9,"Screened",49990.5
+"Kenya","base",10,"Recruited",7848
+"Kenya","base",10,"Screened",48508.5
+"Kenya","base",15,"Recruited",14887
+"Kenya","base",15,"Screened",49743.5
+"Kenya","base",20,"Recruited",19675
+"Kenya","base",20,"Screened",44402.5
+"Kenya","base",25,"Recruited",26016.5
+"Kenya","base",25,"Screened",46662
+"Kenya","base",30,"Recruited",30006
+"Kenya","base",30,"Screened",45766
+"Kenya","base",35,"Recruited",35973.5
+"Kenya","base",35,"Screened",49305
+"Kenya","base",40,"Recruited",36326
+"Kenya","base",40,"Screened",46328.5
+"Kenya","base",45,"Recruited",38643.5
+"Kenya","base",45,"Screened",47479.5
+"Kenya","base",50,"Recruited",40597
+"Kenya","base",50,"Screened",49430.5
+"Kenya","base",55,"Recruited",38219
+"Kenya","base",55,"Screened",46394.5
+"Kenya","base",60,"Recruited",39732.5
+"Kenya","base",60,"Screened",48241
+"Kenya","base",65,"Recruited",36493.5
+"Kenya","base",65,"Screened",44222
+"Kenya","base",70,"Recruited",37492.5
+"Kenya","base",70,"Screened",45692.5
+"Kenya","base",75,"Recruited",42011
+"Kenya","base",75,"Screened",51057.5
+"Kenya","base",80,"Recruited",38031.5
+"Kenya","base",80,"Screened",46167.5
+"Kenya","max",1,"Recruited",743
+"Kenya","max",1,"Screened",80214
+"Kenya","max",2,"Recruited",1236
+"Kenya","max",2,"Screened",67372
+"Kenya","max",3,"Recruited",1803
+"Kenya","max",3,"Screened",63029.5
+"Kenya","max",4,"Recruited",2709.5
+"Kenya","max",4,"Screened",67737
+"Kenya","max",5,"Recruited",3077.5
+"Kenya","max",5,"Screened",59798
+"Kenya","max",6,"Recruited",4895.5
+"Kenya","max",6,"Screened",72910
+"Kenya","max",7,"Recruited",5514
+"Kenya","max",7,"Screened",66454
+"Kenya","max",8,"Recruited",6309.5
+"Kenya","max",8,"Screened",62593.5
+"Kenya","max",9,"Recruited",8330
+"Kenya","max",9,"Screened",69234.5
+"Kenya","max",10,"Recruited",10221.5
+"Kenya","max",10,"Screened",72699.5
+"Kenya","max",15,"Recruited",19412.5
+"Kenya","max",15,"Screened",66795.5
+"Kenya","max",20,"Recruited",28880
+"Kenya","max",20,"Screened",64097.5
+"Kenya","max",25,"Recruited",39903
+"Kenya","max",25,"Screened",68177.5
+"Kenya","max",30,"Recruited",50431.5
+"Kenya","max",30,"Screened",72174
+"Kenya","max",35,"Recruited",45027
+"Kenya","max",35,"Screened",57146.5
+"Kenya","max",40,"Recruited",56347
+"Kenya","max",40,"Screened",65775.5
+"Kenya","max",45,"Recruited",60273.5
+"Kenya","max",45,"Screened",67048
+"Kenya","max",50,"Recruited",62571
+"Kenya","max",50,"Screened",68650.5
+"Kenya","max",55,"Recruited",60689.5
+"Kenya","max",55,"Screened",66725.5
+"Kenya","max",60,"Recruited",62485
+"Kenya","max",60,"Screened",68614.5
+"Kenya","max",65,"Recruited",61470
+"Kenya","max",65,"Screened",67564.5
+"Kenya","max",70,"Recruited",58181.5
+"Kenya","max",70,"Screened",63938.5
+"Kenya","max",75,"Recruited",50650.5
+"Kenya","max",75,"Screened",55665
+"Kenya","max",80,"Recruited",57782.5
+"Kenya","max",80,"Screened",63413
+"Kenya","min",1,"Recruited",736
+"Kenya","min",1,"Screened",73044.5
+"Kenya","min",2,"Recruited",1257
+"Kenya","min",2,"Screened",61695.5
+"Kenya","min",3,"Recruited",1860
+"Kenya","min",3,"Screened",59109.5
+"Kenya","min",4,"Recruited",2683.5
+"Kenya","min",4,"Screened",61765
+"Kenya","min",5,"Recruited",3040
+"Kenya","min",5,"Screened",53467.5
+"Kenya","min",6,"Recruited",4618
+"Kenya","min",6,"Screened",64588.5
+"Kenya","min",7,"Recruited",4697
+"Kenya","min",7,"Screened",54547
+"Kenya","min",8,"Recruited",6322
+"Kenya","min",8,"Screened",62822.5
+"Kenya","min",9,"Recruited",7175.5
+"Kenya","min",9,"Screened",60657
+"Kenya","min",10,"Recruited",8480
+"Kenya","min",10,"Screened",62148
+"Kenya","min",15,"Recruited",15612.5
+"Kenya","min",15,"Screened",62914
+"Kenya","min",20,"Recruited",20533
+"Kenya","min",20,"Screened",56413
+"Kenya","min",25,"Recruited",27913.5
+"Kenya","min",25,"Screened",60467.5
+"Kenya","min",30,"Recruited",32748
+"Kenya","min",30,"Screened",60898
+"Kenya","min",35,"Recruited",30774.5
+"Kenya","min",35,"Screened",51595
+"Kenya","min",40,"Recruited",39368
+"Kenya","min",40,"Screened",61573
+"Kenya","min",45,"Recruited",40448
+"Kenya","min",45,"Screened",60595.5
+"Kenya","min",50,"Recruited",41709
+"Kenya","min",50,"Screened",62271
+"Kenya","min",55,"Recruited",38202
+"Kenya","min",55,"Screened",56804.5
+"Kenya","min",60,"Recruited",38889.5
+"Kenya","min",60,"Screened",57909
+"Kenya","min",65,"Recruited",35783.5
+"Kenya","min",65,"Screened",53207.5
+"Kenya","min",70,"Recruited",41145.5
+"Kenya","min",70,"Screened",61191
+"Kenya","min",75,"Recruited",37320
+"Kenya","min",75,"Screened",55621
+"Kenya","min",80,"Recruited",39228
+"Kenya","min",80,"Screened",58626.5
+"Kenya","uniform1",1,"Recruited",667.5
+"Kenya","uniform1",1,"Screened",88839.5
+"Kenya","uniform1",2,"Recruited",1110.5
+"Kenya","uniform1",2,"Screened",78215.5
+"Kenya","uniform1",3,"Recruited",1507
+"Kenya","uniform1",3,"Screened",71702.5
+"Kenya","uniform1",4,"Recruited",2189
+"Kenya","uniform1",4,"Screened",76989
+"Kenya","uniform1",5,"Recruited",2693.5
+"Kenya","uniform1",5,"Screened",75201
+"Kenya","uniform1",6,"Recruited",3237
+"Kenya","uniform1",6,"Screened",76138
+"Kenya","uniform1",7,"Recruited",4001.5
+"Kenya","uniform1",7,"Screened",79175
+"Kenya","uniform1",8,"Recruited",4080.5
+"Kenya","uniform1",8,"Screened",71143
+"Kenya","uniform1",9,"Recruited",5115.5
+"Kenya","uniform1",9,"Screened",79258.5
+"Kenya","uniform1",10,"Recruited",5619.5
+"Kenya","uniform1",10,"Screened",76983.5
+"Kenya","uniform1",15,"Recruited",8498.5
+"Kenya","uniform1",15,"Screened",75397
+"Kenya","uniform1",20,"Recruited",10284
+"Kenya","uniform1",20,"Screened",70478.5
+"Kenya","uniform1",25,"Recruited",13715
+"Kenya","uniform1",25,"Screened",78794.5
+"Kenya","uniform1",30,"Recruited",15523.5
+"Kenya","uniform1",30,"Screened",79085.5
+"Kenya","uniform1",35,"Recruited",17134.5
+"Kenya","uniform1",35,"Screened",81310
+"Kenya","uniform1",40,"Recruited",16526
+"Kenya","uniform1",40,"Screened",74594
+"Kenya","uniform1",45,"Recruited",18610.5
+"Kenya","uniform1",45,"Screened",82117.5
+"Kenya","uniform1",50,"Recruited",16950.5
+"Kenya","uniform1",50,"Screened",74799
+"Kenya","uniform1",55,"Recruited",17779
+"Kenya","uniform1",55,"Screened",77660.5
+"Kenya","uniform1",60,"Recruited",16064.5
+"Kenya","uniform1",60,"Screened",70790
+"Kenya","uniform1",65,"Recruited",16414
+"Kenya","uniform1",65,"Screened",72062.5
+"Kenya","uniform1",70,"Recruited",17065.5
+"Kenya","uniform1",70,"Screened",75204.5
+"Kenya","uniform1",75,"Recruited",17880
+"Kenya","uniform1",75,"Screened",78170
+"Kenya","uniform1",80,"Recruited",16357.5
+"Kenya","uniform1",80,"Screened",71555
+"Kenya","uniform2",1,"Recruited",668
+"Kenya","uniform2",1,"Screened",62187.5
+"Kenya","uniform2",2,"Recruited",1127
+"Kenya","uniform2",2,"Screened",52676
+"Kenya","uniform2",3,"Recruited",1658.5
+"Kenya","uniform2",3,"Screened",51662
+"Kenya","uniform2",4,"Recruited",2158.5
+"Kenya","uniform2",4,"Screened",48657.5
+"Kenya","uniform2",5,"Recruited",2694.5
+"Kenya","uniform2",5,"Screened",48366
+"Kenya","uniform2",6,"Recruited",3156.5
+"Kenya","uniform2",6,"Screened",46957
+"Kenya","uniform2",7,"Recruited",3679
+"Kenya","uniform2",7,"Screened",45781
+"Kenya","uniform2",8,"Recruited",4742.5
+"Kenya","uniform2",8,"Screened",50516
+"Kenya","uniform2",9,"Recruited",5240
+"Kenya","uniform2",9,"Screened",49728
+"Kenya","uniform2",10,"Recruited",5268
+"Kenya","uniform2",10,"Screened",44744.5
+"Kenya","uniform2",15,"Recruited",9555
+"Kenya","uniform2",15,"Screened",50631
+"Kenya","uniform2",20,"Recruited",11875.5
+"Kenya","uniform2",20,"Screened",46712
+"Kenya","uniform2",25,"Recruited",14991
+"Kenya","uniform2",25,"Screened",49605
+"Kenya","uniform2",30,"Recruited",16003
+"Kenya","uniform2",30,"Screened",47105
+"Kenya","uniform2",35,"Recruited",20102
+"Kenya","uniform2",35,"Screened",54009.5
+"Kenya","uniform2",40,"Recruited",18677
+"Kenya","uniform2",40,"Screened",47909
+"Kenya","uniform2",45,"Recruited",19002
+"Kenya","uniform2",45,"Screened",47279.5
+"Kenya","uniform2",50,"Recruited",19836.5
+"Kenya","uniform2",50,"Screened",49364.5
+"Kenya","uniform2",55,"Recruited",20009
+"Kenya","uniform2",55,"Screened",49546
+"Kenya","uniform2",60,"Recruited",20391.5
+"Kenya","uniform2",60,"Screened",50953.5
+"Kenya","uniform2",65,"Recruited",21431.5
+"Kenya","uniform2",65,"Screened",52852.5
+"Kenya","uniform2",70,"Recruited",19685
+"Kenya","uniform2",70,"Screened",48721.5
+"Kenya","uniform2",75,"Recruited",19980.5
+"Kenya","uniform2",75,"Screened",49825.5
+"Kenya","uniform2",80,"Recruited",20532.5
+"Kenya","uniform2",80,"Screened",50850.5

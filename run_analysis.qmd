@@ -66,7 +66,7 @@ p_slow_m72IIb <- rep(0.5,100)  # *uniform probability of being a slow progressor
 names(p_slow_m72IIb) <- 0:99
 
 pars_m72IIb_igra <- list(
-	minage=18,  # from trial
+	minage=15,  # from trial
 	maxage=49,  # from trial (up to 50.0y)
 	rho=rho_m72IIb,  #0.0275  # modelled value (range considered thus far: ~0.002-0.03 e.g. up to an order of mag greater than old lit)
 	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
@@ -79,7 +79,7 @@ pars_m72IIb_tasa <- pars_m72IIb_igra
 pars_m72IIb_tasa$sigma <- 2
 
 pars_lit_igra <- list(
-	minage=18, # taken from above
+	minage=15, # taken from above
 	maxage=49, # taken from above
 	rho=rho_lit,  # from lit, with choice of tinf method (foi_structure)
 	p_slow=p_slow_lit,  # from lit
@@ -345,7 +345,7 @@ stoch_df_7a_long <- stoch_df_7a %>%
 median_df_7a <- stoch_df_7a_long %>%
   group_by(country, foi_structure, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
-#write.csv(median_df_7a, file="output/variedsite_scenarios.csv", row.names=FALSE)
+write.csv(median_df_7a, file="output/variedsite_scenarios.csv", row.names=FALSE)
 
 fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure)) +
   geom_point(size=0.4, alpha=0.2) +
@@ -391,7 +391,7 @@ benchmarks_7a <- benchmarks_7a %>%
   # India:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
   # Kenya:        between(inf_prev_age20, ?, ?) & between(ARTI, ?, ?) & between(cases_per100k, ?, ?)
 
-#write.csv(benchmarks_7a, file="output/variedsite_benchmarks.csv", row.names=FALSE)
+write.csv(benchmarks_7a, file="output/variedsite_benchmarks.csv", row.names=FALSE)
 ```
 
 ## 7b. Non-test enrolment scenarios
@@ -414,44 +414,23 @@ pars_7b$p_slow  <- p_slow_7b
 pars_7b$mu_slow <- mu_slow_7b
 
 # Flat grid: scenario x country x FOI x rep
-standard_grid <- expand.grid(
-  scenario      = "no test standard",
-  country       = countries_7b,
-  foi_structure = foi_structures_7b,
-  rep           = 1:5,
-  stringsAsFactors = FALSE
-)
-younger_grid <- expand.grid(
-  scenario      = "no test young",
-  country       = countries_7b,
-  foi_structure = foi_structures_7b,
-  rep           = 1:5,
-  stringsAsFactors = FALSE
-)
-household_grid <- expand.grid(
-  scenario      = "no test household",
-  country       = countries_7b,
-  foi_structure = foi_household_7b,
-  rep           = 1:5,
-  stringsAsFactors = FALSE
-)
-sim_grid_7b <- bind_rows(standard_grid, younger_grid, household_grid)
+scenarios_7b <- tibble(scenario = c("no test standard", "no test young", "no test household"),
+                       minage   = c(15, 12, 6),
+                       maxage   = c(49, 34, 99))
+
+sim_grid_7b <- scenarios_7b %>%
+  expand_grid(country = countries_7b, foi_structure = foi_structures_7b, rep = 1:25)
 
 with_progress({
   p <- progressr::progressor(steps=nrow(sim_grid_7b))
   notest_list_7b <- future.apply::future_lapply(1:nrow(sim_grid_7b), function(i) {
     pars_i        <- pars_7b
     pars_i$rho    <- define_foi_by_age(sim_grid_7b$foi_structure[i])
-    pars_i$minage <- switch(sim_grid_7b$scenario[i],
-                            "no test standard"  = 18,
-                            "no test young"     = 12,
-                            "no test household" = 6)
-    pars_i$maxage <- switch(sim_grid_7b$scenario[i],
-                            "no test standard"  = 49,
-                            "no test young"     = 34,
-                            "no test household" = 99)
+    pars_i$minage <- sim_grid_7b$minage[i]
+    pars_i$maxage <- sim_grid_7b$maxage[i]
     agedist_i     <- agedists_7b[[sim_grid_7b$country[i]]]
-    out           <- sim_stoch_notest(pars_i, fasttarget=50, agedist=agedist_i)
+    out           <- sim_stoch_notest(pars_i, fasttarget=50, agedist=agedist_i, 
+                                      households = (sim_grid_7b$scenario[i] == "no test household"))
     p()
     tibble(
       scenario      = sim_grid_7b$scenario[i],
@@ -481,47 +460,31 @@ notest_summary_7b <- notest_df_7b %>%
     n_overall_hi    = quantile(n_overall, 0.9),
     .groups = "drop"
   )
-#write.csv(notest_summary_7b, file="output/notest_scenarios.csv", row.names=FALSE)
+write.csv(notest_summary_7b, file="output/notest_scenarios.csv", row.names=FALSE)
 
-#' Plot: collapse FOI into a range, x = scenario, facet = country
-#' Point = median across FOI structures and reps; errorbar = min/max across FOI structures
-foi_range_7b <- notest_df_7b %>% 
-  group_by(scenario, country, foi_structure) %>%
-  summarise(n_recruited_med = median(n_recruited), .groups="drop") %>%
-  group_by(scenario, country) %>%
-  summarise(
-    n_recruited_mid = median(n_recruited_med),
-    n_recruited_lo  = min(n_recruited_med),
-    n_recruited_hi  = max(n_recruited_med),
-    .groups = "drop"
-  ) %>%
+#' Plot: x = scenario, facet = country, line = foi
+fig_7b <- notest_df_7b %>% 
   mutate(country  = factor(country, levels=countries_7b),
-         scenario = factor(scenario, levels=c("no test standard", "no test young"))) #, "no test household")))
-
-fig_7b <- ggplot(foi_range_7b, aes(x=scenario, y=n_recruited_mid, ymin=n_recruited_lo, ymax=n_recruited_hi)) +
-  geom_point(size=2) +
-  geom_errorbar(width=0.25) +
+         scenario = factor(scenario, levels=c("no test standard", "no test young", "no test household")),
+         foi_structure = factor(foi_structure, levels=foi_structures_7b)) %>%
+  ggplot(aes(x=scenario, y=n_recruited, fill=foi_structure)) +
+  geom_boxplot(coef=Inf) +
+  scale_fill_brewer(palette = "Set1") +
   facet_wrap(~country, nrow=1) +
   theme_classic() +
   theme(strip.background=element_blank(), axis.text.x=element_text(angle=25, hjust=1)) +
-  labs(x=NULL, y="Recruited (per 50 fast progressors)")
+  labs(x=NULL, y="Recruited (per 50 fast progressors)", fill="Force of infection")
 fig_7b
 ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 
 #' Epidemiological benchmarks
-combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure) 
+combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure, minage, maxage) 
 benchmarks_7b <- tibble()
 for (i in 1:nrow(combos_7b)) {
   pars_i        <- pars_7b
   pars_i$rho    <- define_foi_by_age(combos_7b$foi_structure[i])
-  pars_i$minage <- switch(combos_7b$scenario[i],
-                          "no test standard"  = 18,
-                          "no test young"     = 12,
-                          "no test household" = 6)
-  pars_i$maxage <- switch(combos_7b$scenario[i],
-                          "no test standard"  = 49,
-                          "no test young"     = 34,
-                          "no test household" = 99)
+  pars_i$minage <- combos_7b$minage[i]
+  pars_i$maxage <- combos_7b$maxage[i]
 
   stoch_i  <- notest_df_7b %>%
     filter(scenario==combos_7b$scenario[i], country==combos_7b$country[i], foi_structure==combos_7b$foi_structure[i]) %>%
@@ -545,5 +508,5 @@ for (i in 1:nrow(combos_7b)) {
 benchmarks_7b <- benchmarks_7b %>%
   mutate(conditions_met = TRUE)  # TODO: fill in conditions per scenario/country
 
-#write.csv(benchmarks_7b, file="output/notest_benchmarks.csv", row.names=FALSE)
+write.csv(benchmarks_7b, file="output/notest_benchmarks.csv", row.names=FALSE)
 ```
