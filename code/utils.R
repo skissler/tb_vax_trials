@@ -296,7 +296,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist){
+sim_stoch <- function(pars, fasttarget=50, agedist, households=F){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
@@ -330,7 +330,17 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
 	  }
 	  
-		# Grab their (tinf-dependent) progression status 
+	  # HOUSEHOLDS step
+	  if (households) {
+	    if (tinf > age) {  # not already infected
+	      household_infection <- rbinom(1, size=1, prob=0.3)  # true or false coin flip
+	      if (household_infection == TRUE) tinf <- age  # new tinf is current age
+	    } else if (tinf <= age) {
+	      # do nothing
+	    }
+	  }
+	  
+		# Grab their (tinf-dependent) progression status
 	  if (tinf < 100) {
 	    prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
 	  } else {
@@ -339,7 +349,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 	  
 		# Simulate their time to symptoms
-		tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
+		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
 		
 		# ELIGIBILITY
 		if(tsymp > age){
@@ -378,7 +388,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist){
 }
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
-sim_stoch_notest <- function(pars, fasttarget=50, agedist){
+sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
   with(as.list(pars), {
     
     # Initialize tracking variables
@@ -388,7 +398,6 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist){
     n_infected <- 0  # only used for calculating ARTI
     
     # capacity <- 1e6
-    # recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
     
     # Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
     survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
@@ -410,6 +419,16 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist){
         tinf <- tinf + runif(1)  # continuous within that year
       } else {
         tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
+      }
+      
+      # HOUSEHOLDS step
+      if (households) {
+        if (tinf > age) {  # not already infected
+          household_infection <- rbinom(1, size=1, prob=0.3)  # true or false coin flip
+          if (household_infection == TRUE) tinf <- age  # new tinf is current age
+        } else if (tinf <= age) {
+          # do nothing
+        }
       }
       
       # Grab their (tinf-dependent) progression status 
@@ -434,20 +453,12 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist){
         #   capacity <- capacity * 2
         #   length(recruited_list) <- capacity  
         # }
-        # # Record key info for those who were recruited
-        # recruited_list[[n_recruited]] <- list(
-        #   id=n_recruited,
-        #   age=age,
-        #   progressor_type=progressor_type,
-        #   tinf=tinf)  # only recording tinf values for those who were recruited
       }
       n_overall <- n_overall + 1
       
       # Also record those from n_overall who would have been positive if tested (only used in ARTI calculations)
-      if (tinf < age) n_infected <- n_infected + 1
+      if (tinf <= age) n_infected <- n_infected + 1
     }
-    
-    # recruited_df <- bind_rows(recruited_list[1:(n_recruited)])  # bind_rows outside of the while loop is much faster
     
     out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, n_infected=n_infected)
     

@@ -549,3 +549,19 @@ We have \~6 sets of parameter combinations that satisfy all our criteria. Key re
 Now thinking about the trial emulated model run.
 
 The m72IIb trial enrolled 3575 (<https://www.nejm.org/doi/full/10.1056/NEJMoa1909953>). After 3 years, they would have seen approx 52 cases in the absence of vaccination (e.g. doubling the number of cases reported in the placebo arm).
+
+# 5th-6th May (LH)
+
+Constructing the household contacts model scenario. Much discussion with Stephen led us to come up with the following:
+
+- IGRA only. **Assume all individuals are living in a household of a recent case.**
+
+- Step 1 - Have they been infected previously? If yes, use their existing tinf and run the procedure as normal.
+
+- Step 2 - If not, did they get infected by the household? (Coin flip 30% probability). If yes, then the household infection is their new tinf (i.e. their current age). Run the rest of the procedure as normal.
+
+- Step 3 - If still no, in the test case, we don't recruit them (as they haven't tested positive). **In the non-test based case, we would not know whether or not they were infected and we would recruit them anyway because they are a household contact.**
+
+- The idea is that household contacts have this large instantaenous foi at their current age BUT that's only realised if they aren't already infected (step 1). We do not consider reinfection / boosting in our model.
+
+- Note that we assume individuals of all ages are equally likely to live in an exposed household (because we are drawinf from the general population age distribution). Multigenerational households appear to be increasingly common in South Africa (<https://www.statssa.gov.za/?p=18066>).
