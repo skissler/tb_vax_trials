@@ -584,4 +584,12 @@ With this new Dagnew dataset, South Africa infection prevalence averaged across 
 
 ![](images/clipboard-2974238641.png)
 
-We can't reproduce the analysis we did for investigating if new foi should be age-varying as the Dagnew paper doesn't give a nice curve of inf prev by age (only data for two age classes). However we do know we want something 5% or less. So we can try a few different values, and also add in some larger p_fast options (to capture HIV-infected individuals).
+We can't reproduce the analysis we did for investigating if new foi should be age-varying as the Dagnew paper doesn't give a nice curve of inf prev by age (only data for two age classes). However we do know we want something 5% or less. So we can try a few different values (1-5%), and also add in a larger p_fast option "Vynnycky-high" (to capture HIV-infected individuals).
+
+**Results from model fitting:**
+
+- Ran for mu_slow = base, min, max; foi ranging from 1-5% uniform then zooming in on 3-5% age-varying; and p_slow = Vynnycky, Vynnycky-high.
+
+- With relaxed conditions_met, only the mu_slow=max (0.00527) scenarios worked (mu_slow=0.001 did not give enough cases). Lots of parameter options with max mu_slow met the conditions but I'm not super keen having max mu_slow as our base case. I instead reran for a slightly softer mu_slow=0.003 because this is one parameter we'd like to dampen down a little if possible.
+
+- There were some hits with mu_slow=0.003 which is great. Best parameter set looked to be mu_slow=0.003, Vynnycky p_slow, and foi=4,5,3,5,5. So I'll take this as the fitted set. :)

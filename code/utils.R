@@ -167,18 +167,35 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
     p_slow_by_age <- rep(0.95, 100)
   } else if (method %in% df$study) {
     p_slow_by_age <- df %>% filter(study==method) %>% pull(p_slow)
+  } else if (method=="Vynnycky-high") {
+    p_fast_temp <- c(rep(0.04,11), 0.055, 0.07, 0.085, 0.10, 0.115, 0.13, 0.145, 0.16, 0.175, rep(0.19,80))  # 4% for ages 0-10, then linearly increasing, then 19% for age 20+
+    p_slow_by_age <- 1 - p_fast_temp
   } else {
-    print("method must be \"uniform\" or any study from `unique(progressor_type_by_age_studies$study)`")
+    print("method must be \"uniform\" or \"Vynnycky-high\" or any study from `unique(progressor_type_by_age_studies$study)`")
   }
   
   names(p_slow_by_age) <- 0:99
   return(p_slow_by_age)
 }
 
-make_foi <- function(a0_4, a5_24, a25_34, a35_49, a50plus) {
-  # helper: build an age-varying FOI vector using standard age bands (0-4, 5-24, 25-34, 35-49, 50+)
-  # values are supplied as percentages (e.g. a0_4=2 means 2% per year for ages 0-4)
-  c(rep(a0_4/100, 5), rep(a5_24/100, 20), rep(a25_34/100, 10), rep(a35_49/100, 15), rep(a50plus/100, 50))
+make_foi <- function(a0_4, a5_24=NULL, a25_34=NULL, a35_49=NULL, a50plus=NULL) {
+  # Helper: build age-varying FOI vector(s) using standard age bands (0-4, 5-24, 25-34, 35-49, 50+).
+  # Values supplied as percentages (e.g. a0_4=2 means 2% per year for ages 0-4).
+  # Single vector mode:  make_foi(2, 3, 4, 3, 2)
+  # Grid mode:           make_foi(expand.grid(a0_4=1:5, a5_24=1:5, a25_34=1:5, a35_49=1:5, a50plus=1:5))
+  #                      returns a named list of FOI vectors, names like "2_3_4_3_2"
+  if (is.data.frame(a0_4)) {
+    df <- a0_4
+    vecs <- lapply(1:nrow(df), function(i) {
+      foi <- c(rep(df$a0_4[i]/100, 5), rep(df$a5_24[i]/100, 20), rep(df$a25_34[i]/100, 10),
+               rep(df$a35_49[i]/100, 15), rep(df$a50plus[i]/100, 50))
+      setNames(foi, 0:99)
+    })
+    setNames(vecs, paste(df$a0_4, df$a5_24, df$a25_34, df$a35_49, df$a50plus, sep="_"))
+  } else {
+    foi <- c(rep(a0_4/100, 5), rep(a5_24/100, 20), rep(a25_34/100, 10), rep(a35_49/100, 15), rep(a50plus/100, 50))
+    setNames(foi, 0:99)
+  }
 }
 
 define_foi_by_age <- function(method){
@@ -205,6 +222,8 @@ define_mu_slow <- function(method) {
     mu_slow=0.0001
   } else if (method=="max") {
     mu_slow=0.00527
+  } else if (method=="0.003") {
+    mu_slow=0.003
   } else if (method=="Vynnycky") {
     print("Functionality not yet added for Vynnycky (i.e. age-varying mu_slow)")
   }

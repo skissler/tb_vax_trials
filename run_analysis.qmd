@@ -39,7 +39,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-foi_structure <- "base"  # works for "uniform4", "uniform6", ...
+foi_structure <- "uniform_7"  # works for "uniform4", "uniform6", ...
 progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 slow_structure <- "base"
 
@@ -79,8 +79,8 @@ pars_m72IIb_igra <- list(
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55,  # from trial (technically 54% VE)
 	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
-pars_m72IIb_tasa <- pars_m72IIb_igra
-pars_m72IIb_tasa$sigma <- 2
+# pars_m72IIb_tasa <- pars_m72IIb_igra
+# pars_m72IIb_tasa$sigma <- 2
 
 pars_lit_igra <- list(
 	minage=15, # taken from above
@@ -131,7 +131,7 @@ Rather than stopping at fasttarget=50 fast progressors and scaling up, `sim_tria
 target_enrolled <- 3289
 target_cases    <- 52
 
-foi_structures_m72IIb  <- c("base", "min", "max", "incr", "decr")
+foi_structures_m72IIb  <- c("uniform_7")#, "min", "max", "incr", "decr")
 slow_structures_m72IIb <- c("base", "min", "max")
 p_slow_m72IIb_vals     <- seq(0.5, 1.0, by=0.05)
 p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
@@ -244,9 +244,12 @@ Note: run code snippets 1-3 first.
 #| eval: FALSE
 
 # define parameter search space
-foi_structures <- c("base", "min", "max", "incr", "decr")
-progression_structures <- c("uniform", "Vynnycky-1997")
-slow_structures <- c("base", "min", "max") #, "Vynnycky" )
+foi_grid_1 <- tibble(a0_4=1:5, a5_24=1:5, a25_34=1:5, a35_49=1:5, a50plus=1:5)  # initial uniform fits
+foi_grid_2 <- expand.grid(a0_4=3:5, a5_24=3:5, a25_34=3:5, a35_49=3:5, a50plus=3:5)  # closer inspection of 3-5% as this looked promising from initial fits
+foi_grid <- bind_rows(foi_grid_1, foi_grid_2) %>% distinct()
+foi_structures <- make_foi(foi_grid)  # named list of 3125 vectors
+progression_structures <- c("Vynnycky-1997", "Vynnycky-high")
+slow_structures <- c("base", "min", "max", "0.003")
 summary_table <- tibble()
 reps <- 5
 
@@ -261,9 +264,9 @@ for (progression_structure in progression_structures) {
     mu_slow <- define_mu_slow(slow_structure)  # rate of progression to disease for slow progressors
     pars_lit_igra$mu_slow <- mu_slow
     
-    for (foi_structure in foi_structures) {
+    for (foi_structure in names(foi_structures)) {
     # Redefine parameter which is looped
-    foi <- define_foi_by_age(foi_structure)  # force of infection by age
+    foi <- foi_structures[[foi_structure]] # force of infection by age
     pars_lit_igra$rho <- foi
   
     # Simulate stochastic approach
@@ -286,18 +289,55 @@ for (progression_structure in progression_structures) {
 
 # extract infection prevalence data from Dagnew et al. for fitting
 dagnew_sa <- read.csv("data/Dagnew_2016_IGRA_positivity_by_site.csv") %>%
-  filter(country == "South Africa", site_no == "country average") %>%
-  select(age_group, ci_lo_positive, ci_hi_positive) %>%
-  mutate(across(c(ci_lo_positive, ci_hi_positive), ~ .x / 100))  # convert % to proportion
-dagnew_age20_lo <- dagnew_sa %>% filter(age_group == "15-24") %>% pull(ci_lo_positive)
-dagnew_age20_hi <- dagnew_sa %>% filter(age_group == "15-24") %>% pull(ci_hi_positive)
-dagnew_age30_lo <- dagnew_sa %>% filter(age_group == "25-34") %>% pull(ci_lo_positive)
-dagnew_age30_hi <- dagnew_sa %>% filter(age_group == "25-34") %>% pull(ci_hi_positive)
+  filter(country == "South Africa") %>% select(site_no, age_group, pct_positive) %>%
+  mutate(across(c(pct_positive), ~ .x / 100))  # convert % to proportion
+dagnew_age20_min <- dagnew_sa %>% filter(site_no=="country_range_min" & age_group=="15-24") %>% pull(pct_positive)
+dagnew_age20_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_group=="15-24") %>% pull(pct_positive)
+dagnew_age30_min <- dagnew_sa %>% filter(site_no=="country_range_min" & age_group=="25-34") %>% pull(pct_positive)
+dagnew_age30_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_group=="25-34") %>% pull(pct_positive)
 
 # compute summary table and save
-summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_lo, dagnew_age20_hi + 0.1) & between(inf_prev_age30, dagnew_age30_lo, dagnew_age30_hi + 0.15) & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
-write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
+summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max + 0.05) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max + 0.1) & between(ARTI1, 0.04, 0.06) & cases_max1 > 200))  # NB: our model has no recovery
+write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE)
 ```
+
+```{r}
+# plot parameter fitting results
+fig_6 <- summary_table %>%
+  ggplot(aes(x=inf_prev_age20, y=ARTI1, shape=progression_structure, col=conditions_met)) +
+  annotate("rect", xmin=dagnew_age20_min, xmax=dagnew_age20_max + 0.05,
+           ymin=0.04, ymax=0.06, alpha=0.1, fill="steelblue") +
+  geom_vline(xintercept=c(dagnew_age20_min, dagnew_age20_max + 0.05),
+             linetype="dashed", col="steelblue", linewidth=0.4) +
+  geom_hline(yintercept=c(0.04, 0.06),
+             linetype="dashed", col="steelblue", linewidth=0.4) +
+  geom_point(data=~filter(.x, !conditions_met), size=2, alpha=0.8) +
+  geom_point(data=~filter(.x, conditions_met), size=2, alpha=0.8) +
+  scale_colour_manual(values=c("FALSE"="grey80", "TRUE"="forestgreen")) +
+  facet_wrap(~slow_structure, labeller=label_both) +
+  theme_classic() +
+  theme(strip.background=element_blank()) +
+  labs(x="Infection prevalence, age 20", y="ARTI",
+       col="All conditions met", shape="p_slow")
+
+fig_6
+ggsave(fig_6, file="figures/6_parameter_fit.pdf", width=10, height=4)
+
+# summary table
+library(flextable)
+summary_table %>%
+  filter(conditions_met) %>%
+  select(foi_structure, progression_structure, slow_structure,
+         inf_prev_age20, inf_prev_age30, ARTI1, cases_min1, cases_max1) %>%
+  mutate(across(c(inf_prev_age20, inf_prev_age30), ~ round(.x, 2)),
+         across(c(ARTI1), ~ round(.x, 3)),
+         across(c(cases_min1, cases_max1), ~ round(.x, 0))) %>%
+  arrange(slow_structure, progression_structure) %>%
+  flextable() %>%
+  autofit() %>%
+  save_as_docx(path="output/parameter_fit_passing.docx")
+```
+
 
 ## 7. (Scenarios)
 
@@ -314,7 +354,7 @@ Compare trial recruitment requirements across three country populations (South A
 plan(multisession, workers=8)  # reset worker pool in case of stale state from previous run
 
 countries_7a      <- c("South Africa", "India", "Kenya")
-foi_structures_7a <- c("min", "base", "max", "uniform2", "uniform1")
+foi_structures_7a <- c("uniform_7") #"min", "base", "max", "uniform2", "uniform1")
 p_slow_7a         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
 mu_slow_7a        <- define_mu_slow("base")
 
@@ -425,7 +465,7 @@ Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (1
 plan(multisession, workers=8)
 
 countries_7b      <- c("South Africa", "India", "Kenya")
-foi_structures_7b <- c("min", "base", "max", "uniform2", "uniform1")
+foi_structures_7b <- c("uniform_7") #"min", "base", "max", "uniform2", "uniform1")
 p_slow_7b         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
 mu_slow_7b        <- define_mu_slow("base")
 agedists_7b       <- setNames(lapply(countries_7b, function(c) extract_age_distribution(unwpp, c)), countries_7b)
