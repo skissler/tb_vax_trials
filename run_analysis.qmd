@@ -6,6 +6,7 @@ format: html
 This Quarto Markdown file outlines a workflow for running all steps of the analysis. It is based on the example workflow in `code/trialsim_rote.R` and has been copied to a .qmd for ease of editing and commenting.
 
 ## 1. load packages, functions, data
+
 ```{r}
 #| label: setup
 
@@ -33,6 +34,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 ```
 
 ## 2. define age structure for the model e.g. uniform
+
 ```{r}
 #| label: define_age_structure
 
@@ -54,9 +56,11 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure
 ```
 
 ## 3. define parameter values
-`pars_m72IIb` currently uses values such that model outputs emulate the M72 Van Der Meeren trial outputs of # enrolled, # recruited etc. Note this is different to some of the values of the trial population itself (e.g. p_slow).
 
-`pars_lit` takes best-known parameter values from the literature. 
+`pars_m72IIb` currently uses values such that model outputs emulate the M72 Van Der Meeren trial outputs of \# enrolled, \# recruited etc. Note this is different to some of the values of the trial population itself (e.g. p_slow).
+
+`pars_lit` takes best-known parameter values from the literature.
+
 ```{r}
 #| label: define_params
 
@@ -93,6 +97,7 @@ pars_lit_igra <- list(
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytic and stochastic approaches)
+
 ```{r}
 #| label: simulate_with_m72IIb
 #| eval: FALSE
@@ -115,8 +120,10 @@ fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
 ```
 
-## 4b. parameter fitting: simulate trial at full enrolment scale
+## 4b. parameter fitting: m72IIb trial
+
 Rather than stopping at fasttarget=50 fast progressors and scaling up, `sim_trial` recruit until enrol_target is reached.
+
 ```{r}
 #| label: simulate_with_m72IIb_fit
 #| eval: FALSE
@@ -196,6 +203,7 @@ head(m72IIb_fit_trial)
 ```
 
 ## 5. simulate trials under literature conditions (analytic and stochastic approaches)
+
 ```{r}
 #| label: simulate_with_lit
 #| eval: FALSE
@@ -227,18 +235,22 @@ for (i in 1:2) {
 summary_tab <- bind_rows(summary_tab, tibble(foi_structure=foi_structure, ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
 ```
 
-# 6. (Optional) Parameter fitting: simulate trials under literature conditions, for different foi's
+## 6. (Optional) Parameter fitting: simulate trials under literature conditions (stochastic approach), for different parameter values
+
 Note: run code snippets 1-3 first.
+
 ```{r}
 #| label: parameter_fit
 #| eval: FALSE
 
+# define parameter search space
 foi_structures <- c("base", "min", "max", "incr", "decr")
 progression_structures <- c("uniform", "Vynnycky-1997")
 slow_structures <- c("base", "min", "max") #, "Vynnycky" )
 summary_table <- tibble()
-reps <- 1
+reps <- 5
 
+# run sims
 for (progression_structure in progression_structures) {
   # Redefine parameter which is looped
   prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being slow
@@ -254,15 +266,12 @@ for (progression_structure in progression_structures) {
     foi <- define_foi_by_age(foi_structure)  # force of infection by age
     pars_lit_igra$rho <- foi
   
-    # Simulate stochastic and analytic approaches
+    # Simulate stochastic approach
     with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
-    analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=80, to=80, by=0.1), fasttarget=50, agedist=agedist)
-  
+    
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
     from_model <- tibble()
-    cases2 <- estimate_case_incidence_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)  # 1=stochastic, 2=analytic
-    ARTI2 <- estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, sig=80)
-    infection_prevalence1 <- estimate_inf_prev_from_model(foi)
+    infection_prevalence1 <- estimate_inf_prev_from_model(foi)  # 1=stochastic, 2=analytic
     for (i in 1:reps) {
       cases1 <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
       ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
@@ -270,23 +279,34 @@ for (progression_structure in progression_structures) {
     }
     summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, foi_structure=foi_structure, 
                                                      as_tibble_row(infection_prevalence1), ARTI1=median(from_model$ARTI1),
-                                                     cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1), ARTI2=ARTI2["ARTI"], cases2=cases2))
+                                                     cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1)))
     }
   }
 }
-summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, 0.57, 0.77) & between(inf_prev_age30, 0.67, 0.92) &
-                                             between(inf_prev_age40, 0.59, 0.95) & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
-#write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
+
+# extract infection prevalence data from Dagnew et al. for fitting
+dagnew_sa <- read.csv("data/Dagnew_2016_IGRA_positivity_by_site.csv") %>%
+  filter(country == "South Africa", site_no == "country average") %>%
+  select(age_group, ci_lo_positive, ci_hi_positive) %>%
+  mutate(across(c(ci_lo_positive, ci_hi_positive), ~ .x / 100))  # convert % to proportion
+dagnew_age20_lo <- dagnew_sa %>% filter(age_group == "15-24") %>% pull(ci_lo_positive)
+dagnew_age20_hi <- dagnew_sa %>% filter(age_group == "15-24") %>% pull(ci_hi_positive)
+dagnew_age30_lo <- dagnew_sa %>% filter(age_group == "25-34") %>% pull(ci_lo_positive)
+dagnew_age30_hi <- dagnew_sa %>% filter(age_group == "25-34") %>% pull(ci_hi_positive)
+
+# compute summary table and save
+summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_lo, dagnew_age20_hi + 0.1) & between(inf_prev_age30, dagnew_age30_lo, dagnew_age30_hi + 0.15) & between(ARTI1, 0.035, 0.065) & cases_max1 > 200))  # NB: our model has no recovery
+write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE)
 ```
 
+## 7. (Scenarios)
 
-# 7. (Scenarios)
 Note: run code snippets 1-3 first.
 
 ## 7a. Varied vaccine trial sites
-Compare trial recruitment requirements across three country populations (South Africa, India, Kenya)
-under a range of FOI structures. Parameters held constant: minage, maxage, sigma range, trial_length,
-mu_fast, mu_slow (base), p_slow (Vynnycky-1997). Age distribution and FOI vary by scenario.
+
+Compare trial recruitment requirements across three country populations (South Africa, India, Kenya) under a range of FOI structures. Parameters held constant: minage, maxage, sigma range, trial_length, mu_fast, mu_slow (base), p_slow (Vynnycky-1997). Age distribution and FOI vary by scenario.
+
 ```{r}
 #| label: 7a_varied_sites
 #| eval: FALSE
@@ -395,10 +415,12 @@ write.csv(benchmarks_7a, file="output/variedsite_benchmarks.csv", row.names=FALS
 ```
 
 ## 7b. Non-test enrolment scenarios
-Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (12-34), and
-household contacts (6-99, high instantaneous FOI if not already infected). No sigma dimension — one output per (scenario, country, FOI, rep).
+
+Three scenarios using `sim_stoch_notest`: standard ages (18-49), younger ages (12-34), and household contacts (6-99, high instantaneous FOI if not already infected). No sigma dimension — one output per (scenario, country, FOI, rep).
+
 ```{r}
 #| label: 7b_notest_scenarios
+#| eval: FALSE
 
 plan(multisession, workers=8)
 

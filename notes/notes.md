@@ -265,20 +265,29 @@ Results 1: What values of age-varying ARTI give a plausible case incidence e.g. 
 
 Assume a South Africa-like population age distribution and by-age ARTI. We can use high or low ARTI study estimates (Wood-2010 or Ncayiyana-2016 respectively). And we can use uniform 5% or Vynncyky (4-14%) probability of being a fast progressor. Let's create a table for these 4 key data options:
 
-| South Africa ARTI by age | Prob of being fast | pars_lit | Estimated median (range) case incidence from 100 simulations with sigma=80 |
-|----|----|----|----|
-| High (\~3-5.5%) | Uniform 5% | `pars_lit_igra <- list( minage=18, maxage=49, rho=rho_lit, p_slow=p_slow_lit, mu_slow=0.0001, mu_fast=1.5, sigma=100, ve=0.55, trial_length=3)` | 21 (16-29) cases per 100k per year |
-| High (\~3-5.5%) | Vynnycky (4-14%) | as above | 45 (31-59) cases per 100k per year |
-| Low (\<3%) | Uniform 5% | as above | 12 (10-17) cases per 100k per year |
-| Low (\<3%) | Vynnycky (4-14%) | as above | 26 (21-38) cases per 100k per year |
++--------------------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+
+| South Africa ARTI by age | Prob of being fast | pars_lit                                                                                                                                        | Estimated median (range) case incidence from 100 simulations with sigma=80 |
++==========================+====================+=================================================================================================================================================+============================================================================+
+| High (\~3-5.5%)          | Uniform 5%         | `pars_lit_igra <- list( minage=18, maxage=49, rho=rho_lit, p_slow=p_slow_lit, mu_slow=0.0001, mu_fast=1.5, sigma=100, ve=0.55, trial_length=3)` | 21 (16-29) cases per 100k per year                                         |
++--------------------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+
+| High (\~3-5.5%)          | Vynnycky (4-14%)   | as above                                                                                                                                        | 45 (31-59) cases per 100k per year                                         |
++--------------------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+
+| Low (\<3%)               | Uniform 5%         | as above                                                                                                                                        | 12 (10-17) cases per 100k per year                                         |
++--------------------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+
+| Low (\<3%)               | Vynnycky (4-14%)   | as above                                                                                                                                        | 26 (21-38) cases per 100k per year                                         |
++--------------------------+--------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------+
 
 We are an order of magnitude off. Try ARTI = uniform 6%:
 
-|             |                  |          |                                    |
-|-------------|------------------|----------|------------------------------------|
-| Uniform 6%  | Vynnycky (4-14%) | as above | 39 (31-53) cases per 100k per year |
-| Uniform 4%  | Vynnycky (4-14%) | as above | 43 (32-55) cases per 100k per year |
-| Uniform 10% | Vynnycky (4-14%) | as above | 26 (23-33) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
+|             |                  |             |                                    |
++=============+==================+=============+====================================+
+| Uniform 6%  | Vynnycky (4-14%) | as above    | 39 (31-53) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
+| Uniform 4%  | Vynnycky (4-14%) | as above    | 43 (32-55) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
+| Uniform 10% | Vynnycky (4-14%) | as above    | 26 (23-33) cases per 100k per year |
++-------------+------------------+-------------+------------------------------------+
 
 Uniform ARTI seems to not be acting in the way I expect. Let's explore the survival functions for these scenarios, to understand what is going on under the hood:
 
@@ -339,27 +348,41 @@ After discussing with Stephen (20th March), we conclude the following:
 
 Changed ARTI -\> foi in code. Wrote a quick function to estimate infection prevalence and ARTI from model. Ran a few simulations for different foi's:
 
-| foi_structure | infection_prevalence1 | ARTI1 | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2 | cases2 |
-|:---|---:|---:|---:|---:|---:|---:|---:|
-| uniform4 | 0.7114811 | 0.0364244 | 30.79454 | 58.86564 | 0.7108885 | 0.0363654 | 42.65139 |
-| uniform6 | 0.8377743 | 0.0528441 | 32.31318 | 52.57591 | 0.8378896 | 0.0528642 | 38.27642 |
-| 5,8,8,8 | 0.8311868 | 0.0517180 | 37.85567 | 60.65643 | NA | NA | NA |
-| 5,10,20,30 | 0.8548957 | 0.0559923 | 43.26882 | 73.00132 | NA | NA | NA |
-| 5,20,40,50 | 0.9082453 | 0.0688199 | 43.45901 | 69.75439 | NA | NA | NA |
-| 5,25,50,70 | 0.9196090 | 0.0724878 | 41.67618 | 66.20451 | NA | NA | NA |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| foi_structure | infection_prevalence1 | ARTI1     | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2     | cases2   |
++:==============+======================:+==========:+===========:+===========:+======================:+==========:+=========:+
+| uniform4      | 0.7114811             | 0.0364244 | 30.79454   | 58.86564   | 0.7108885             | 0.0363654 | 42.65139 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| uniform6      | 0.8377743             | 0.0528441 | 32.31318   | 52.57591   | 0.8378896             | 0.0528642 | 38.27642 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,8,8,8       | 0.8311868             | 0.0517180 | 37.85567   | 60.65643   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,10,20,30    | 0.8548957             | 0.0559923 | 43.26882   | 73.00132   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,20,40,50    | 0.9082453             | 0.0688199 | 43.45901   | 69.75439   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,25,50,70    | 0.9196090             | 0.0724878 | 41.67618   | 66.20451   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
 
 1=stochastic approach (median from 25 repetitions); 2=analytic approach. Note the analytic has no age structure and is meaningless when run with non-uniform foi.
 
 25 repetitions isn't very many so I ran again for 100 repetitions. Here the new summary table (using `knitr::kable(summary_table)` to print the table in a nice markdown format):
 
-| foi_structure | infection_prevalence1 | ARTI1 | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2 | cases2 |
-|:---|---:|---:|---:|---:|---:|---:|---:|
-| uniform4 | 0.7103147 | 0.0363083 | 32.31737 | 62.48219 | 0.7108885 | 0.0363654 | 42.65139 |
-| uniform6 | 0.8378392 | 0.0528554 | 29.58173 | 56.92928 | 0.8378896 | 0.0528642 | 38.27642 |
-| 5,8,8,8 | 0.8314365 | 0.0517599 | 35.75042 | 65.75450 | NA | NA | NA |
-| 5,10,20,30 | 0.8551929 | 0.0560501 | 34.43678 | 67.94885 | NA | NA | NA |
-| 5,20,40,50 | 0.9081022 | 0.0687766 | 39.37186 | 79.66431 | NA | NA | NA |
-| 5,25,50,70 | 0.9202141 | 0.0726970 | 43.03942 | 69.38878 | NA | NA | NA |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| foi_structure | infection_prevalence1 | ARTI1     | cases_min1 | cases_max1 | infection_prevalence2 | ARTI2     | cases2   |
++:==============+======================:+==========:+===========:+===========:+======================:+==========:+=========:+
+| uniform4      | 0.7103147             | 0.0363083 | 32.31737   | 62.48219   | 0.7108885             | 0.0363654 | 42.65139 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| uniform6      | 0.8378392             | 0.0528554 | 29.58173   | 56.92928   | 0.8378896             | 0.0528642 | 38.27642 |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,8,8,8       | 0.8314365             | 0.0517599 | 35.75042   | 65.75450   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,10,20,30    | 0.8551929             | 0.0560501 | 34.43678   | 67.94885   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,20,40,50    | 0.9081022             | 0.0687766 | 39.37186   | 79.66431   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
+| 5,25,50,70    | 0.9202141             | 0.0726970 | 43.03942   | 69.38878   | NA                    | NA        | NA       |
++---------------+-----------------------+-----------+------------+------------+-----------------------+-----------+----------+
 
 Thoughts:
 
@@ -395,17 +418,27 @@ Claude-assisted diagnostics were run on the whole codebase. Some free-flowing ob
 
 Diagnostic table 1c for our model is as follows: Where in the life-course do infections land?
 
++--------------+-------------------+--------------------+------------------+-------------------+
 | FOI scenario | \% infected \<18y | \% infected 18–49y | \% infected 50+y | \% never infected |
-|:---|---:|---:|---:|---:|
-| uniform4 | 51.3 | 35.1 | 11.7 | 1.8 |
-| uniform6 | 66.0 | 29.0 | 4.7 | 0.2 |
-| uniform10 | 83.5 | 15.9 | 0.7 | 0.0 |
-| 5-8-8-8 | 59.3 | 37.3 | 3.3 | 0.1 |
-| 5-10-20-30 | 59.3 | 40.0 | 0.7 | 0.0 |
-| 5-20-40-50 | 59.3 | 40.6 | 0.0 | 0.0 |
-| 5-25-50-70 | 59.3 | 40.7 | 0.0 | 0.0 |
-| 3-3-5-10 | 41.7 | 40.0 | 17.7 | 0.6 |
-| 1-5-10-15 | 16.5 | 72.4 | 11.1 | 0.0 |
++:=============+==================:+===================:+=================:+==================:+
+| uniform4     | 51.3              | 35.1               | 11.7             | 1.8               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| uniform6     | 66.0              | 29.0               | 4.7              | 0.2               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| uniform10    | 83.5              | 15.9               | 0.7              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-8-8-8      | 59.3              | 37.3               | 3.3              | 0.1               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-10-20-30   | 59.3              | 40.0               | 0.7              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-20-40-50   | 59.3              | 40.6               | 0.0              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 5-25-50-70   | 59.3              | 40.7               | 0.0              | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 3-3-5-10     | 41.7              | 40.0               | 17.7             | 0.6               |
++--------------+-------------------+--------------------+------------------+-------------------+
+| 1-5-10-15    | 16.5              | 72.4               | 11.1             | 0.0               |
++--------------+-------------------+--------------------+------------------+-------------------+
 
 **Diagnostic 2: Population composition at trial entry**
 
@@ -534,3 +567,21 @@ Constructing the household contacts model scenario. Much discussion with Stephen
 - The idea is that household contacts have this large instantaenous foi at their current age BUT that's only realised if they aren't already infected (step 1). We do not consider reinfection / boosting in our model.
 
 - Note that we assume individuals of all ages are equally likely to live in an exposed household (because we are drawing from the general population age distribution). Multigenerational households appear to be increasingly common in South Africa (<https://www.statssa.gov.za/?p=18066>).
+
+# 6th-12th May 2026 (LH)
+
+Kristin & Tyler identified a new IGRA positivity study - Dagnew et al. 2026 (<https://journals.theunion.org/content/ijtldo/3/4/232>). This gives estimates of infection prevalence in different sites in \~8 countries, by age group (15-24y and 25-34y). I think this is now the best data to fit our model to.
+
+I extracted the Dagnew results by age (Table S5) to a csv and then used Claude to compute country averages. Claude's calculations are outlined in GitHub Issue 3 (<https://github.com/skissler/MINA_TB/issues/3>).
+
+Q1 - with this new lower prevalence, can we still reach \>200 cases? Answer: yes. Claude ran a few scenarios for different foi's and looks like we have a winner at for matching the age20 inf prev and cases metrics (obviously I will check thoroughly when doing the proper fitting):
+
+![](images/clipboard-1571519271.png)
+
+Fab we will go with this dataset for fitting then. I will allow wider upper bands for infection prevalence though as our model does not capture recovery.
+
+With this new Dagnew dataset, South Africa infection prevalence averaged across sites was approx 35% at age 20y and 50% at age 30y. This matches with Tyler's intuition of around 50% inf prevalence as a ballpark figure. The force of infection then needs to update – to less than 5% hazard rate, as from Vynnycky & White we know that a 5% annual hazard rate would give a mean age of infection around 20y and we want slightly later:
+
+![](images/clipboard-2974238641.png)
+
+We can't reproduce the analysis we did for investigating if new foi should be age-varying as the Dagnew paper doesn't give a nice curve of inf prev by age (only data for two age classes). However we do know we want something 5% or less. So we can try a few different values, and also add in some larger p_fast options (to capture HIV-infected individuals).

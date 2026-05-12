@@ -175,39 +175,23 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
   return(p_slow_by_age)
 }
 
+make_foi <- function(a0_4, a5_24, a25_34, a35_49, a50plus) {
+  # helper: build an age-varying FOI vector using standard age bands (0-4, 5-24, 25-34, 35-49, 50+)
+  # values are supplied as percentages (e.g. a0_4=2 means 2% per year for ages 0-4)
+  c(rep(a0_4/100, 5), rep(a5_24/100, 20), rep(a25_34/100, 10), rep(a35_49/100, 15), rep(a50plus/100, 50))
+}
+
 define_foi_by_age <- function(method){
-  if (method=="uniform1") {
-    foi <- rep(0.01,100)
-  } else if (method=="uniform2") {
-    foi <- rep(0.02,100)
-  } else if (method=="uniform4") {
-    foi <- rep(0.04,100)
-  } else if (method=="uniform6") {
-    foi <- rep(0.06,100)
-  } else if (method=="uniform10") {
-    foi <- rep(0.1,100)
-  } else if (method=="5888") {
-    foi <- c(rep(0.05,20), rep(0.08,20), rep(0.08,40), rep(0.08,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="5102030") {
-    foi <- c(rep(0.05,20), rep(0.10,20), rep(0.20,40), rep(0.30,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="5204050") {
-    foi <- c(rep(0.05,20), rep(0.20,20), rep(0.40,40), rep(0.50,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="5255070") {
-    foi <- c(rep(0.05,20), rep(0.25,20), rep(0.50,40), rep(0.70,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="33510") {
-    foi <- c(rep(0.03,20), rep(0.03,20), rep(0.05,40), rep(0.10,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="151015") {
-    foi <- c(rep(0.01,20), rep(0.05,20), rep(0.10,40), rep(0.15,20))  # age 0-19, 20-39, 40-79, 80+
-  } else if (method=="base") {
-    foi <- c(rep(0.07,25), rep(0.07,5), rep(0.07,20), rep(0.07,50))  # age 0-24, 25-29, 30-49, 50+
-  } else if (method=="min") {
-    foi <- c(rep(0.05,25), rep(0.01,5), rep(0.01,20), rep(0.01,50))  # age 0-24, 25-29, 30-49, 50+
-  } else if (method=="max") {
-    foi <- c(rep(0.10,25), rep(0.10,5), rep(0.10,20), rep(0.10,50))  # age 0-24, 25-29, 30-49, 50+
-  } else if (method=="incr") {
-    foi <- c(rep(0.07,25), rep(0.08,5), rep(0.09,20), rep(0.10,50))  # age 0-24, 25-29, 30-49, 50+
-  } else if (method=="decr") {
-    foi <- c(rep(0.07,25), rep(0.05,5), rep(0.03,20), rep(0.01,50))  # age 0-24, 25-29, 30-49, 50+
+  # raw vector pass-through: if method is already a length-100 numeric vector, use directly
+  if (is.numeric(method) && length(method) == 100) {
+    foi <- method
+  # generic uniform_n: any string matching "uniform" followed by a number (e.g. "uniform_3", "uniform3.5")
+  # value is interpreted as % per year (e.g. "uniform_3" -> 3% -> 0.03)
+  } else if (grepl("^uniform_?[0-9]+(\\.[0-9]+)?$", method)) {
+    n <- as.numeric(sub("^uniform_?", "", method))
+    foi <- rep(n/100, 100)
+  } else {
+    stop(paste0("define_foi_by_age: unrecognised method '", method, "'"))
   }
   
   names(foi) <- 0:99
@@ -616,7 +600,7 @@ estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # c
   return(incidence*100000)
 }
 
-estimate_inf_prev_from_model <- function(foi, ages = c(20, 30, 40, 60)) {
+estimate_inf_prev_from_model <- function(foi, ages = c(20, 30, 40)) {
   # P(ever infected by age a) = 1 - S(a), derived directly from the FOI
   sv <- compute_survival_fn(foi)
   inf_prev <- 1 - sv$survival_fn  # index i = age i (survival_fn[1] = P(not infected by age 1))
