@@ -593,3 +593,7 @@ We can't reproduce the analysis we did for investigating if new foi should be ag
 - With relaxed conditions_met, only the mu_slow=max (0.00527) scenarios worked (mu_slow=0.001 did not give enough cases). Lots of parameter options with max mu_slow met the conditions but I'm not super keen having max mu_slow as our base case. I instead reran for a slightly softer mu_slow=0.003 because this is one parameter we'd like to dampen down a little if possible.
 
 - There were some hits with mu_slow=0.003 which is great. Best parameter set looked to be mu_slow=0.003, Vynnycky p_slow, and foi=4,5,3,5,5. So I'll take this as the fitted set. :)
+
+# 15th May 2026 (LH)
+
+We discussed the terminology for overall/sampled, screened/tested, and enrolled/recruited etc and settled on using the following three terms in the manuscript: **contacted, tested, enrolled.**

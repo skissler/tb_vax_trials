@@ -1,0 +1,46 @@
+"scenario","country","foi_structure","n_recruited_med","n_recruited_lo","n_recruited_hi","n_overall_med","n_overall_lo","n_overall_hi"
+"no test household","India","uniform_1",1687,1460.2,2017.6,1760,1529,2104
+"no test household","India","uniform_2",2444,2061,2757.2,2605,2215.4,2951
+"no test household","India","uniform_3",3259,2990.8,3744.8,3562,3253,4087.2
+"no test household","India","uniform_4",4100,3284,4860.6,4530,3609.4,5364.8
+"no test household","India","uniform_5",5398,4562.8,5981.8,6009,5056.4,6653.2
+"no test household","Kenya","uniform_1",1908,1654.6,2336,1970,1706.8,2413.6
+"no test household","Kenya","uniform_2",2332,2107.8,2728.2,2459,2217,2878
+"no test household","Kenya","uniform_3",3146,2759.8,3510.2,3365,2949,3768.6
+"no test household","Kenya","uniform_4",3506,2758,4069.6,3793,2966.6,4403.6
+"no test household","Kenya","uniform_5",4720,4044,5570,5129,4425.8,6076.4
+"no test household","South Africa","uniform_1",1774,1426.8,2124,1852,1492,2212
+"no test household","South Africa","uniform_2",2374,2018.2,3006,2557,2158.2,3213.6
+"no test household","South Africa","uniform_3",3170,2603.8,3859.2,3451,2849.8,4207.2
+"no test household","South Africa","uniform_4",4256,3736.8,4761.4,4693,4139,5286.2
+"no test household","South Africa","uniform_5",5083,4304.2,5762.4,5684,4799,6415.8
+"no test standard","India","uniform_1",71732,60134,81176,74265,62219.2,84025
+"no test standard","India","uniform_2",49610,41704.4,55626.2,52728,44212.2,59004.2
+"no test standard","India","uniform_3",42686,33770.6,49407.6,46168,36434.2,53464.6
+"no test standard","India","uniform_4",39714,31954.6,46499.4,43313,34981.8,50857.6
+"no test standard","India","uniform_5",40695,34763.8,45225.4,44819,38388.8,49987
+"no test standard","Kenya","uniform_1",73935,62764,86559.8,76297,64815.4,89324.2
+"no test standard","Kenya","uniform_2",48694,39220,57065,51371,41311.2,60256.2
+"no test standard","Kenya","uniform_3",38438,32301.4,47658,41198,34648.2,51133.8
+"no test standard","Kenya","uniform_4",40306,32859,45378.4,43729,35738,49297
+"no test standard","Kenya","uniform_5",36155,32896.8,45090.8,39801,36015,49426.6
+"no test standard","South Africa","uniform_1",75762,61794.6,85338.6,78519,63935.8,88386.4
+"no test standard","South Africa","uniform_2",49095,39462.4,59340.6,52144,42002.4,62986.6
+"no test standard","South Africa","uniform_3",40497,33484.4,49338.8,43799,36206.2,53416.8
+"no test standard","South Africa","uniform_4",38701,32738,48740.6,42375,35909.8,53371.8
+"no test standard","South Africa","uniform_5",42992,39490,50063.8,47500,43571,55384
+"no test young","India","uniform_1",78366,64053.2,90803,80050,65395.6,92751.4
+"no test young","India","uniform_2",47504,40075,59945.6,49367,41597.4,62275
+"no test young","India","uniform_3",40039,33914.4,45958,42098,35675.6,48346.6
+"no test young","India","uniform_4",36602,33317.4,41306.8,38865,35367.6,43892.4
+"no test young","India","uniform_5",38965,31452.6,44818,41651,33692.8,47952.8
+"no test young","Kenya","uniform_1",78389,69301.2,87883.6,79926,70628,89605
+"no test young","Kenya","uniform_2",48810,43826.4,57967.6,50567,45371.6,60025.6
+"no test young","Kenya","uniform_3",40926,34511.6,46477,42869,36177.8,48781
+"no test young","Kenya","uniform_4",34784,28321.8,44996.4,36808,29978.2,47571.4
+"no test young","Kenya","uniform_5",35172,27163.8,41885.8,37523,28948.2,44609.2
+"no test young","South Africa","uniform_1",74670,65240.4,88525.4,76303,66715,90464.4
+"no test young","South Africa","uniform_2",47280,39501,55305.6,49238,41091.4,57504.6
+"no test young","South Africa","uniform_3",39382,34447.4,48282.2,41428,36321,50855
+"no test young","South Africa","uniform_4",35208,29122.6,42864.8,37492,31024.4,45573
+"no test young","South Africa","uniform_5",37322,31019.8,42924.4,40000,33262.4,45979

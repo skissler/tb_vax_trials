@@ -463,7 +463,7 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
 }
 sim_stoch_notest <- compiler::cmpfun(sim_stoch_notest)  # R bytecode compiler (for speed)
 
-sim_trial <- function(pars, enrol_target, agedist) {
+sim_stoch_trial <- function(pars, enrol_target, agedist) {
   # Like sim_stoch but stops when enrol_target recruits are reached rather than fasttarget fast progressors.
   with(as.list(pars), {
 
@@ -517,7 +517,7 @@ sim_trial <- function(pars, enrol_target, agedist) {
     return(out)
   })
 }
-sim_trial <- compiler::cmpfun(sim_trial)  # R bytecode compiler (for speed)
+sim_stoch_trial <- compiler::cmpfun(sim_stoch_trial)  # R bytecode compiler (for speed)
 
 sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
 	grid <- expand.grid(sigma=sigmavec, rep=1:reps)  # expand.grid is faster than nested for loops
@@ -542,33 +542,33 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
-			name=="n_tested"~"Screened",
-			name=="n_recruited"~"Recruited",
+			name=="n_tested"~"Tested",
+			name=="n_recruited"~"Enrolled",
 			name=="n_fast"~"Fast",
 			name=="n_slow"~"Slow",
-			name=="n_overall"~"Overall"
+			name=="n_overall"~"Contacted"
 			))
 
 	analytical_df_toplot <- analytical_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
-			name=="n_tested"~"Screened",
-			name=="n_recruited"~"Recruited",
+			name=="n_tested"~"Tested",
+			name=="n_recruited"~"Enrolled",
 			name=="n_fast"~"Fast",
 			name=="n_slow"~"Slow",
-			name=="n_overall"~"Overall"
+			name=="n_overall"~"Contacted"
 			))
 
 	fig_stochastic_analytic <- ggplot() + 
-		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), size=0.5, alpha=0.2) + 
-		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Overall","Screened","Recruited","Slow","Fast"))), linewidth=1, alpha=1) + 
-		scale_color_manual(values=c("Overall"="green","Screened"="black","Recruited"="blue","Slow"="magenta","Fast"="red")) + 
+		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Slow","Fast"))), size=0.5, alpha=0.2) + 
+		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Slow","Fast"))), linewidth=1, alpha=1) + 
+		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Slow"="magenta","Fast"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
-		labs(x="Test span (years)", y="People")
+		labs(x="Test span (years)", y="Number (per 50 fast progressors)")
 
 	return(fig_stochastic_analytic)
 }

@@ -1,0 +1,17 @@
+"country","foi_structure","sigma","metric","value"
+"South Africa","uniform_4",1,"Tested",55142
+"South Africa","uniform_4",80,"Tested",43136
+"South Africa","uniform_5",1,"Tested",58881
+"South Africa","uniform_5",80,"Tested",43183
+"India","uniform_1",1,"Tested",91588
+"India","uniform_1",80,"Tested",71988
+"India","uniform_2",1,"Tested",61844
+"India","uniform_2",80,"Tested",49434
+"India","uniform_3",1,"Tested",55415
+"India","uniform_3",80,"Tested",41759
+"Kenya","uniform_2",1,"Tested",61452
+"Kenya","uniform_2",80,"Tested",46875
+"Kenya","uniform_3",1,"Tested",52147
+"Kenya","uniform_3",80,"Tested",40941
+"Kenya","uniform_4",1,"Tested",49527
+"Kenya","uniform_4",80,"Tested",37440
