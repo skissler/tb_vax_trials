@@ -104,17 +104,16 @@ pars_lit_igra <- list(
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=1)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
-analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), fasttarget=50, agedist=agedist)
-analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
+analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
 
 #' Plot all results
 fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                           cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
+                                           cols=c("n_tested","n_recruited","n_cases","n_overall")) + 
 	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
 fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
@@ -122,7 +121,7 @@ ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_
 
 ## 4b. parameter fitting: m72IIb trial
 
-Rather than stopping at fasttarget=50 fast progressors and scaling up, `sim_stoch_trial` recruits until enrol_target is reached.
+Rather than stopping at casetarget=50 and scaling up, `sim_stoch_trial` recruits until enrol_target is reached.
 
 ```{r}
 #| label: simulate_with_m72IIb_fit
@@ -211,7 +210,7 @@ head(m72IIb_fit_trial)
 pars_lit_igra$rho <- make_foi(4,5,3,5,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, fasttarget=50, agedist=agedist, reps=25)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
@@ -219,7 +218,7 @@ with_progress({
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
 
 #' Plot all results
-fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_overall"))
+fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_cases","n_overall"))
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
 
@@ -228,7 +227,6 @@ from_model <- tibble()
 for (i in 1:25) {
   cases <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  #estimate_ARTI_from_model(analytical_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   from_model <- bind_rows(from_model, tibble(i = i, ARTI = ARTI_and_prev["ARTI"], cases= cases))
 }
 ```
@@ -268,7 +266,7 @@ for (progression_structure in progression_structures) {
     pars_lit_igra$rho <- foi
   
     # Simulate stochastic approach
-    with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), fasttarget=50, agedist=agedist, reps=reps)})
+    with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), casetarget=50, agedist=agedist, reps=reps)})
     
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
     from_model <- tibble()
@@ -296,7 +294,7 @@ dagnew_age30_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_grou
 
 # compute summary table and save
 summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max + 0.05) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max + 0.1) & between(ARTI1, 0.04, 0.06) & cases_max1 > 200))  # NB: our model has no recovery
-#write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE)
+write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE)
 ```
 
 ```{r}
@@ -395,12 +393,12 @@ with_progress({
     pars_i$rho    <- define_foi_by_age(sim_grid_7a$foi_structure[i])
     pars_i$sigma  <- sim_grid_7a$sigma[i]
     agedist_i     <- agedists_7a[[sim_grid_7a$country[i]]]
-    out           <- sim_stoch(pars_i, fasttarget=50, agedist=agedist_i)
+    out           <- sim_stoch(pars_i, casetarget=50, agedist=agedist_i)
     p()
     tibble(country=sim_grid_7a$country[i], foi_structure=sim_grid_7a$foi_structure[i],
            sigma=sim_grid_7a$sigma[i], rep=sim_grid_7a$rep[i],
            n_tested=out$n_tested, n_recruited=out$n_recruited,
-           n_fast=out$n_fast, n_slow=out$n_slow, n_overall=out$n_overall)
+           n_fast=out$n_fast, n_cases=out$n_cases, n_overall=out$n_overall)
   }, future.seed=TRUE)
 })
 
@@ -433,7 +431,7 @@ fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure)) +
   scale_colour_brewer(palette="Set1") +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Duration of positivity of test (years)", y="Number (per 50 fast progressors)", col="Force of infection")
+  labs(x="Duration of positivity of test (years)", y="Number (for 50 cases)", col="Force of infection")
 fig_7a
 ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=10, height=10/1.6)
 
@@ -448,7 +446,7 @@ for (i in 1:nrow(combos_7a)) {
   # Filter full stoch output to this country/FOI at sigma=80, all reps
   stoch_i <- stoch_df_7a %>%
     filter(country==combos_7a$country[i], foi_structure==combos_7a$foi_structure[i]) %>%
-    select(sigma, rep, n_tested, n_recruited, n_fast, n_slow, n_overall)
+    select(sigma, rep, n_tested, n_recruited, n_fast, n_cases, n_overall)
 
   inf_prev <- estimate_inf_prev_from_model(pars_i$rho)
   reps_i   <- unique(stoch_i$rep)
@@ -516,7 +514,7 @@ with_progress({
     pars_i$minage <- sim_grid_7b$minage[i]
     pars_i$maxage <- sim_grid_7b$maxage[i]
     agedist_i     <- agedists_7b[[sim_grid_7b$country[i]]]
-    out           <- sim_stoch_notest(pars_i, fasttarget=50, agedist=agedist_i, 
+    out           <- sim_stoch_notest(pars_i, casetarget=50, agedist=agedist_i, 
                                       households = (sim_grid_7b$scenario[i] == "no test household"))
     p()
     tibble(
@@ -526,7 +524,7 @@ with_progress({
       rep           = sim_grid_7b$rep[i],
       n_recruited   = out$n_recruited,
       n_fast        = out$n_fast,
-      n_slow        = out$n_slow,
+      n_cases        = out$n_cases,
       n_overall     = out$n_overall,
       n_infected    = out$n_infected
     )
@@ -563,7 +561,7 @@ fig_7b <- notest_df_7b %>%
   facet_wrap(~country, nrow=1) +
   theme_classic() +
   theme(strip.background=element_blank(), axis.text.x=element_text(angle=25, hjust=1)) +
-  labs(x=NULL, y="Enrolled (per 50 fast progressors)", fill="Force of infection")
+  labs(x=NULL, y="Enrolled (for 50 cases)", fill="Force of infection")
 fig_7b
 ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 

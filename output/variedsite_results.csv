@@ -1,385 +1,49 @@
 "country","foi_structure","sigma","metric","value"
-"South Africa","uniform_4",1,"Enrolled",723
-"South Africa","uniform_4",1,"Tested",55142
-"South Africa","uniform_4",2,"Enrolled",1157
-"South Africa","uniform_4",2,"Tested",44773
-"South Africa","uniform_4",3,"Enrolled",1661
-"South Africa","uniform_4",3,"Tested",42085
-"South Africa","uniform_4",4,"Enrolled",2286
-"South Africa","uniform_4",4,"Tested",43621
-"South Africa","uniform_4",5,"Enrolled",2628
-"South Africa","uniform_4",5,"Tested",39953
-"South Africa","uniform_4",6,"Enrolled",3231
-"South Africa","uniform_4",6,"Tested",39349
-"South Africa","uniform_4",7,"Enrolled",4201
-"South Africa","uniform_4",7,"Tested",43040
-"South Africa","uniform_4",8,"Enrolled",4796
-"South Africa","uniform_4",8,"Tested",41780
-"South Africa","uniform_4",9,"Enrolled",5413
-"South Africa","uniform_4",9,"Tested",41636
-"South Africa","uniform_4",10,"Enrolled",6229
-"South Africa","uniform_4",10,"Tested",42526
-"South Africa","uniform_4",15,"Enrolled",10563
-"South Africa","uniform_4",15,"Tested",43516
-"South Africa","uniform_4",20,"Enrolled",13992
-"South Africa","uniform_4",20,"Tested",40008
-"South Africa","uniform_4",25,"Enrolled",17843
-"South Africa","uniform_4",25,"Tested",40296
-"South Africa","uniform_4",30,"Enrolled",22189
-"South Africa","uniform_4",30,"Tested",42424
-"South Africa","uniform_4",35,"Enrolled",24837
-"South Africa","uniform_4",35,"Tested",42420
-"South Africa","uniform_4",40,"Enrolled",26051
-"South Africa","uniform_4",40,"Tested",41660
-"South Africa","uniform_4",45,"Enrolled",26250
-"South Africa","uniform_4",45,"Tested",40065
-"South Africa","uniform_4",50,"Enrolled",27854
-"South Africa","uniform_4",50,"Tested",42437
-"South Africa","uniform_4",55,"Enrolled",26758
-"South Africa","uniform_4",55,"Tested",40857
-"South Africa","uniform_4",60,"Enrolled",27745
-"South Africa","uniform_4",60,"Tested",41954
-"South Africa","uniform_4",65,"Enrolled",26792
-"South Africa","uniform_4",65,"Tested",40615
-"South Africa","uniform_4",70,"Enrolled",27170
-"South Africa","uniform_4",70,"Tested",41150
-"South Africa","uniform_4",75,"Enrolled",26247
-"South Africa","uniform_4",75,"Tested",39957
-"South Africa","uniform_4",80,"Enrolled",28440
-"South Africa","uniform_4",80,"Tested",43136
-"South Africa","uniform_5",1,"Enrolled",737
-"South Africa","uniform_5",1,"Tested",58881
-"South Africa","uniform_5",2,"Enrolled",1151
-"South Africa","uniform_5",2,"Tested",44702
-"South Africa","uniform_5",3,"Enrolled",1559
-"South Africa","uniform_5",3,"Tested",41038
-"South Africa","uniform_5",4,"Enrolled",2290
-"South Africa","uniform_5",4,"Tested",44483
-"South Africa","uniform_5",5,"Enrolled",2713
-"South Africa","uniform_5",5,"Tested",40371
-"South Africa","uniform_5",6,"Enrolled",3455
-"South Africa","uniform_5",6,"Tested",42796
-"South Africa","uniform_5",7,"Enrolled",4214
-"South Africa","uniform_5",7,"Tested",43690
-"South Africa","uniform_5",8,"Enrolled",5034
-"South Africa","uniform_5",8,"Tested",43926
-"South Africa","uniform_5",9,"Enrolled",5769
-"South Africa","uniform_5",9,"Tested",43552
-"South Africa","uniform_5",10,"Enrolled",6328
-"South Africa","uniform_5",10,"Tested",41430
-"South Africa","uniform_5",15,"Enrolled",10875
-"South Africa","uniform_5",15,"Tested",41973
-"South Africa","uniform_5",20,"Enrolled",15082
-"South Africa","uniform_5",20,"Tested",40535
-"South Africa","uniform_5",25,"Enrolled",20871
-"South Africa","uniform_5",25,"Tested",43382
-"South Africa","uniform_5",30,"Enrolled",22888
-"South Africa","uniform_5",30,"Tested",39858
-"South Africa","uniform_5",35,"Enrolled",28046
-"South Africa","uniform_5",35,"Tested",43313
-"South Africa","uniform_5",40,"Enrolled",29475
-"South Africa","uniform_5",40,"Tested",42154
-"South Africa","uniform_5",45,"Enrolled",31220
-"South Africa","uniform_5",45,"Tested",42907
-"South Africa","uniform_5",50,"Enrolled",33163
-"South Africa","uniform_5",50,"Tested",44863
-"South Africa","uniform_5",55,"Enrolled",32973
-"South Africa","uniform_5",55,"Tested",44612
-"South Africa","uniform_5",60,"Enrolled",32226
-"South Africa","uniform_5",60,"Tested",43773
-"South Africa","uniform_5",65,"Enrolled",32644
-"South Africa","uniform_5",65,"Tested",44220
-"South Africa","uniform_5",70,"Enrolled",32625
-"South Africa","uniform_5",70,"Tested",44356
-"South Africa","uniform_5",75,"Enrolled",32171
-"South Africa","uniform_5",75,"Tested",43577
-"South Africa","uniform_5",80,"Enrolled",31817
-"South Africa","uniform_5",80,"Tested",43183
-"India","uniform_1",1,"Enrolled",666
-"India","uniform_1",1,"Tested",91588
-"India","uniform_1",2,"Enrolled",1069
-"India","uniform_1",2,"Tested",75991
-"India","uniform_1",3,"Enrolled",1478
-"India","uniform_1",3,"Tested",70230
-"India","uniform_1",4,"Enrolled",1985
-"India","uniform_1",4,"Tested",70824
-"India","uniform_1",5,"Enrolled",2520
-"India","uniform_1",5,"Tested",72219
-"India","uniform_1",6,"Enrolled",3009
-"India","uniform_1",6,"Tested",72035
-"India","uniform_1",7,"Enrolled",3619
-"India","uniform_1",7,"Tested",72536
-"India","uniform_1",8,"Enrolled",4131
-"India","uniform_1",8,"Tested",73437
-"India","uniform_1",9,"Enrolled",4585
-"India","uniform_1",9,"Tested",73168
-"India","uniform_1",10,"Enrolled",5019
-"India","uniform_1",10,"Tested",71899
-"India","uniform_1",15,"Enrolled",8012
-"India","uniform_1",15,"Tested",72920
-"India","uniform_1",20,"Enrolled",11136
-"India","uniform_1",20,"Tested",77301
-"India","uniform_1",25,"Enrolled",12637
-"India","uniform_1",25,"Tested",73011
-"India","uniform_1",30,"Enrolled",15627
-"India","uniform_1",30,"Tested",79956
-"India","uniform_1",35,"Enrolled",15166
-"India","uniform_1",35,"Tested",70172
-"India","uniform_1",40,"Enrolled",16781
-"India","uniform_1",40,"Tested",73961
-"India","uniform_1",45,"Enrolled",17072
-"India","uniform_1",45,"Tested",73015
-"India","uniform_1",50,"Enrolled",16911
-"India","uniform_1",50,"Tested",71932
-"India","uniform_1",55,"Enrolled",18116
-"India","uniform_1",55,"Tested",77108
-"India","uniform_1",60,"Enrolled",17874
-"India","uniform_1",60,"Tested",76044
-"India","uniform_1",65,"Enrolled",16447
-"India","uniform_1",65,"Tested",70430
-"India","uniform_1",70,"Enrolled",17741
-"India","uniform_1",70,"Tested",74844
-"India","uniform_1",75,"Enrolled",16003
-"India","uniform_1",75,"Tested",68265
-"India","uniform_1",80,"Enrolled",16731
-"India","uniform_1",80,"Tested",71988
-"India","uniform_2",1,"Enrolled",674
-"India","uniform_2",1,"Tested",61844
-"India","uniform_2",2,"Enrolled",1127
-"India","uniform_2",2,"Tested",52052
-"India","uniform_2",3,"Enrolled",1617
-"India","uniform_2",3,"Tested",48969
-"India","uniform_2",4,"Enrolled",2018
-"India","uniform_2",4,"Tested",45591
-"India","uniform_2",5,"Enrolled",2626
-"India","uniform_2",5,"Tested",47915
-"India","uniform_2",6,"Enrolled",3255
-"India","uniform_2",6,"Tested",49081
-"India","uniform_2",7,"Enrolled",3743
-"India","uniform_2",7,"Tested",48356
-"India","uniform_2",8,"Enrolled",4257
-"India","uniform_2",8,"Tested",47757
-"India","uniform_2",9,"Enrolled",5275
-"India","uniform_2",9,"Tested",50720
-"India","uniform_2",10,"Enrolled",5334
-"India","uniform_2",10,"Tested",47098
-"India","uniform_2",15,"Enrolled",9165
-"India","uniform_2",15,"Tested",51459
-"India","uniform_2",20,"Enrolled",11782
-"India","uniform_2",20,"Tested",48686
-"India","uniform_2",25,"Enrolled",14198
-"India","uniform_2",25,"Tested",48111
-"India","uniform_2",30,"Enrolled",15640
-"India","uniform_2",30,"Tested",46368
-"India","uniform_2",35,"Enrolled",18243
-"India","uniform_2",35,"Tested",49082
-"India","uniform_2",40,"Enrolled",18934
-"India","uniform_2",40,"Tested",47604
-"India","uniform_2",45,"Enrolled",21461
-"India","uniform_2",45,"Tested",52253
-"India","uniform_2",50,"Enrolled",19195
-"India","uniform_2",50,"Tested",46083
-"India","uniform_2",55,"Enrolled",19276
-"India","uniform_2",55,"Tested",46940
-"India","uniform_2",60,"Enrolled",19882
-"India","uniform_2",60,"Tested",48049
-"India","uniform_2",65,"Enrolled",19201
-"India","uniform_2",65,"Tested",46273
-"India","uniform_2",70,"Enrolled",21087
-"India","uniform_2",70,"Tested",50379
-"India","uniform_2",75,"Enrolled",19864
-"India","uniform_2",75,"Tested",47910
-"India","uniform_2",80,"Enrolled",20540
-"India","uniform_2",80,"Tested",49434
-"India","uniform_3",1,"Enrolled",718
-"India","uniform_3",1,"Tested",55415
-"India","uniform_3",2,"Enrolled",1085
-"India","uniform_3",2,"Tested",43066
-"India","uniform_3",3,"Enrolled",1651
-"India","uniform_3",3,"Tested",42235
-"India","uniform_3",4,"Enrolled",2155
-"India","uniform_3",4,"Tested",42108
-"India","uniform_3",5,"Enrolled",2874
-"India","uniform_3",5,"Tested",44362
-"India","uniform_3",6,"Enrolled",3430
-"India","uniform_3",6,"Tested",44463
-"India","uniform_3",7,"Enrolled",3913
-"India","uniform_3",7,"Tested",41543
-"India","uniform_3",8,"Enrolled",4238
-"India","uniform_3",8,"Tested",39647
-"India","uniform_3",9,"Enrolled",4992
-"India","uniform_3",9,"Tested",40766
-"India","uniform_3",10,"Enrolled",5731
-"India","uniform_3",10,"Tested",41536
-"India","uniform_3",15,"Enrolled",9669
-"India","uniform_3",15,"Tested",42788
-"India","uniform_3",20,"Enrolled",12574
-"India","uniform_3",20,"Tested",40003
-"India","uniform_3",25,"Enrolled",16301
-"India","uniform_3",25,"Tested",42691
-"India","uniform_3",30,"Enrolled",18450
-"India","uniform_3",30,"Tested",41649
-"India","uniform_3",35,"Enrolled",19948
-"India","uniform_3",35,"Tested",40114
-"India","uniform_3",40,"Enrolled",22313
-"India","uniform_3",40,"Tested",42232
-"India","uniform_3",45,"Enrolled",23902
-"India","uniform_3",45,"Tested",43908
-"India","uniform_3",50,"Enrolled",22619
-"India","uniform_3",50,"Tested",41291
-"India","uniform_3",55,"Enrolled",21755
-"India","uniform_3",55,"Tested",39545
-"India","uniform_3",60,"Enrolled",21494
-"India","uniform_3",60,"Tested",39030
-"India","uniform_3",65,"Enrolled",21745
-"India","uniform_3",65,"Tested",39663
-"India","uniform_3",70,"Enrolled",23007
-"India","uniform_3",70,"Tested",41652
-"India","uniform_3",75,"Enrolled",22759
-"India","uniform_3",75,"Tested",41274
-"India","uniform_3",80,"Enrolled",23050
-"India","uniform_3",80,"Tested",41759
-"Kenya","uniform_2",1,"Enrolled",682
-"Kenya","uniform_2",1,"Tested",61452
-"Kenya","uniform_2",2,"Enrolled",1075
-"Kenya","uniform_2",2,"Tested",48401
-"Kenya","uniform_2",3,"Enrolled",1612
-"Kenya","uniform_2",3,"Tested",48085
-"Kenya","uniform_2",4,"Enrolled",2321
-"Kenya","uniform_2",4,"Tested",50140
-"Kenya","uniform_2",5,"Enrolled",2739
-"Kenya","uniform_2",5,"Tested",48014
-"Kenya","uniform_2",6,"Enrolled",3327
-"Kenya","uniform_2",6,"Tested",49110
-"Kenya","uniform_2",7,"Enrolled",3765
-"Kenya","uniform_2",7,"Tested",46321
-"Kenya","uniform_2",8,"Enrolled",4546
-"Kenya","uniform_2",8,"Tested",48958
-"Kenya","uniform_2",9,"Enrolled",5049
-"Kenya","uniform_2",9,"Tested",48502
-"Kenya","uniform_2",10,"Enrolled",5540
-"Kenya","uniform_2",10,"Tested",47164
-"Kenya","uniform_2",15,"Enrolled",9197
-"Kenya","uniform_2",15,"Tested",49085
-"Kenya","uniform_2",20,"Enrolled",12201
-"Kenya","uniform_2",20,"Tested",48539
-"Kenya","uniform_2",25,"Enrolled",14083
-"Kenya","uniform_2",25,"Tested",47201
-"Kenya","uniform_2",30,"Enrolled",15990
-"Kenya","uniform_2",30,"Tested",47660
-"Kenya","uniform_2",35,"Enrolled",16633
-"Kenya","uniform_2",35,"Tested",46045
-"Kenya","uniform_2",40,"Enrolled",18438
-"Kenya","uniform_2",40,"Tested",48177
-"Kenya","uniform_2",45,"Enrolled",18981
-"Kenya","uniform_2",45,"Tested",47806
-"Kenya","uniform_2",50,"Enrolled",19042
-"Kenya","uniform_2",50,"Tested",48008
-"Kenya","uniform_2",55,"Enrolled",18222
-"Kenya","uniform_2",55,"Tested",46183
-"Kenya","uniform_2",60,"Enrolled",17913
-"Kenya","uniform_2",60,"Tested",45350
-"Kenya","uniform_2",65,"Enrolled",18761
-"Kenya","uniform_2",65,"Tested",47628
-"Kenya","uniform_2",70,"Enrolled",18007
-"Kenya","uniform_2",70,"Tested",45717
-"Kenya","uniform_2",75,"Enrolled",18717
-"Kenya","uniform_2",75,"Tested",46900
-"Kenya","uniform_2",80,"Enrolled",18554
-"Kenya","uniform_2",80,"Tested",46875
-"Kenya","uniform_3",1,"Enrolled",717
-"Kenya","uniform_3",1,"Tested",52147
-"Kenya","uniform_3",2,"Enrolled",1175
-"Kenya","uniform_3",2,"Tested",44052
-"Kenya","uniform_3",3,"Enrolled",1600
-"Kenya","uniform_3",3,"Tested",39664
-"Kenya","uniform_3",4,"Enrolled",2179
-"Kenya","uniform_3",4,"Tested",41019
-"Kenya","uniform_3",5,"Enrolled",2714
-"Kenya","uniform_3",5,"Tested",40464
-"Kenya","uniform_3",6,"Enrolled",3326
-"Kenya","uniform_3",6,"Tested",40235
-"Kenya","uniform_3",7,"Enrolled",4008
-"Kenya","uniform_3",7,"Tested",41484
-"Kenya","uniform_3",8,"Enrolled",4766
-"Kenya","uniform_3",8,"Tested",41660
-"Kenya","uniform_3",9,"Enrolled",5488
-"Kenya","uniform_3",9,"Tested",41669
-"Kenya","uniform_3",10,"Enrolled",6045
-"Kenya","uniform_3",10,"Tested",41141
-"Kenya","uniform_3",15,"Enrolled",9666
-"Kenya","uniform_3",15,"Tested",40509
-"Kenya","uniform_3",20,"Enrolled",13114
-"Kenya","uniform_3",20,"Tested",40770
-"Kenya","uniform_3",25,"Enrolled",15358
-"Kenya","uniform_3",25,"Tested",38760
-"Kenya","uniform_3",30,"Enrolled",18731
-"Kenya","uniform_3",30,"Tested",42175
-"Kenya","uniform_3",35,"Enrolled",20369
-"Kenya","uniform_3",35,"Tested",42083
-"Kenya","uniform_3",40,"Enrolled",21471
-"Kenya","uniform_3",40,"Tested",42284
-"Kenya","uniform_3",45,"Enrolled",21396
-"Kenya","uniform_3",45,"Tested",40696
-"Kenya","uniform_3",50,"Enrolled",22414
-"Kenya","uniform_3",50,"Tested",42271
-"Kenya","uniform_3",55,"Enrolled",21647
-"Kenya","uniform_3",55,"Tested",40970
-"Kenya","uniform_3",60,"Enrolled",21644
-"Kenya","uniform_3",60,"Tested",41342
-"Kenya","uniform_3",65,"Enrolled",22418
-"Kenya","uniform_3",65,"Tested",42914
-"Kenya","uniform_3",70,"Enrolled",20417
-"Kenya","uniform_3",70,"Tested",38841
-"Kenya","uniform_3",75,"Enrolled",21287
-"Kenya","uniform_3",75,"Tested",40227
-"Kenya","uniform_3",80,"Enrolled",21670
-"Kenya","uniform_3",80,"Tested",40941
-"Kenya","uniform_4",1,"Enrolled",691
-"Kenya","uniform_4",1,"Tested",49527
-"Kenya","uniform_4",2,"Enrolled",1169
-"Kenya","uniform_4",2,"Tested",42189
-"Kenya","uniform_4",3,"Enrolled",1612
-"Kenya","uniform_4",3,"Tested",37712
-"Kenya","uniform_4",4,"Enrolled",2257
-"Kenya","uniform_4",4,"Tested",39687
-"Kenya","uniform_4",5,"Enrolled",2733
-"Kenya","uniform_4",5,"Tested",37986
-"Kenya","uniform_4",6,"Enrolled",3450
-"Kenya","uniform_4",6,"Tested",39750
-"Kenya","uniform_4",7,"Enrolled",4212
-"Kenya","uniform_4",7,"Tested",39536
-"Kenya","uniform_4",8,"Enrolled",4839
-"Kenya","uniform_4",8,"Tested",39576
-"Kenya","uniform_4",9,"Enrolled",5506
-"Kenya","uniform_4",9,"Tested",38489
-"Kenya","uniform_4",10,"Enrolled",6374
-"Kenya","uniform_4",10,"Tested",39564
-"Kenya","uniform_4",15,"Enrolled",10905
-"Kenya","uniform_4",15,"Tested",40454
-"Kenya","uniform_4",20,"Enrolled",15483
-"Kenya","uniform_4",20,"Tested",40662
-"Kenya","uniform_4",25,"Enrolled",18644
-"Kenya","uniform_4",25,"Tested",41165
-"Kenya","uniform_4",30,"Enrolled",20729
-"Kenya","uniform_4",30,"Tested",39466
-"Kenya","uniform_4",35,"Enrolled",23368
-"Kenya","uniform_4",35,"Tested",40765
-"Kenya","uniform_4",40,"Enrolled",23922
-"Kenya","uniform_4",40,"Tested",39601
-"Kenya","uniform_4",45,"Enrolled",25174
-"Kenya","uniform_4",45,"Tested",40147
-"Kenya","uniform_4",50,"Enrolled",24528
-"Kenya","uniform_4",50,"Tested",38942
-"Kenya","uniform_4",55,"Enrolled",24088
-"Kenya","uniform_4",55,"Tested",38062
-"Kenya","uniform_4",60,"Enrolled",23519
-"Kenya","uniform_4",60,"Tested",37320
-"Kenya","uniform_4",65,"Enrolled",24761
-"Kenya","uniform_4",65,"Tested",39291
-"Kenya","uniform_4",70,"Enrolled",23326
-"Kenya","uniform_4",70,"Tested",36715
-"Kenya","uniform_4",75,"Enrolled",25626
-"Kenya","uniform_4",75,"Tested",40565
-"Kenya","uniform_4",80,"Enrolled",23654
-"Kenya","uniform_4",80,"Tested",37440
+"India","uniform_1",1,"Enrolled",593.5
+"India","uniform_1",1,"Tested",85210
+"India","uniform_1",2,"Enrolled",1045.5
+"India","uniform_1",2,"Tested",74715.5
+"India","uniform_1",3,"Enrolled",1271.5
+"India","uniform_1",3,"Tested",59880
+"India","uniform_1",4,"Enrolled",1536.5
+"India","uniform_1",4,"Tested",53462.5
+"India","uniform_1",5,"Enrolled",1932
+"India","uniform_1",5,"Tested",55953.5
+"India","uniform_1",6,"Enrolled",2087.5
+"India","uniform_1",6,"Tested",48962
+"India","uniform_1",7,"Enrolled",2162.5
+"India","uniform_1",7,"Tested",45637
+"India","uniform_1",8,"Enrolled",2308.5
+"India","uniform_1",8,"Tested",41629.5
+"India","uniform_1",9,"Enrolled",2726.5
+"India","uniform_1",9,"Tested",42607
+"India","uniform_1",10,"Enrolled",2819.5
+"India","uniform_1",10,"Tested",40206.5
+"India","uniform_1",15,"Enrolled",3365.5
+"India","uniform_1",15,"Tested",30546.5
+"India","uniform_1",20,"Enrolled",3368.5
+"India","uniform_1",20,"Tested",23284.5
+"India","uniform_1",25,"Enrolled",4043.5
+"India","uniform_1",25,"Tested",23563
+"India","uniform_1",30,"Enrolled",3904.5
+"India","uniform_1",30,"Tested",20136
+"India","uniform_1",35,"Enrolled",4422
+"India","uniform_1",35,"Tested",21004
+"India","uniform_1",40,"Enrolled",4180
+"India","uniform_1",40,"Tested",18336.5
+"India","uniform_1",45,"Enrolled",4069.5
+"India","uniform_1",45,"Tested",17363
+"India","uniform_1",50,"Enrolled",4400
+"India","uniform_1",50,"Tested",18788
+"India","uniform_1",55,"Enrolled",4124
+"India","uniform_1",55,"Tested",17742
+"India","uniform_1",60,"Enrolled",4232
+"India","uniform_1",60,"Tested",17804
+"India","uniform_1",65,"Enrolled",4180
+"India","uniform_1",65,"Tested",17931
+"India","uniform_1",70,"Enrolled",4188.5
+"India","uniform_1",70,"Tested",17872.5
+"India","uniform_1",75,"Enrolled",4235
+"India","uniform_1",75,"Tested",18352.5
+"India","uniform_1",80,"Enrolled",4255.5
+"India","uniform_1",80,"Tested",18088

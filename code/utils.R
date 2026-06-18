@@ -293,13 +293,14 @@ sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
   return(analytical_df)
 }
 
-sim_stoch <- function(pars, fasttarget=50, agedist, households=F){
+sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
 	n_tested <- 0
 	n_recruited <- 0
 	n_fast <- 0
+	n_cases <- 0
 	n_overall <- 0
 
 	capacity <- 1e6
@@ -315,7 +316,7 @@ sim_stoch <- function(pars, fasttarget=50, agedist, households=F){
 	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
-	while(n_fast < fasttarget){
+	while(n_cases < casetarget){
 	  # Grab their age from the age distribution
 	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
 
@@ -355,7 +356,8 @@ sim_stoch <- function(pars, fasttarget=50, agedist, households=F){
 			if((tinf >= age-sigma) && (tinf <= age)){
 				# They were infected in past sigma years, so test positive. Recruit!
 				n_recruited <- n_recruited + 1
-				if(progressor_type=="fast"){n_fast <- n_fast + 1}
+				if(progressor_type=="fast") {n_fast <- n_fast + 1}
+				n_cases <- n_fast + ((n_recruited - n_fast)*pars$mu_slow*pars$trial_length)
 
 				# Expand list if needed
 				if (n_recruited > capacity) {
@@ -378,20 +380,21 @@ sim_stoch <- function(pars, fasttarget=50, agedist, households=F){
 
 	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])  # bind_rows outside of the while loop is much faster
 
-	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_overall=n_overall, recruited_df=recruited_df)
+	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_cases=n_cases, n_overall=n_overall, recruited_df=recruited_df)
 	
 	return(out)
 	})
 }
 sim_stoch <- compiler::cmpfun(sim_stoch)  # R bytecode compiler (for speed)
 
-sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
+sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
   with(as.list(pars), {
     
     # Initialize tracking variables
     n_recruited <- 0
     n_fast <- 0
     n_slow <- 0
+    n_cases <- 0
     n_overall <- 0
     n_infected <- 0  # only used for calculating ARTI
     
@@ -407,7 +410,7 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
     eligible_probs <- agedist[as.character(eligible_ages)]
     prog_types     <- c("slow","fast")
     
-    while(n_fast < fasttarget){
+    while(n_cases < casetarget){
       # Grab their age from the age distribution
       age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
       
@@ -447,6 +450,7 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
         # If they are fast (and actually infected), add 1 to n_fast:
         if (tinf <= age) {
           (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
+          n_cases <- n_fast + ((n_slow)*pars$mu_slow*pars$trial_length)  # expected no of cases
         }
       }
 
@@ -456,7 +460,7 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
       if (tinf <= age) n_infected <- n_infected + 1
     }
     
-    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_slow, n_overall=n_overall, n_infected=n_infected)
+    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected)
     
     return(out)
   })
@@ -464,7 +468,7 @@ sim_stoch_notest <- function(pars, fasttarget=50, agedist, households=F){
 sim_stoch_notest <- compiler::cmpfun(sim_stoch_notest)  # R bytecode compiler (for speed)
 
 sim_stoch_trial <- function(pars, enrol_target, agedist) {
-  # Like sim_stoch but stops when enrol_target recruits are reached rather than fasttarget fast progressors.
+  # Like sim_stoch but stops when enrol_target recruits are reached rather than casetarget cases.
   with(as.list(pars), {
 
     n_tested    <- 0
@@ -519,14 +523,14 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
 }
 sim_stoch_trial <- compiler::cmpfun(sim_stoch_trial)  # R bytecode compiler (for speed)
 
-sim_stoch_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist, reps=25){
+sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25){
 	grid <- expand.grid(sigma=sigmavec, rep=1:reps)  # expand.grid is faster than nested for loops
   p <- progressr::progressor(steps=nrow(grid))  # set up progress bar
   
 	stoch_list <- future.apply::future_lapply(1:nrow(grid), function(i) {  # put everything into a lapply to use multiple cores
 	  these_pars <- pars
 	  these_pars$sigma <- grid$sigma[i]
-	  stoch_output <- sim_stoch(these_pars, fasttarget=fasttarget, agedist=agedist)
+	  stoch_output <- sim_stoch(these_pars, casetarget=casetarget, agedist=agedist)
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_recruited=stoch_output$n_recruited,
@@ -568,7 +572,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
-		labs(x="Test span (years)", y="Number (per 50 fast progressors)")
+		labs(x="Test span (years)", y="Number (per 50 cases)")
 
 	return(fig_stochastic_analytic)
 }
