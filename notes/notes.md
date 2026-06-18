@@ -597,3 +597,7 @@ We can't reproduce the analysis we did for investigating if new foi should be ag
 # 15th May 2026 (LH)
 
 We discussed the terminology for overall/sampled, screened/tested, and enrolled/recruited etc and settled on using the following three terms in the manuscript: **contacted, tested, enrolled.**
+
+# 18th June (LH)
+
+Our objective function should be 50 cases not 50 fasts.
