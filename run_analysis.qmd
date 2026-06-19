@@ -602,7 +602,7 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 ## 8 Match analytic & stochastic (on non-age-varying params)
 ```{r}
 #| label: match_approaches
-
+#| eval: FALSE
 
 #Set non-age-varying params TODO
 
@@ -618,3 +618,4 @@ analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(
 fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
 fig_stochastic_analytic_match
 ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=5, height=5/1.6)
+```
