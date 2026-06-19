@@ -284,7 +284,7 @@ for (progression_structure in progression_structures) {
 }
 
 # extract infection prevalence data from Dagnew et al. for fitting
-dagnew_sa <- read.csv("data/Dagnew_2016_IGRA_positivity_by_site.csv") %>%
+dagnew_sa <- read.csv("data/Dagnew_2026_IGRA_positivity_by_site.csv") %>%
   filter(country == "South Africa") %>% select(site_no, age_group, pct_positive) %>%
   mutate(across(c(pct_positive), ~ .x / 100))  # convert % to proportion
 dagnew_age20_min <- dagnew_sa %>% filter(site_no=="country_range_min" & age_group=="15-24") %>% pull(pct_positive)
@@ -615,7 +615,7 @@ with_progress({
 analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
 
 #' Plot all results
-fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
+fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, analytical_df_match, cols=c("n_tested","n_enrolled","n_overall"))
 fig_stochastic_analytic_match
 ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=5, height=5/1.6)
 ```

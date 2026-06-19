@@ -604,4 +604,24 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
   ![](images/clipboard-860729345.png)
 
-- 
+- Now thinking about implementing reversion to the stochastic model:
+
+  Primary reversion only. No reinfection.
+
+  - First idea: simulate a random low probability of reversion for each individual infected. i.e. some fraction of tinf's turn back to uninfected?
+
+    - CLaude suggested to give each person a random chance of still being IGRA positive, i.e. P(positive) = exp(-mu_revert \* (age - tinf)).
+
+    - Alternative idea from Claude: After infection, sample two times - tsymp and t_revert. If t_revert \< age, then the individual has already reverted and is not recruited.
+
+  - What do we do about individuals that revert DURING the trial? Our model only simulates trial recruitment but we calculate expected cases etc based on no reversion during the trial...
+
+  - does ARTI need to change? I assume ARTI in the population is estimated in real conditions where there is reversion. So the ARTI data I am using should be fine; I just need to enable the individuals in my model to revert. (Which might have the outcome of larger foi in the model fits to fit to reasonable ARTI data).
+
+  - does infection prevalence by age need to change? here we can just use the data from Dagnew and relabel it IGRA positivity.
+
+  - does cases need to change? Same as ARTI I imagine - no change needed but we'd expect different parameter values to be favoured in the model selection - probably higher foi.
+
+  - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance?
+
+  - Getting something nice from the model fits might be quite fiddly. Suggest trying 0%, 5%, 10%, and 22.8% reversion, with a super-skimmed down exhaustive search and see what is plausible. Or just run a large model fitting and wait a while (but run a small one first to check its quick and working properly).
