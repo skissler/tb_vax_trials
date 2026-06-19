@@ -40,7 +40,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 foi_structure <- "uniform_4"  # works for "uniform4", "uniform6", ...
-progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
+progression_structure <- "uniform" #"Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 slow_structure <- "0.003"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
@@ -57,7 +57,7 @@ fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure
 
 ## 3. define parameter values
 
-`pars_m72IIb` currently uses values such that model outputs emulate the M72 Van Der Meeren trial outputs of \# enrolled, \# recruited etc. Note this is different to some of the values of the trial population itself (e.g. p_slow).
+`pars_m72IIb` currently uses values such that model outputs emulate the M72 Van Der Meeren trial outputs of \# enrolled etc. Note this is different to some of the values of the trial population itself (e.g. p_slow).
 
 `pars_lit` takes best-known parameter values from the literature.
 
@@ -109,11 +109,11 @@ with_progress({
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
-analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
+analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.1), casetarget=50, agedist=agedist)
 
 #' Plot all results
 fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                           cols=c("n_tested","n_recruited","n_cases","n_overall")) + 
+                                           cols=c("n_tested","n_enrolled","n_cases","n_overall")) + 
 	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
 fig_stochastic_analytic_m72IIb
 ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
@@ -173,9 +173,9 @@ with_progress({
       foi_structure  = param_grid$foi_structure[i],
       rep            = param_grid$rep[i],
       n_overall      = out$n_overall,
-      n_recruited    = out$n_recruited,
+      n_enrolled    = out$n_enrolled,
       n_fast         = out$n_fast,
-      n_slow         = out$n_slow,
+      #n_cases         = out$n_cases,
       exp_cases      = out$n_fast + out$n_slow * pars_fit$mu_slow * pars_fit$trial_length
     )
   }, future.seed=TRUE)
@@ -210,15 +210,15 @@ head(m72IIb_fit_trial)
 pars_lit_igra$rho <- make_foi(4,5,3,5,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=25)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), fasttarget=50, agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
 
 #' Plot all results
-fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_cases","n_overall"))
+fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
 
@@ -397,19 +397,19 @@ with_progress({
     p()
     tibble(country=sim_grid_7a$country[i], foi_structure=sim_grid_7a$foi_structure[i],
            sigma=sim_grid_7a$sigma[i], rep=sim_grid_7a$rep[i],
-           n_tested=out$n_tested, n_recruited=out$n_recruited,
+           n_tested=out$n_tested, n_enrolled=out$n_enrolled,
            n_fast=out$n_fast, n_cases=out$n_cases, n_overall=out$n_overall)
   }, future.seed=TRUE)
 })
 
 stoch_df_7a <- bind_rows(stoch_list_7a)
 
-#' 3x2 panel plot: rows = n_recruited / n_tested, columns = country, colour = FOI structure
+#' 3x2 panel plot: rows = n_enrolled / n_tested, columns = country, colour = FOI structure
 stoch_df_7a_long <- stoch_df_7a %>%
   mutate(country = factor(country, levels=countries_7a)) %>%
-  select(country, foi_structure, sigma, rep, n_recruited, n_tested) %>%
-  pivot_longer(cols=c(n_recruited, n_tested), names_to="metric", values_to="value") %>%
-  mutate(metric = case_when(metric=="n_recruited"~"Enrolled", metric=="n_tested"~"Tested")) %>%
+  select(country, foi_structure, sigma, rep, n_enrolled, n_tested) %>%
+  pivot_longer(cols=c(n_enrolled, n_tested), names_to="metric", values_to="value") %>%
+  mutate(metric = case_when(metric=="n_enrolled"~"Enrolled", metric=="n_tested"~"Tested")) %>%
   mutate(metric = factor(metric, levels=c("Enrolled", "Tested"))) %>%
   filter(!(country=="Kenya" & foi_structure %in% c("uniform_1", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
   filter(!(country=="India" & foi_structure %in% c("uniform_4", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
@@ -446,7 +446,7 @@ for (i in 1:nrow(combos_7a)) {
   # Filter full stoch output to this country/FOI at sigma=80, all reps
   stoch_i <- stoch_df_7a %>%
     filter(country==combos_7a$country[i], foi_structure==combos_7a$foi_structure[i]) %>%
-    select(sigma, rep, n_tested, n_recruited, n_fast, n_cases, n_overall)
+    select(sigma, rep, n_tested, n_enrolled, n_fast, n_cases, n_overall)
 
   inf_prev <- estimate_inf_prev_from_model(pars_i$rho)
   reps_i   <- unique(stoch_i$rep)
@@ -522,7 +522,7 @@ with_progress({
       country       = sim_grid_7b$country[i],
       foi_structure = sim_grid_7b$foi_structure[i],
       rep           = sim_grid_7b$rep[i],
-      n_recruited   = out$n_recruited,
+      n_enrolled   = out$n_enrolled,
       n_fast        = out$n_fast,
       n_cases        = out$n_cases,
       n_overall     = out$n_overall,
@@ -537,9 +537,9 @@ notest_df_7b <- bind_rows(notest_list_7b)
 notest_summary_7b <- notest_df_7b %>%
   group_by(scenario, country, foi_structure) %>%
   summarise(
-    n_recruited_med = median(n_recruited),
-    n_recruited_lo  = quantile(n_recruited, 0.1),
-    n_recruited_hi  = quantile(n_recruited, 0.9),
+    n_enrolled_med = median(n_enrolled),
+    n_enrolled_lo  = quantile(n_enrolled, 0.1),
+    n_enrolled_hi  = quantile(n_enrolled, 0.9),
     n_overall_med   = median(n_overall),
     n_overall_lo    = quantile(n_overall, 0.1),
     n_overall_hi    = quantile(n_overall, 0.9),
@@ -555,7 +555,7 @@ fig_7b <- notest_df_7b %>%
   filter(!(country=="Kenya" & foi_structure %in% c("uniform_1", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
   filter(!(country=="India" & foi_structure %in% c("uniform_4", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
   filter(!(country=="South Africa" & foi_structure %in% c("uniform_1", "uniform_2", "uniform_3"))) %>% # filter out foi's that do not give plausible outputs
-  ggplot(aes(x=scenario, y=n_recruited, fill=foi_structure)) +
+  ggplot(aes(x=scenario, y=n_enrolled, fill=foi_structure)) +
   geom_boxplot(coef=Inf) +
   scale_fill_brewer(palette = "Set1") +
   facet_wrap(~country, nrow=1) +
@@ -576,7 +576,7 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 # 
 #   stoch_i  <- notest_df_7b %>%
 #     filter(scenario==combos_7b$scenario[i], country==combos_7b$country[i], foi_structure==combos_7b$foi_structure[i]) %>%
-#     select(rep, n_fast, n_slow, n_overall, n_infected)
+#     select(rep, n_fast, n_cases, n_overall, n_infected)
 # 
 #   inf_prev   <- estimate_inf_prev_from_model(pars_i$rho)
 #   reps_i     <- unique(stoch_i$rep)
@@ -598,3 +598,23 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 # 
 # write.csv(benchmarks_7b, file="output/notest_benchmarks.csv", row.names=FALSE)
 ```
+
+## 8 Match analytic & stochastic (on non-age-varying params)
+```{r}
+#| label: match_approaches
+
+
+#Set non-age-varying params TODO
+
+#' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
+with_progress({
+  stochastic_df_match <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=25)
+})
+
+#' Simulate the analytical approach with lit params, over the duration of positivity sigma
+analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
+
+#' Plot all results
+fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
+fig_stochastic_analytic_match
+ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=5, height=5/1.6)

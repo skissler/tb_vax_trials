@@ -242,20 +242,23 @@ compute_survival_fn <- function(rho) {
 }
 
 # Simulate functions
-sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
+sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
   # Restrict to eligible age groups
   eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
   eligible <- eligible/sum(eligible)
   ages <- as.numeric(names(eligible))
 
   # Pre-compute sigma-independent quantities outside the for loop
-  # Vector for drawing asymtomatic people of age a
+  # Vector for drawing asymptomatic people of age a
   p_asymp_given_age_vec <- vapply(ages, function(x)
     p_asymp_given_age(age=x, p_slow=pars$p_slow, foi=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),  # probability for each age x
     numeric(1))
   names(p_asymp_given_age_vec) <- names(eligible)
   # Integrate over all a
   p_asymp <- sum(p_asymp_given_age_vec * eligible)
+  # Fraction of slow inf individuals expected to progress to disease during trial
+  slow_endpt_ratio <- pars$mu_slow * pars$trial_length
+  print(slow_endpt_ratio)
 
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
@@ -269,23 +272,22 @@ sim_analytic_over_sigma <- function(pars, sigmavec, fasttarget=50, agedist){
       p_inf_and_type_and_asymp_given_age(prog_type="fast", age=x, sigma=sigma, p_slow=pars$p_slow, foi=pars$rho, prograte_slow=pars$mu_slow, prograte_fast=pars$mu_fast),
       numeric(1))
     
-    # Calculate probabilities needed for no. overall, no. tested, and no. recruited
-    p_inf_and_fast_and_asymp <- sum(num_fast * eligible)
-    p_inf_and_fast_given_asymp <- sum(num_fast * eligible) / p_asymp  # used to be called p_fast but it is actually P_{pos&fast|asymp} from p15
-    p_inf_and_slow_given_asymp <- sum(num_slow * eligible) / p_asymp  # used to be called p_slow or p_slow_prop
-    p_fast_given_inf_and_asymp <- p_inf_and_fast_given_asymp / (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp)
+    # Calculate probabilities needed for no. overall, no. tested, and no. enrolled
+    p_inf_and_fast_and_asymp <- sum(num_fast * eligible)  # P1
+    p_inf_and_slow_and_asymp <- sum(num_slow * eligible)  # P1'
+    p_inf_and_fast_given_asymp <- sum(num_fast * eligible) / p_asymp  # P2
+    p_inf_and_slow_given_asymp <- sum(num_slow * eligible) / p_asymp  # P2'
     
-    recruits_to_fasttarget <- fasttarget / p_fast_given_inf_and_asymp
-    tests_to_fasttarget    <- fasttarget / p_inf_and_fast_given_asymp
-    overall_to_fasttarget <- fasttarget / p_inf_and_fast_and_asymp
+    overall_to_casetarget <- casetarget / (p_inf_and_fast_and_asymp + slow_endpt_ratio*p_inf_and_slow_and_asymp)
+    tests_to_casetarget    <- casetarget / (p_inf_and_fast_given_asymp + slow_endpt_ratio*p_inf_and_slow_given_asymp)
+    enrolls_to_casetarget <- casetarget * (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp) / (p_inf_and_fast_given_asymp + slow_endpt_ratio*p_inf_and_slow_given_asymp)
     
     analytical_df[[counter]] <- list(
       sigma=sigma,
-      n_tested=tests_to_fasttarget,
-      n_recruited=recruits_to_fasttarget,
-      n_fast=fasttarget,
-      n_slow=recruits_to_fasttarget - fasttarget,
-      n_overall=overall_to_fasttarget)
+      n_tested=tests_to_casetarget,
+      n_enrolled=enrolls_to_casetarget,
+      n_cases=casetarget,
+      n_overall=overall_to_casetarget)
     counter <- counter + 1
   }
 
@@ -298,13 +300,13 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 
 	# Initialize tracking variables  
 	n_tested <- 0
-	n_recruited <- 0
+	n_enrolled <- 0
 	n_fast <- 0
 	n_cases <- 0
 	n_overall <- 0
 
 	capacity <- 1e6
-	recruited_list <- vector("list", capacity)  # specifying list size in advance for speed
+	enrolled_list <- vector("list", capacity)  # specifying list size in advance for speed
 
 	# Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
 	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
@@ -354,22 +356,22 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 			# They are asymptomatic, so let's test them: 
 			n_tested <- n_tested + 1
 			if((tinf >= age-sigma) && (tinf <= age)){
-				# They were infected in past sigma years, so test positive. Recruit!
-				n_recruited <- n_recruited + 1
+				# They were infected in past sigma years, so test positive. Enrol!
+				n_enrolled <- n_enrolled + 1
 				if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				n_cases <- n_fast + ((n_recruited - n_fast)*pars$mu_slow*pars$trial_length)
+				n_cases <- n_fast + ((n_enrolled - n_fast)*pars$mu_slow*pars$trial_length)
 
 				# Expand list if needed
-				if (n_recruited > capacity) {
+				if (n_enrolled > capacity) {
 					capacity <- capacity * 2
-					length(recruited_list) <- capacity  
+					length(enrolled_list) <- capacity  
 				}
 
-				recruited_list[[n_recruited]] <- list(
-					id=n_recruited,
+				enrolled_list[[n_enrolled]] <- list(
+					id=n_enrolled,
 					age=age,
 					progressor_type=progressor_type,
-					tinf=tinf  # only recording tinf values for those who were recruited
+					tinf=tinf  # only recording tinf values for those who were enrolled
 					)
 
 			}
@@ -378,9 +380,9 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 		n_overall <- n_overall + 1
 	}
 
-	recruited_df <- bind_rows(recruited_list[1:(n_recruited)])  # bind_rows outside of the while loop is much faster
+	enrolled_df <- bind_rows(enrolled_list[1:(n_enrolled)])  # bind_rows outside of the while loop is much faster
 
-	out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast, n_cases=n_cases, n_overall=n_overall, recruited_df=recruited_df)
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_cases=n_cases, n_overall=n_overall, enrolled_df=enrolled_df)
 	
 	return(out)
 	})
@@ -391,7 +393,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
   with(as.list(pars), {
     
     # Initialize tracking variables
-    n_recruited <- 0
+    n_enrolled <- 0
     n_fast <- 0
     n_slow <- 0
     n_cases <- 0
@@ -445,8 +447,8 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       
       # ELIGIBILITY
       if(tsymp > age){
-        # They are asymptomatic, so let's recruit them: 
-        n_recruited <- n_recruited + 1
+        # They are asymptomatic, so let's enrol them: 
+        n_enrolled <- n_enrolled + 1
         # If they are fast (and actually infected), add 1 to n_fast:
         if (tinf <= age) {
           (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
@@ -460,7 +462,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       if (tinf <= age) n_infected <- n_infected + 1
     }
     
-    out <- list(n_recruited=n_recruited, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected)
+    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected)
     
     return(out)
   })
@@ -468,16 +470,16 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
 sim_stoch_notest <- compiler::cmpfun(sim_stoch_notest)  # R bytecode compiler (for speed)
 
 sim_stoch_trial <- function(pars, enrol_target, agedist) {
-  # Like sim_stoch but stops when enrol_target recruits are reached rather than casetarget cases.
+  # Like sim_stoch but stops when enrol_target enrolls are reached rather than casetarget cases.
   with(as.list(pars), {
 
     n_tested    <- 0
-    n_recruited <- 0
+    n_enrolled <- 0
     n_fast      <- 0
     n_overall   <- 0
 
     capacity       <- enrol_target * 20
-    recruited_list <- vector("list", capacity)
+    enrolled_list <- vector("list", capacity)
 
     survival_fn  <- exp(-cumsum(rho[1:100]))
     survival_pmf <- c(1, survival_fn[-100]) - survival_fn
@@ -487,7 +489,7 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
     eligible_probs <- agedist[as.character(eligible_ages)]
     prog_types     <- c("slow", "fast")
 
-    while (n_recruited < enrol_target) {
+    while (n_enrolled < enrol_target) {
       age  <- sample(eligible_ages, size=1, prob=eligible_probs)
       tinf <- sample(0:100, size=1, prob=survival_pmf)
       if (tinf < 100) {
@@ -503,21 +505,21 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
       if (tsymp > age) {
         n_tested <- n_tested + 1
         if ((tinf >= age - sigma) && (tinf <= age)) {
-          n_recruited <- n_recruited + 1
+          n_enrolled <- n_enrolled + 1
           if (progressor_type == "fast") n_fast <- n_fast + 1
-          if (n_recruited > capacity) { capacity <- capacity * 2; length(recruited_list) <- capacity }
-          recruited_list[[n_recruited]] <- list(
-            id=n_recruited, age=age, progressor_type=progressor_type, tinf=tinf
+          if (n_enrolled > capacity) { capacity <- capacity * 2; length(enrolled_list) <- capacity }
+          enrolled_list[[n_enrolled]] <- list(
+            id=n_enrolled, age=age, progressor_type=progressor_type, tinf=tinf
           )
         }
       }
       n_overall <- n_overall + 1
     }
 
-    recruited_df <- bind_rows(recruited_list[1:n_recruited])
+    enrolled_df <- bind_rows(enrolled_list[1:n_enrolled])
 
-    out <- list(n_tested=n_tested, n_recruited=n_recruited, n_fast=n_fast, n_slow=n_recruited-n_fast,
-                n_overall=n_overall, recruited_df=recruited_df)
+    out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast,
+                n_overall=n_overall, enrolled_df=enrolled_df)
     return(out)
   })
 }
@@ -533,23 +535,22 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 	  stoch_output <- sim_stoch(these_pars, casetarget=casetarget, agedist=agedist)
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
-	    n_tested=stoch_output$n_tested, n_recruited=stoch_output$n_recruited,
-	    n_fast=stoch_output$n_fast, n_slow=stoch_output$n_slow, n_overall=stoch_output$n_overall)
+	    n_tested=stoch_output$n_tested, n_enrolled=stoch_output$n_enrolled,
+	    n_fast=stoch_output$n_fast, n_cases=stoch_output$n_cases, n_overall=stoch_output$n_overall)
 	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
 	
 	bind_rows(stoch_list)
 }
 
 # Plot functions
-plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_recruited","n_fast")){
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_cases")){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested"~"Tested",
-			name=="n_recruited"~"Enrolled",
-			name=="n_fast"~"Fast",
-			name=="n_slow"~"Slow",
+			name=="n_enrolled"~"Enrolled",
+			name=="n_cases"~"Cases",
 			name=="n_overall"~"Contacted"
 			))
 
@@ -558,38 +559,22 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested"~"Tested",
-			name=="n_recruited"~"Enrolled",
-			name=="n_fast"~"Fast",
-			name=="n_slow"~"Slow",
+			name=="n_enrolled"~"Enrolled",
+			name=="n_cases"~"Cases",
 			name=="n_overall"~"Contacted"
 			))
 
 	fig_stochastic_analytic <- ggplot() + 
-		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Slow","Fast"))), size=0.5, alpha=0.2) + 
-		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Slow","Fast"))), linewidth=1, alpha=1) + 
-		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Slow"="magenta","Fast"="red")) + 
+		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), size=0.5, alpha=0.2) + 
+		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), linewidth=0.7, alpha=0.5) + 
+		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Cases"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
-		labs(x="Test span (years)", y="Number (per 50 cases)")
+		labs(x="Test span (years)", y="Number (for 50 cases)")
 
 	return(fig_stochastic_analytic)
-}
-
-plot_screenslope <- function(analytical_df){
-	fig_screenslope <- analytical_df %>% 
-	select(sigma, n_tested) %>% 
-	mutate(sigma_diff = sigma - lag(sigma)) %>% 
-	mutate(tested_diff=n_tested - lag(n_tested)) %>% 
-	mutate(slope=tested_diff/sigma_diff) %>% 
-	filter(!is.na(slope)) %>% 
-	ggplot(aes(x=sigma, y=slope)) + 
-		geom_line(linewidth=1) + 
-		theme_classic() + 
-		labs(x="Test span (years)", y="Slope of screening line")
-	
-	return(fig_screenslope)
 }
 
 # Character string manipulation functions
@@ -635,7 +620,7 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
   if ("n_tested" %in% names(df)) {
-    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_recruited"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_enrolled"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
   } else {
     infection_prevalence <- unname(model_run["n_infected"] / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
   }
