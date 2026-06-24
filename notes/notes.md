@@ -625,3 +625,31 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
   - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance?
 
   - Getting something nice from the model fits might be quite fiddly. Suggest trying 0%, 5%, 10%, and 22.8% reversion, with a super-skimmed down exhaustive search and see what is plausible. Or just run a large model fitting and wait a while (but run a small one first to check its quick and working properly).
+
+# 24th June LH
+
+- What happens if you revert during the trial? -\> We discussed and agreed to calculated the expected cases formally incorporating exponentially-distributed mu_revert.
+
+- Reversion rate for time since infection: a constant annual rate, exponentially distributed, for each year since you were infected.
+
+- Memoryless property of the exponential distribution: Once *enrolled*, your individual tinf and tsymp times are forgotten. And trial outcome just calculated in expectation for the probability that an infected+asymp+fast/slow person contracts the disease during the 3-year tria
+
+- Remember rates vs probabilities. There's a typo in `estimate_case_incidence_from_model` that needs correcting. mu_slow. That term should be exp(0.003) or something rather than just 0.003.
+
+- The `estimate_case_incidence_from_model` function also needs to change from an estimate to the actual expected case incidence. Input is n_enrolled. The actual trial:
+
+  - Combination of exponential CDFs.
+
+  - Without reversion, P(becoming a case) = P(exponentially-distributed mu_f random variable is less than 3) + P(exponentially-distributed mu_s random variable is less than 3). Should just be the `dexp` function in R (i.e. P(X\<=3)).
+
+  - Now with reversion, we have an exponential race. Two exp rv's and want to know which happens first (becoming a case or reverting).
+
+    - P(progress + don't revert)
+
+    - Using the additive property of exponentials, its just r.v with rate (mu_f + mu_r) I think?
+
+    - P(something happens) = A, and A is a reversion with probability mu_r/(mu_f + mu_r) and a progression with probability mu_f/(mu_f + mu_r).
+
+  - So the full trial process in expectation is: 1. Did the event happen in the 3-year period? And 2. Was the event a reversion or progression (bernoulli coin flip).
+
+    - So this should be an exponential CDF x Bernoulli prob. (or similar).
