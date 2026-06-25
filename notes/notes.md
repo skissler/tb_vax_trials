@@ -653,3 +653,5 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
   - So the full trial process in expectation is: 1. Did the event happen in the 3-year period? And 2. Was the event a reversion or progression (bernoulli coin flip).
 
     - So this should be an exponential CDF x Bernoulli prob. (or similar).
+
+  - Update: 25th June- I worked through the math and arrive at some nice probability expressions for expected no of cases DURING the trial. Algebra and final results are outlined in `notes/Expected cases DURING the trial.pdf` . :D
