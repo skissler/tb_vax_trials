@@ -659,3 +659,5 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 # 17th July 2026 (LH)
 
 Corrected 50-cases objective for the analytic approach. Expected no of cases is now computed rather than just an estimate of all fasts + 3mu_s slows.
+
+Also corrected for the stochastic approach (all variations).

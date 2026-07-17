@@ -104,7 +104,7 @@ pars_lit_igra <- list(
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)  ## NB: THIS JUST USES sim_stoch() NOT sim_stoch_trial() - MIGHT WANT TO CHANGE casetarget=50
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -175,8 +175,7 @@ with_progress({
       n_overall      = out$n_overall,
       n_enrolled    = out$n_enrolled,
       n_fast         = out$n_fast,
-      #n_cases         = out$n_cases,
-      exp_cases      = out$n_fast + out$n_slow * pars_fit$mu_slow * pars_fit$trial_length
+      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  # if no reversion
     )
   }, future.seed=TRUE)
 })

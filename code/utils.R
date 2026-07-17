@@ -320,6 +320,10 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
+	# Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
+	fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
+	slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
+	
 	while(n_cases < casetarget){
 	  # Grab their age from the age distribution
 	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
@@ -361,7 +365,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				# They were infected in past sigma years, so test positive. Enrol!
 				n_enrolled <- n_enrolled + 1
 				if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				n_cases <- n_fast + ((n_enrolled - n_fast)*pars$mu_slow*pars$trial_length)
+				n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases if no reversion
 
 				# Expand list if needed
 				if (n_enrolled > capacity) {
@@ -414,6 +418,10 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     eligible_probs <- agedist[as.character(eligible_ages)]
     prog_types     <- c("slow","fast")
     
+    # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
+    fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
+    slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
+    
     while(n_cases < casetarget){
       # Grab their age from the age distribution
       age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
@@ -454,7 +462,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
         # If they are fast (and actually infected), add 1 to n_fast:
         if (tinf <= age) {
           (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
-          n_cases <- n_fast + ((n_slow)*pars$mu_slow*pars$trial_length)  # expected no of cases
+          n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases if no reversion
         }
       }
 
@@ -606,7 +614,7 @@ estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # c
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
-  incidence <- unname((model_run["n_fast"] + model_run["n_slow"]*pars$mu_slow*pars$trial_length) / (model_run["n_overall"]*pars$trial_length))
+  incidence <- unname(model_run["n_cases"] / (model_run["n_overall"]*pars$trial_length))
   return(incidence*100000)
 }
 
