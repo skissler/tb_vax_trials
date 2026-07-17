@@ -321,8 +321,8 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	prog_types     <- c("slow","fast")
 	
 	# Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
-	fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
-	slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
+	fast_endpt_fraction <- (1 - exp(-(pars$mu_fast + pars$mu_revert) * pars$trial_length))*pars$mu_fast/(pars$mu_fast + pars$mu_revert)
+	slow_endpt_fraction <- (1 - exp(-(pars$mu_slow + pars$mu_revert) * pars$trial_length))*pars$mu_slow/(pars$mu_slow + pars$mu_revert)
 	
 	while(n_cases < casetarget){
 	  # Grab their age from the age distribution
@@ -365,7 +365,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				# They were infected in past sigma years, so test positive. Enrol!
 				n_enrolled <- n_enrolled + 1
 				if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases if no reversion
+				n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases including reversion DURING trial
 
 				# Expand list if needed
 				if (n_enrolled > capacity) {
@@ -419,8 +419,8 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     prog_types     <- c("slow","fast")
     
     # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
-    fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
-    slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
+    fast_endpt_fraction <- (1 - exp(-(pars$mu_fast + pars$mu_revert) * pars$trial_length))*pars$mu_fast/(pars$mu_fast + pars$mu_revert)
+    slow_endpt_fraction <- (1 - exp(-(pars$mu_slow + pars$mu_revert) * pars$trial_length))*pars$mu_slow/(pars$mu_slow + pars$mu_revert)
     
     while(n_cases < casetarget){
       # Grab their age from the age distribution

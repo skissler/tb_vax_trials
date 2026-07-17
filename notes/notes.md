@@ -610,7 +610,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
   - First idea: simulate a random low probability of reversion for each individual infected. i.e. some fraction of tinf's turn back to uninfected?
 
-    - CLaude suggested to give each person a random chance of still being IGRA positive, i.e. P(positive) = exp(-mu_revert \* (age - tinf)).
+    - Claude suggested to give each person a random chance of still being IGRA positive, i.e. P(positive) = exp(-mu_revert \* (age - tinf)).
 
     - Alternative idea from Claude: After infection, sample two times - tsymp and t_revert. If t_revert \< age, then the individual has already reverted and is not recruited.
 
@@ -634,7 +634,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
 - Memoryless property of the exponential distribution: Once *enrolled*, your individual tinf and tsymp times are forgotten. And trial outcome just calculated in expectation for the probability that an infected+asymp+fast/slow person contracts the disease during the 3-year trial.
 
-- Remember rates vs probabilities. There's a typo in `estimate_case_incidence_from_model` that needs correcting. mu_slow. That term should be exp(0.003) or something rather than just 0.003.
+- Remember rates vs probabilities. There's a typo in `estimate_case_incidence_from_model` that needs correcting. mu_slow. That term should be exp(0.003) or something rather than just 0.003. -\> Update: Has now been corrected.
 
 - The `estimate_case_incidence_from_model` function also needs to change from an estimate to the actual expected case incidence. Input is n_enrolled. The actual trial:
 
@@ -661,3 +661,17 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 Corrected 50-cases objective for the analytic approach. Expected no of cases is now computed rather than just an estimate of all fasts + 3mu_s slows.
 
 Also corrected for the stochastic approach (all variations).
+
+Have added reversion DURING the trial.
+
+Final bit is to add reversion BEFORE the trial. Plan is as follows:
+
+- Reversion rate for time since infection: a constant annual rate, exponentially distributed, for each year since you were infected.
+
+- First idea: simulate a random low probability of reversion for each individual infected. i.e. some fraction of tinf's turn back to uninfected?
+
+  - Claude suggested to give each person a random chance of still being IGRA positive, i.e. P(positive) = exp(-mu_revert \* (age - tinf)).
+
+- Alternative idea from Claude: After infection, sample two times - tsymp and t_revert. If t_revert \< age, then the individual has already reverted and is not recruited.
+
+  \*PICK THIS UP ON MONDAY. :)

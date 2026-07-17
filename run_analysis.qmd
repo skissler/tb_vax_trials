@@ -76,6 +76,7 @@ pars_m72IIb_igra <- list(
 	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
 	mu_slow=mu_slow_lit,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
+	mu_revert=0,  # tbd
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55,  # from trial (technically 54% VE)
 	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
@@ -166,6 +167,8 @@ with_progress({
         setNames(rep(val, 100), 0:99)
       }
     out <- sim_stoch_trial(pars_fit, enrol_target=target_enrolled, agedist=agedist)
+    fast_endpt_fraction <- (1 - exp(-(pars_fit$mu_fast + pars_fit$mu_revert) * pars_fit$trial_length))*pars_fit$mu_fast/(pars_fit$mu_fast + pars_fit$mu_revert)
+	slow_endpt_fraction <- (1 - exp(-(pars_fit$mu_slow + pars_fit$mu_revert) * pars_fit$trial_length))*pars_fit$mu_slow/(pars_fit$mu_slow + pars_fit$mu_revert)
     p()
     tibble(
       p_slow_structure= param_grid$p_slow_label[i],
@@ -175,7 +178,7 @@ with_progress({
       n_overall      = out$n_overall,
       n_enrolled    = out$n_enrolled,
       n_fast         = out$n_fast,
-      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  # if no reversion
+      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  # including reversion DURING trial
     )
   }, future.seed=TRUE)
 })
