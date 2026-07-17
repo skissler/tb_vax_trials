@@ -600,7 +600,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
 # 18th-19th June (LH)
 
-- Our objective function should be 50 cases not 50 fasts. Change implemented in both stochastic and analytic approach. Have confirmed that both approaches still align when run on non-age-varying params:
+- Our objective function should be 50 cases not 50 fasts. Change implemented in both stochastic and analytic approach. New analytic eqns are written out in the manuscript supplementary. Have confirmed that both approaches still align when run on non-age-varying params:
 
   ![](images/clipboard-860729345.png)
 
@@ -622,7 +622,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
   - does cases need to change? Same as ARTI I imagine - no change needed but we'd expect different parameter values to be favoured in the model selection - probably higher foi.
 
-  - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance?
+  - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance? And are the individuals receiving treatment?
 
   - Getting something nice from the model fits might be quite fiddly. Suggest trying 0%, 5%, 10%, and 22.8% reversion, with a super-skimmed down exhaustive search and see what is plausible. Or just run a large model fitting and wait a while (but run a small one first to check its quick and working properly).
 
@@ -632,7 +632,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
 - Reversion rate for time since infection: a constant annual rate, exponentially distributed, for each year since you were infected.
 
-- Memoryless property of the exponential distribution: Once *enrolled*, your individual tinf and tsymp times are forgotten. And trial outcome just calculated in expectation for the probability that an infected+asymp+fast/slow person contracts the disease during the 3-year tria
+- Memoryless property of the exponential distribution: Once *enrolled*, your individual tinf and tsymp times are forgotten. And trial outcome just calculated in expectation for the probability that an infected+asymp+fast/slow person contracts the disease during the 3-year trial.
 
 - Remember rates vs probabilities. There's a typo in `estimate_case_incidence_from_model` that needs correcting. mu_slow. That term should be exp(0.003) or something rather than just 0.003.
 
@@ -650,8 +650,12 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
     - P(something happens) = A, and A is a reversion with probability mu_r/(mu_f + mu_r) and a progression with probability mu_f/(mu_f + mu_r).
 
-  - So the full trial process in expectation is: 1. Did the event happen in the 3-year period? And 2. Was the event a reversion or progression (bernoulli coin flip).
+  - So the full trial process in expectation is: 1. Did an event happen in the 3-year period? And 2. Was the event a reversion or progression (bernoulli coin flip).
 
     - So this should be an exponential CDF x Bernoulli prob. (or similar).
 
   - Update: 25th June- I worked through the math and arrive at some nice probability expressions for expected no of cases DURING the trial. Algebra and final results are outlined in `notes/Expected cases DURING the trial.pdf` . :D
+
+# 17th July 2026 (LH)
+
+Corrected 50-cases objective for the analytic approach. Expected no of cases is now computed rather than just an estimate of all fasts + 3mu_s slows.

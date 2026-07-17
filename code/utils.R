@@ -256,9 +256,11 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
   names(p_asymp_given_age_vec) <- names(eligible)
   # Integrate over all a
   p_asymp <- sum(p_asymp_given_age_vec * eligible)
-  # Fraction of slow inf individuals expected to progress to disease during trial
-  slow_endpt_ratio <- pars$mu_slow * pars$trial_length
-  print(slow_endpt_ratio)
+  # Fraction of fast inf and slow inf individuals expected to progress to disease during trial
+  fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
+  slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
+  print(fast_endpt_fraction)
+  print(slow_endpt_fraction)
 
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
@@ -278,9 +280,9 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
     p_inf_and_fast_given_asymp <- sum(num_fast * eligible) / p_asymp  # P2
     p_inf_and_slow_given_asymp <- sum(num_slow * eligible) / p_asymp  # P2'
     
-    overall_to_casetarget <- casetarget / (p_inf_and_fast_and_asymp + slow_endpt_ratio*p_inf_and_slow_and_asymp)
-    tests_to_casetarget    <- casetarget / (p_inf_and_fast_given_asymp + slow_endpt_ratio*p_inf_and_slow_given_asymp)
-    enrolls_to_casetarget <- casetarget * (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp) / (p_inf_and_fast_given_asymp + slow_endpt_ratio*p_inf_and_slow_given_asymp)
+    overall_to_casetarget <- casetarget / (fast_endpt_fraction*p_inf_and_fast_and_asymp + slow_endpt_fraction*p_inf_and_slow_and_asymp)
+    tests_to_casetarget    <- casetarget / (fast_endpt_fraction*p_inf_and_fast_given_asymp + slow_endpt_fraction*p_inf_and_slow_given_asymp)
+    enrolls_to_casetarget <- casetarget * (p_inf_and_fast_given_asymp + p_inf_and_slow_given_asymp) / (fast_endpt_fraction*p_inf_and_fast_given_asymp + slow_endpt_fraction*p_inf_and_slow_given_asymp)
     
     analytical_df[[counter]] <- list(
       sigma=sigma,
