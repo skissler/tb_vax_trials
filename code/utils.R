@@ -362,23 +362,27 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 			# They are asymptomatic, so let's test them: 
 			n_tested <- n_tested + 1
 			if((tinf >= age-sigma) && (tinf <= age)){
-				# They were infected in past sigma years, so test positive. Enrol!
-				n_enrolled <- n_enrolled + 1
-				if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases including reversion DURING trial
-
-				# Expand list if needed
-				if (n_enrolled > capacity) {
-					capacity <- capacity * 2
-					length(enrolled_list) <- capacity  
+			  # They were infected in past sigma years but may have reverted. Check reversion.
+			  still_infected <- rbinom(1, size=1, prob=exp(-mu_revert * (age - tinf)))  # true or false coin flip
+				if(still_infected == T){
+				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
+				  n_enrolled <- n_enrolled + 1
+				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
+				  n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases including reversion before+during trial
+				  
+				  # Expand list if needed
+				  if (n_enrolled > capacity) {
+				    capacity <- capacity * 2
+				    length(enrolled_list) <- capacity  
+				  }
+				  
+				  enrolled_list[[n_enrolled]] <- list(
+				    id=n_enrolled,
+				    age=age,
+				    progressor_type=progressor_type,
+				    tinf=tinf  # only recording tinf values for those who were enrolled
+				  )
 				}
-
-				enrolled_list[[n_enrolled]] <- list(
-					id=n_enrolled,
-					age=age,
-					progressor_type=progressor_type,
-					tinf=tinf  # only recording tinf values for those who were enrolled
-					)
 
 			}
 		}
@@ -461,15 +465,20 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
         n_enrolled <- n_enrolled + 1
         # If they are fast (and actually infected), add 1 to n_fast:
         if (tinf <= age) {
-          (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
-          n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases if no reversion
+          # They were infected in past sigma years but may have reverted. Check reversion.
+          still_infected <- rbinom(1, size=1, prob=exp(-mu_revert * (age - tinf)))  # true or false coin flip
+          if (still_infected == T) {
+            # They were infected in past sigma years and haven't reverted yet
+            (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
+            n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_slow)  # expected no of cases
+          }
         }
       }
 
       n_overall <- n_overall + 1
       
       # Also record those from n_overall who would have been positive if tested (only used in ARTI calculations)
-      if (tinf <= age) n_infected <- n_infected + 1
+      if (tinf <= age & still_infected == T) n_infected <- n_infected + 1
     }
     
     out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected)
@@ -512,15 +521,22 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
       progressor_type <- sample(prog_types, size=1, prob=prog_probs)
       tsymp           <- tinf + rexp(1, if (progressor_type=="slow") mu_slow else mu_fast)
 
+      # ELIGIBILITY
       if (tsymp > age) {
+        # They are asymptomatic, so let's test them:
         n_tested <- n_tested + 1
         if ((tinf >= age - sigma) && (tinf <= age)) {
-          n_enrolled <- n_enrolled + 1
-          if (progressor_type == "fast") n_fast <- n_fast + 1
-          if (n_enrolled > capacity) { capacity <- capacity * 2; length(enrolled_list) <- capacity }
-          enrolled_list[[n_enrolled]] <- list(
-            id=n_enrolled, age=age, progressor_type=progressor_type, tinf=tinf
-          )
+          # They were infected in past sigma years but may have reverted. Check reversion.
+          still_infected <- rbinom(1, size=1, prob=exp(-mu_revert * (age - tinf)))  # true or false coin flip
+          if (still_infected == T) {
+            # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
+            n_enrolled <- n_enrolled + 1
+            if (progressor_type == "fast") n_fast <- n_fast + 1
+            if (n_enrolled > capacity) { capacity <- capacity * 2; length(enrolled_list) <- capacity }
+            enrolled_list[[n_enrolled]] <- list(
+              id=n_enrolled, age=age, progressor_type=progressor_type, tinf=tinf
+            )
+          }
         }
       }
       n_overall <- n_overall + 1
@@ -610,7 +626,7 @@ pull_mean <- function(x, life_exp=99){
 }
 
 # Functions outside the model
-estimate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
+calculate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()

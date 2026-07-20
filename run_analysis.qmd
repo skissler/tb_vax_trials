@@ -105,7 +105,7 @@ pars_lit_igra <- list(
 
 #' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)  ## NB: THIS JUST USES sim_stoch() NOT sim_stoch_trial() - MIGHT WANT TO CHANGE casetarget=50
+  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)  ## NB: THIS JUST USES sim_stoch() NOT sim_stoch_trial() - MIGHT WANT TO CHANGE
 })
 #stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
 
@@ -178,7 +178,7 @@ with_progress({
       n_overall      = out$n_overall,
       n_enrolled    = out$n_enrolled,
       n_fast         = out$n_fast,
-      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  # including reversion DURING trial
+      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  
     )
   }, future.seed=TRUE)
 })
@@ -227,7 +227,7 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
 from_model <- tibble()
 for (i in 1:25) {
-  cases <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  cases <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   from_model <- bind_rows(from_model, tibble(i = i, ARTI = ARTI_and_prev["ARTI"], cases= cases))
 }
@@ -274,7 +274,7 @@ for (progression_structure in progression_structures) {
     from_model <- tibble()
     infection_prevalence1 <- estimate_inf_prev_from_model(foi)  # 1=stochastic, 2=analytic
     for (i in 1:reps) {
-      cases1 <- estimate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      cases1 <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
       ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
       from_model <- bind_rows(from_model, tibble(i = i, ARTI1 = ARTI1["ARTI"], cases1= cases1))
     }
@@ -452,7 +452,7 @@ for (i in 1:nrow(combos_7a)) {
 
   inf_prev <- estimate_inf_prev_from_model(pars_i$rho)
   reps_i   <- unique(stoch_i$rep)
-  cases_vec <- sapply(reps_i, function(r) estimate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
+  cases_vec <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
   ARTI_vec  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["ARTI"])
 
   benchmarks_7a <- bind_rows(benchmarks_7a, tibble(
@@ -582,7 +582,7 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 # 
 #   inf_prev   <- estimate_inf_prev_from_model(pars_i$rho)
 #   reps_i     <- unique(stoch_i$rep)
-#   cases_vec  <- sapply(reps_i, function(r) estimate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r))
+#   cases_vec  <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r))
 #   ARTI_vec   <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r))
 # 
 #   benchmarks_7b <- bind_rows(benchmarks_7b, tibble(

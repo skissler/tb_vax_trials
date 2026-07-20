@@ -670,8 +670,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 - First idea: simulate a random low probability of reversion for each individual infected. i.e. some fraction of tinf's turn back to uninfected?
 
-  - Claude suggested to give each person a random chance of still being IGRA positive, i.e. P(positive) = exp(-mu_revert \* (age - tinf)).
+  - Claude suggested to give each person a random chance of still being IGRA positive, i.e. \
+    P(hasn't reverted yet) = exp(-mu_revert \* (age - tinf)).
 
-- Alternative idea from Claude: After infection, sample two times - tsymp and t_revert. If t_revert \< age, then the individual has already reverted and is not recruited.
-
-  \*PICK THIS UP ON MONDAY. :)
+  This has now been implemented (20th July 2026). :)
