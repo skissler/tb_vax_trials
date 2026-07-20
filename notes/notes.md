@@ -622,7 +622,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
   - does cases need to change? Same as ARTI I imagine - no change needed but we'd expect different parameter values to be favoured in the model selection - probably higher foi.
 
-  - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance? And are the individuals receiving treatment?
+  - What value to use? Dagnew paper observed 4.0% IGRA reversion overall, 3.2% in SA, 0.8% in India, 6.3% in Kenya, after 12 months. But the systematic review (Wang 2025) had mean IGRA reversion of 22.8%. Are these values lifetime chance or annual chance? Generally annual. And are the individuals receiving treatment? Generally not. Update: But note that the Dagnew data (table S6) gives the percentages as a fraction of the total study population, not as a fraction of those who were positive at the start!
 
   - Getting something nice from the model fits might be quite fiddly. Suggest trying 0%, 5%, 10%, and 22.8% reversion, with a super-skimmed down exhaustive search and see what is plausible. Or just run a large model fitting and wait a while (but run a small one first to check its quick and working properly).
 
@@ -674,3 +674,9 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
     P(hasn't reverted yet) = exp(-mu_revert \* (age - tinf)).
 
   This has now been implemented (20th July 2026). :)
+
+# 20th July 2026 (LH)
+
+- ‡Probability of primary reversion once infected is informed by Dagnew et al. Table S6 but rescaled by number of Day 1 positives and the percentage of individuals who completed the study (i.e. reported a month-12 IGRA status) [[16]](https://www.zotero.org/google-docs/?tsm34f). This yields an approximate probability of primary reversion for those already infected, rather than probability of primary reversion among all participants as reported.
+
+- This now gives probability of reversion (once infected) in the range 6-41%, which is much more in line with the Wang et al. review (22.8% overall). Note that in Dagnew study, South Africa has a much lower-than-average rate of reversion, likely due to the high-burden and high-HIV-prevalence etc. So I think its best to stick with Dagnew country-specific estimates and not use the Wang all-countries average.
