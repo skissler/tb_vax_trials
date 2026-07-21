@@ -634,7 +634,7 @@ calculate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # 
   return(incidence*100000)
 }
 
-estimate_inf_prev_from_model <- function(foi, ages = c(20, 30, 40)) {
+estimate_inf_prev_from_model <- function(foi, ages = c(20, 30)) {
   # P(ever infected by age a) = 1 - S(a), derived directly from the FOI
   sv <- compute_survival_fn(foi)
   inf_prev <- 1 - sv$survival_fn  # index i = age i (survival_fn[1] = P(not infected by age 1))

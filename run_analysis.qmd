@@ -99,7 +99,7 @@ pars_lit_igra <- list(
 	p_slow=p_slow_lit,  # from lit
 	mu_slow=mu_slow_lit,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
-	mu_revert=0,  # mu_revert_lit
+	mu_revert=mu_revert_lit,
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above, currently unused
 	trial_length=3) # taken from above
@@ -291,23 +291,25 @@ for (progression_structure in progression_structures) {
     }
     summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, foi_structure=foi_structure, 
                                                      as_tibble_row(infection_prevalence1), ARTI1=median(from_model$ARTI1),
-                                                     cases_min1=min(from_model$cases1), cases_max1=max(from_model$cases1)))
+                                                     cases1=median(from_model$cases1)))
     }
   }
 }
 
 # extract infection prevalence data from Dagnew et al. for fitting
-dagnew_sa <- read.csv("data/Dagnew_2026_IGRA_positivity_by_site.csv") %>%
-  filter(country == "South Africa") %>% select(site_no, age_group, pct_positive) %>%
-  mutate(across(c(pct_positive), ~ .x / 100))  # convert % to proportion
-dagnew_age20_min <- dagnew_sa %>% filter(site_no=="country_range_min" & age_group=="15-24") %>% pull(pct_positive)
-dagnew_age20_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_group=="15-24") %>% pull(pct_positive)
-dagnew_age30_min <- dagnew_sa %>% filter(site_no=="country_range_min" & age_group=="25-34") %>% pull(pct_positive)
-dagnew_age30_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_group=="25-34") %>% pull(pct_positive)
+Dagnew_positivity_data <- read.csv("data/Dagnew_2026_IGRA_positivity_by_age_table_s5.csv") %>%
+  select(country, site_no, age_group, pct_positive, ci_lo_positive, ci_hi_positive) %>%
+  mutate(across(c(pct_positive, ci_lo_positive, ci_hi_positive), ~ .x / 100)) %>%  # convert % to proportion
+  group_by(country, age_group) %>% summarise(min_positivity = min(ci_lo_positive), max_positivity = max(ci_hi_positive)) %>%
+  ungroup()
+dagnew_age20_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="15-24") %>% pull(min_positivity)
+dagnew_age20_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="15-24") %>% pull(max_positivity)
+dagnew_age30_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(min_positivity)
+dagnew_age30_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(max_positivity)
 
 # compute summary table and save
-summary_table <- summary_table %>% mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max + 0.05) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max + 0.1) & between(ARTI1, 0.04, 0.06) & cases_max1 > 200))  # NB: our model has no recovery
-#write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE)
+summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max) & between(ARTI1, 0.04, 0.06) & between(cases1, 242, 571))
+write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE)  # no reversion yet
 end.time <- Sys.time()
 ```
 
