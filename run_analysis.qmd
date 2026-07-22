@@ -17,7 +17,7 @@ library(progressr)
 library(countrycode)
 library(zoo)
 source('code/utils.R')
-plan(multisession, workers=8)  # use multiple cores for speed
+plan(multisession, workers=10)  # use multiple cores for speed
 
 # Extract and pre-process data sets
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
@@ -278,20 +278,21 @@ for (progression_structure in progression_structures) {
     foi <- foi_structures[[foi_structure]] # force of infection by age
     pars_lit_igra$rho <- foi
   
-    # Simulate stochastic approach
+    # Simulate stochastic approach (sigma=80)
     with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), casetarget=50, agedist=agedist, reps=reps)})
     
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
     from_model <- tibble()
-    infection_prevalence1 <- estimate_inf_prev_from_model(foi)  # 1=stochastic, 2=analytic
     for (i in 1:reps) {
       cases1 <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-      ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)  # need to update this see post-it note
       from_model <- bind_rows(from_model, tibble(i = i, ARTI1 = ARTI1["ARTI"], cases1= cases1))
     }
-    summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, foi_structure=foi_structure, 
-                                                     as_tibble_row(infection_prevalence1), ARTI1=median(from_model$ARTI1),
-                                                     cases1=median(from_model$cases1)))
+    summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, 
+                                                     foi_structure=foi_structure, 
+                                                     inf_prev_15to24=median(stochastic_df_lit$inf_prev_15to24),  # assuming sigmavec=c(80)
+                                                     inf_prev_25to34=median(stochastic_df_lit$inf_prev_25to34),  # assuming sigmavec=c(80)
+                                                     ARTI1=median(from_model$ARTI1), cases1=median(from_model$cases1)))
     }
   }
 }

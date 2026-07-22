@@ -306,9 +306,11 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	n_fast <- 0
 	n_cases <- 0
 	n_overall <- 0
-
-	capacity <- 1e6
-	enrolled_list <- vector("list", capacity)  # specifying list size in advance for speed
+	n_overall_15to24 <- 0  # only used for estimating inf prev
+	n_overall_25to34 <- 0  # only used for estimating inf prev
+	n_infected_15to24 <- 0  # only used for estimating inf prev
+	n_infected_25to34 <- 0  # only used for estimating inf prev
+	still_infected <- 1
 
 	# Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
 	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
@@ -369,30 +371,27 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				  n_enrolled <- n_enrolled + 1
 				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
 				  n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases including reversion before+during trial
-				  
-				  # Expand list if needed
-				  if (n_enrolled > capacity) {
-				    capacity <- capacity * 2
-				    length(enrolled_list) <- capacity  
-				  }
-				  
-				  enrolled_list[[n_enrolled]] <- list(
-				    id=n_enrolled,
-				    age=age,
-				    progressor_type=progressor_type,
-				    tinf=tinf  # only recording tinf values for those who were enrolled
-				  )
 				}
 
 			}
 		}
 
+		# Also record those from n_overall who are positive, and by age (only used in ARTI/ inf prev calculations)
+		if (age >= 15 & age < 25) {
+		  n_overall_15to24 <- n_overall_15to24 + 1
+		  if (tinf <= age & still_infected == T) n_infected_15to24 <- n_infected_15to24 + 1
+		} else if (age >= 25 & age < 35) {
+		  n_overall_25to34 <- n_overall_25to34 + 1
+		  if (tinf <= age & still_infected == T) n_infected_25to34 <- n_infected_25to34 + 1
+		}
+		
 		n_overall <- n_overall + 1
 	}
 
-	enrolled_df <- bind_rows(enrolled_list[1:(n_enrolled)])  # bind_rows outside of the while loop is much faster
-
-	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_cases=n_cases, n_overall=n_overall, enrolled_df=enrolled_df)
+	inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
+	inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
+	
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_cases=n_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
 	
 	return(out)
 	})
@@ -409,8 +408,11 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     n_cases <- 0
     n_overall <- 0
     n_infected <- 0  # only used for calculating ARTI
-    
-    capacity <- 1e6
+    n_overall_15to24 <- 0  # only used for estimating inf prev
+    n_overall_25to34 <- 0  # only used for estimating inf prev
+    n_infected_15to24 <- 0  # only used for estimating inf prev
+    n_infected_25to34 <- 0  # only used for estimating inf prev
+    still_infected <- 1
     
     # Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
     survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
@@ -477,11 +479,21 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
 
       n_overall <- n_overall + 1
       
-      # Also record those from n_overall who would have been positive if tested (only used in ARTI calculations)
+      # Also record those from n_overall who would have been positive if tested, and by age (only used in ARTI/ inf prev calculations)
       if (tinf <= age & still_infected == T) n_infected <- n_infected + 1
+      if (age >= 15 & age < 25) {
+        n_overall_15to24 <- n_overall_15to24 + 1
+        if (tinf <= age & still_infected == T) n_infected_15to24 <- n_infected_15to24 + 1
+      } else if (age >= 25 & age < 35) {
+        n_overall_25to34 <- n_overall_25to34 + 1
+        if (tinf <= age & still_infected == T) n_infected_25to34 <- n_infected_25to34 + 1
+      }
     }
     
-    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected)
+    inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
+    inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
+    
+    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
     
     return(out)
   })
@@ -496,9 +508,6 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
     n_enrolled <- 0
     n_fast      <- 0
     n_overall   <- 0
-
-    capacity       <- enrol_target * 20
-    enrolled_list <- vector("list", capacity)
 
     survival_fn  <- exp(-cumsum(rho[1:100]))
     survival_pmf <- c(1, survival_fn[-100]) - survival_fn
@@ -532,20 +541,14 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
             # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
             n_enrolled <- n_enrolled + 1
             if (progressor_type == "fast") n_fast <- n_fast + 1
-            if (n_enrolled > capacity) { capacity <- capacity * 2; length(enrolled_list) <- capacity }
-            enrolled_list[[n_enrolled]] <- list(
-              id=n_enrolled, age=age, progressor_type=progressor_type, tinf=tinf
-            )
           }
         }
       }
       n_overall <- n_overall + 1
     }
 
-    enrolled_df <- bind_rows(enrolled_list[1:n_enrolled])
-
     out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast,
-                n_overall=n_overall, enrolled_df=enrolled_df)
+                n_overall=n_overall)
     return(out)
   })
 }
@@ -562,7 +565,8 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_enrolled=stoch_output$n_enrolled,
-	    n_fast=stoch_output$n_fast, n_cases=stoch_output$n_cases, n_overall=stoch_output$n_overall)
+	    n_fast=stoch_output$n_fast, n_cases=stoch_output$n_cases, n_overall=stoch_output$n_overall,
+	    inf_prev_15to24=stoch_output$inf_prev_15to24, inf_prev_25to34=stoch_output$inf_prev_25to34)
 	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
 	
 	bind_rows(stoch_list)
@@ -634,21 +638,14 @@ calculate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # 
   return(incidence*100000)
 }
 
-estimate_inf_prev_from_model <- function(foi, ages = c(20, 30)) {
-  # P(ever infected by age a) = 1 - S(a), derived directly from the FOI
-  sv <- compute_survival_fn(foi)
-  inf_prev <- 1 - sv$survival_fn  # index i = age i (survival_fn[1] = P(not infected by age 1))
-  setNames(inf_prev[ages], paste0("inf_prev_age", ages))
-}
-
 estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
   if ("n_tested" %in% names(df)) {
-    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_enrolled"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_enrolled"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
   } else {
-    infection_prevalence <- unname(model_run["n_infected"] / model_run["n_overall"])  # total infection prevalence at start of trial (for eligible ages)
+    infection_prevalence <- unname(model_run["n_infected"] / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
   }
   meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
   ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
