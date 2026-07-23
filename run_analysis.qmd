@@ -236,10 +236,12 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
 from_model <- tibble()
-for (i in 1:25) {
+for (i in 1:10) {
   cases <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  from_model <- bind_rows(from_model, tibble(i = i, ARTI = ARTI_and_prev["ARTI"], cases= cases))
+  from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
+                                             inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
+                                             ARTI = ARTI_and_prev["ARTI"], cases= cases))
 }
 ```
 
@@ -284,15 +286,17 @@ for (progression_structure in progression_structures) {
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
     from_model <- tibble()
     for (i in 1:reps) {
-      cases1 <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-      ARTI1 <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)  # need to update this see post-it note
-      from_model <- bind_rows(from_model, tibble(i = i, ARTI1 = ARTI1["ARTI"], cases1= cases1))
+      cases <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
+                                             inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
+                                             ARTI = ARTI_and_prev["ARTI"], cases= cases))
     }
     summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, 
                                                      foi_structure=foi_structure, 
                                                      inf_prev_15to24=median(stochastic_df_lit$inf_prev_15to24),  # assuming sigmavec=c(80)
                                                      inf_prev_25to34=median(stochastic_df_lit$inf_prev_25to34),  # assuming sigmavec=c(80)
-                                                     ARTI1=median(from_model$ARTI1), cases1=median(from_model$cases1)))
+                                                     ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
     }
   }
 }
@@ -309,8 +313,8 @@ dagnew_age30_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & 
 dagnew_age30_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(max_positivity)
 
 # compute summary table and save
-summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max) & between(ARTI1, 0.04, 0.06) & between(cases1, 242, 571))
-write.csv(summary_table, file="output/parameter_fit_results2.csv", row.names=FALSE) 
+summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI1, 0.04, 0.06) & between(cases1, 242, 571))
+write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE) 
 end.time <- Sys.time()
 ```
 
@@ -465,15 +469,17 @@ for (i in 1:nrow(combos_7a)) {
     filter(country==combos_7a$country[i], foi_structure==combos_7a$foi_structure[i]) %>%
     select(sigma, rep, n_tested, n_enrolled, n_fast, n_cases, n_overall)
 
-  inf_prev <- estimate_inf_prev_from_model(pars_i$rho)
   reps_i   <- unique(stoch_i$rep)
   cases_vec <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
+  inf_vec1  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_15to24"])
+  inf_vec2  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_25to34"])
   ARTI_vec  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["ARTI"])
-
+  
   benchmarks_7a <- bind_rows(benchmarks_7a, tibble(
     country       = combos_7a$country[i],
     foi_structure = combos_7a$foi_structure[i],
-    as_tibble_row(inf_prev),
+    inf_prev_15to24 = median(inf_vec1),
+    inf_prev_25to34 = median(inf_vec2),
     ARTI          = median(ARTI_vec),
     cases_per100k = median(cases_vec)
   ))
@@ -489,7 +495,7 @@ for (i in 1:nrow(combos_7a)) {
 # dagnew_age30_max <- dagnew_sa %>% filter(site_no=="country_range_max" & age_group=="25-34") %>% pull(pct_positive)
 # 
 # benchmarks_7a <- benchmarks_7a %>%
-#   mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max + 0.05) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max + 0.1) & between(ARTI1, 0.04, 0.06) & cases_per100k > 100))
+#   mutate(conditions_met = (between(inf_prev_age20, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_age30, dagnew_age30_min, dagnew_age30_max) & between(ARTI1, 0.04, 0.06) & cases_per100k > 100))
 
 write.csv(benchmarks_7a, file="output/variedsite_benchmarks.csv", row.names=FALSE)
 ```
@@ -595,16 +601,18 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 #     filter(scenario==combos_7b$scenario[i], country==combos_7b$country[i], foi_structure==combos_7b$foi_structure[i]) %>%
 #     select(rep, n_fast, n_cases, n_overall, n_infected)
 # 
-#   inf_prev   <- estimate_inf_prev_from_model(pars_i$rho)
 #   reps_i     <- unique(stoch_i$rep)
 #   cases_vec  <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r))
+#   inf_vec1  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_15to24"])
+#   inf_vec2  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_25to34"])
 #   ARTI_vec   <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r))
 # 
 #   benchmarks_7b <- bind_rows(benchmarks_7b, tibble(
 #     scenario      = combos_7b$scenario[i],
 #     country       = combos_7b$country[i],
 #     foi_structure = combos_7b$foi_structure[i],
-#     as_tibble_row(inf_prev),
+#     inf_prev_15to24 = median(inf_vec1),
+#     inf_prev_25to34 = median(inf_vec2),
 #     ARTI          = median(ARTI_vec),
 #     cases_per100k = median(cases_vec)
 #   ))

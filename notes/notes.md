@@ -683,4 +683,26 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 # 22nd July 2026 (LH)
 
-- Reversion now added. Results of model fitting show that now none of the parameter combinations fulfill all the criteria! Cases is too low. But infection prevalence is still quite high – perhaps because my calculation of infection prevalence is done deterinsitically and wouldn't include reversion. Will see if i can fix. -\> I have now fixed this.
+- Reversion now added. Results of model fitting show that now none of the parameter combinations fulfill all the criteria! Cases is too low. But infection prevalence is still quite high – perhaps because my calculation of infection prevalence is done determinsitically and wouldn't include reversion. Will see if i can fix. -\> I have now fixed this.
+
+# 23rd july
+
+- Reversion is much too high now – we are only seeing around 20% infection prevalence in model fitting now and none of the parameter combinations fulfill all the criteria. I think better to try Stephen's approach of a 7.5% chance of reverting (and then draw a trev), rather than compounded 7.5% chance per year.
+
+  - Want to understand *when* reversion is likely to happen in an individual (relative to their time since infection). Currently our exponential/constant rate set up assumes an increasing chance of reversion as more time passes since infection - is this realistic?
+
+  - Let's try to understand reversion a little more. This review paper looks promising: <https://doi.org/10.1183/16000617.0007-2024>. Some useful snippets:
+
+    - Wang 2022 paper is cited - comparing testing of immigrant children before and after their arrival in the US. But unclear if they are claiming a high reversion rate or just less reliable pre-arrival (TST) testing.
+
+    - "At least two studies have reported higher reversion probabilities with longer time to retesting, but with diminishing reversion rates over time."
+
+    - "A retrospective German study of IGRA testing noted that reversion occurred in 11.2% of those retested within 6 months (reversion rate of 0.233 per 100 population·year−1), in 29.9% retested more than 2 years later (reversion rate of \<0.178 per 100 population·year−1) and in 38.2% of 34 contact persons tested after 6 years (reversion rate of \<0.080 per 100 population·year−1)".
+
+      - \*\*This suggests to me that reversion rate is not constant and should decrease with time since infection. Probably ok on the timescale of the trial (3 years) in our model but not for reversion before the trial.
+
+    - "G[rzybowski]{.smallcaps} and A[llen]{.smallcaps} 1964 observed that 50-year-old women living in Ontario, Canada, had lower immunoreactivity (≥5 mm) in 1959 (∼40%) than the same birth cohort when they were teenagers in 1923 (∼50%), despite having lived in a high-incidence setting for 36 years."
+
+      - i.e. High-incidence setting; 20% reversion over long time horizon. Perhaps we can use this as some sort of upper bound.
+
+- Probably also want to consider greater force of infection, e.g. look at 1-10% rather than 1-5%. Now we have reversion its no longer a simple catalytic setup.

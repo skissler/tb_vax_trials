@@ -642,6 +642,7 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
+  # infection prevalence all ages
   if ("n_tested" %in% names(df)) {
     infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_enrolled"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
   } else {
@@ -649,5 +650,8 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   }
   meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
   ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
-  return(c(ARTI = ARTI))
+  # infection prevalence for key age groups
+  inf_prev_15to24 <- unname(model_run["inf_prev_15to24"])
+  inf_prev_25to34 <- unname(model_run["inf_prev_25to34"])
+  return(c(ARTI = ARTI, inf_prev_15to24 = inf_prev_15to24, inf_prev_25to34 = inf_prev_25to34))
   }
