@@ -706,3 +706,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
       - i.e. High-incidence setting; 20% reversion over long time horizon. Perhaps we can use this as some sort of upper bound.
 
 - Probably also want to consider greater force of infection, e.g. look at 1-10% rather than 1-5%. Now we have reversion its no longer a simple catalytic setup.
+
+Thoughts from Stephen:
+
+"It does seem like the papers above are converging on the idea that *if* reversion happens, it tends to happen soon after infection. So, you’re right that the more realistic model appears to be the one where we say that each person has a \~7.5% chance of reverting, and then for those who revert, we draw their reversion time according to an exponential distribution that puts most of the mass w/in 3 years. (that 3-year time horizon is loosely based on the retrospective German study, where reversion rates past 3 years were quite small). This is pretty similar in spirit to what we’re doing with the fast/slow progressors! We (a) draw a probability that you’re a fast progressor, and then (b) draw the progression time so that most of the mass is w/in 2 years. Exactly the same math, just with a different interpretation."

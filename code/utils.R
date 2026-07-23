@@ -356,6 +356,8 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  }
 	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 	  
+	  # Grab their (tinf-dependent) reversion status <- EDIT HERE
+	  
 		# Simulate their time to symptoms
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
 		
