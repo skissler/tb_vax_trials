@@ -48,7 +48,7 @@ Dagnew_reversion_data <- left_join(read.csv("data/Dagnew_2026_IGRA_status_at_day
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
 foi_structure <- "uniform_4"  # works for "uniform4", "uniform6", ...
-progression_structure <- "uniform" #"Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
+progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
 slow_structure <- "0.003"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
@@ -85,7 +85,9 @@ pars_m72IIb_igra <- list(
 	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
 	mu_slow=mu_slow_lit,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
+	p_revert=0, # tbd
 	mu_revert=0,  # tbd - could take from trial data?
+	mu_revert1=0, # tbd
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55,  # from trial (technically 54% VE)
 	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
@@ -99,6 +101,8 @@ pars_lit_igra <- list(
 	p_slow=p_slow_lit,  # from lit
 	mu_slow=mu_slow_lit,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
+	p_revert=0.075,  # from lit
+	mu_revert1=0.75, #mu_revert_lit, # for most reverters reverting within three years, assuming exponential dist
 	mu_revert=mu_revert_lit,
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above, currently unused
@@ -222,7 +226,7 @@ head(m72IIb_fit_trial)
 pars_lit_igra$rho <- make_foi(4,5,3,5,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=10)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
@@ -255,12 +259,12 @@ Note: run code snippets 1-3 first.
 
 start.time <- Sys.time()
 # define parameter search space
-foi_grid_1 <- tibble(a0_4=1:5, a5_24=1:5, a25_34=1:5, a35_49=1:5, a50plus=1:5)  # initial uniform fits
-foi_grid_2 <- expand.grid(a0_4=3:5, a5_24=3:5, a25_34=3:5, a35_49=3:5, a50plus=3:5)  # closer inspection of 3-5% as this looked promising from initial fits
+foi_grid_1 <- tibble(a0_4=1:10, a5_24=1:10, a25_34=1:10, a35_49=1:10, a50plus=1:10)  # initial uniform fits
+foi_grid_2 <- expand.grid(a0_4=3:7, a5_24=3:7, a25_34=3:7, a35_49=3:7, a50plus=3:7)  # closer inspection of 4-7% as this looked promising from initial fits
 foi_grid <- bind_rows(foi_grid_1, foi_grid_2) %>% distinct()
 foi_structures <- make_foi(foi_grid)  # named list of 3125 vectors
 progression_structures <- c("Vynnycky-1997", "Vynnycky-high")
-slow_structures <- c("base", "min", "max", "0.003")
+slow_structures <- c("max", "0.003")  #c("base", "min", "max", "0.003")
 summary_table <- tibble()
 reps <- 5
 
@@ -313,7 +317,13 @@ dagnew_age30_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & 
 dagnew_age30_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(max_positivity)
 
 # compute summary table and save
-summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI1, 0.04, 0.06) & between(cases1, 242, 571))
+summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI, 0.04, 0.06) & between(cases, 242, 571)) %>%
+  mutate(three_conditions_met = (
+  between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) +
+  between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) +
+  between(ARTI, 0.04, 0.06) +
+  between(cases, 242, 571)
+) >= 3)
 write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE) 
 end.time <- Sys.time()
 ```

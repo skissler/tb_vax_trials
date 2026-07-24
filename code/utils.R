@@ -356,10 +356,13 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  }
 	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
 	  
-	  # Grab their (tinf-dependent) reversion status <- EDIT HERE
+	  # Grab their reversion status
+	  reversion_status <- rbinom(1, size=1, prob=p_revert)  # true or false coin flip
 	  
-		# Simulate their time to symptoms
+		# Simulate their time to symptoms and time to reversion
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
+		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {101})  # doesn't revert during lifetime
+		still_infected <- (if(reversion_status==T & trev < age) {F} else {T})
 		
 		# ELIGIBILITY
 		if(tsymp > age){
@@ -367,7 +370,6 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 			n_tested <- n_tested + 1
 			if((tinf >= age-sigma) && (tinf <= age)){
 			  # They were infected in past sigma years but may have reverted. Check reversion.
-			  still_infected <- rbinom(1, size=1, prob=exp(-mu_revert * (age - tinf)))  # true or false coin flip
 				if(still_infected == T){
 				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
 				  n_enrolled <- n_enrolled + 1

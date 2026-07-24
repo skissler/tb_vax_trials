@@ -699,7 +699,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
     - "A retrospective German study of IGRA testing noted that reversion occurred in 11.2% of those retested within 6 months (reversion rate of 0.233 per 100 population·year−1), in 29.9% retested more than 2 years later (reversion rate of \<0.178 per 100 population·year−1) and in 38.2% of 34 contact persons tested after 6 years (reversion rate of \<0.080 per 100 population·year−1)".
 
-      - \*\*This suggests to me that reversion rate is not constant and should decrease with time since infection. Probably ok on the timescale of the trial (3 years) in our model but not for reversion before the trial.
+      - \*\*This suggests to me that reversion rate is not constant and should decrease with time since infection.
 
     - "G[rzybowski]{.smallcaps} and A[llen]{.smallcaps} 1964 observed that 50-year-old women living in Ontario, Canada, had lower immunoreactivity (≥5 mm) in 1959 (∼40%) than the same birth cohort when they were teenagers in 1923 (∼50%), despite having lived in a high-incidence setting for 36 years."
 
@@ -710,3 +710,5 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 Thoughts from Stephen:
 
 "It does seem like the papers above are converging on the idea that *if* reversion happens, it tends to happen soon after infection. So, you’re right that the more realistic model appears to be the one where we say that each person has a \~7.5% chance of reverting, and then for those who revert, we draw their reversion time according to an exponential distribution that puts most of the mass w/in 3 years. (that 3-year time horizon is loosely based on the retrospective German study, where reversion rates past 3 years were quite small). This is pretty similar in spirit to what we’re doing with the fast/slow progressors! We (a) draw a probability that you’re a fast progressor, and then (b) draw the progression time so that most of the mass is w/in 2 years. Exactly the same math, just with a different interpretation."
+
+-\> I have now implemented this (with a coin flip 7.5% probability of being a reverter, and if you are a reverter, most of the probability mass (78%) is within 2 years using Exp(0.75) - informed by the German study above). I am now exploring 1-10% foi to find a good model fit (around 3-7% age-varying looks promising).
