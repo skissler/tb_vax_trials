@@ -361,11 +361,13 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  
 		# Simulate their time to symptoms and time to reversion
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {101})  # doesn't revert during lifetime
+		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {101})  # 101 = doesn't revert during lifetime
 		still_infected <- (if(reversion_status==T & trev < age) {F} else {T})
+		# Which process happens first? - EDIT HERE
+		#if ()
 		
 		# ELIGIBILITY
-		if(tsymp > age){
+		if(tsymp > age){  # this misses reverters a bit - EDIT HERE
 			# They are asymptomatic, so let's test them: 
 			n_tested <- n_tested + 1
 			if((tinf >= age-sigma) && (tinf <= age)){
@@ -374,11 +376,15 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
 				  n_enrolled <- n_enrolled + 1
 				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				  n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases including reversion before+during trial
+				  n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases
+				  n_actual_cases
 				}
 
 			}
-		}
+		} else if (tsymp <= age) {
+		  n_actual_cases <- n_actual_cases + 1
+		  n_exluded_symps <- n_excluded_symps + 1
+		  }
 
 		# Also record those from n_overall who are positive, and by age (only used in ARTI/ inf prev calculations)
 		if (age >= 15 & age < 25) {
@@ -395,7 +401,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
 	inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
 	
-	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_cases=n_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_expected_cases=n_expected_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
 	
 	return(out)
 	})
@@ -569,7 +575,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_enrolled=stoch_output$n_enrolled,
-	    n_fast=stoch_output$n_fast, n_cases=stoch_output$n_cases, n_overall=stoch_output$n_overall,
+	    n_fast=stoch_output$n_fast, n_expected_cases=stoch_output$n_expected_cases, n_overall=stoch_output$n_overall,
 	    inf_prev_15to24=stoch_output$inf_prev_15to24, inf_prev_25to34=stoch_output$inf_prev_25to34)
 	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
 	
