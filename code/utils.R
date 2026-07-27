@@ -415,7 +415,6 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     n_fast <- 0
     n_slow <- 0
     n_infected <- 0  # only used for calculating ARTI
-    exp_trial_cases <- 0
     n_trial_cases <- 0
     n_overall_15to24 <- 0  # only used for estimating inf prev
     n_overall_25to34 <- 0  # only used for estimating inf prev
@@ -432,10 +431,6 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     eligible_ages  <- minage:maxage
     eligible_probs <- agedist[as.character(eligible_ages)]
     prog_types     <- c("slow","fast")
-    
-    # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
-    fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert) * trial_length))*mu_fast/(mu_fast + mu_revert)
-    slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert) * trial_length))*mu_slow/(mu_slow + mu_revert)
     
     while(n_trial_cases < casetarget){
       # Grab their age from the age distribution
@@ -488,8 +483,6 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
           if (still_infected == T) {
             # They were infected in past sigma years and haven't reverted yet.
             n_infected <- n_infected + 1
-            (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
-            exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_slow)  # expected no of cases during trial - exp race method for interest
             if(tsymp > age & tsymp <= age + trial_length) n_trial_cases <- n_trial_cases + 1  # record actual no of trial cases that would occur
           }
         }
@@ -510,7 +503,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
     inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
     
-    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, exp_trial_cases=exp_trial_cases, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
     
     return(out)
   })
@@ -665,12 +658,12 @@ pull_mean <- function(x, life_exp=99){
 }
 
 # Functions outside the model, at time of recruitment
-calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of symptomatics at time of recruitment / n_overall
+calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
-  # case incidence at time of recruitment is the excluded symptomatics
-  incidence <- unname((model_run["n_overall"] - model_run["n_tested"]) / (model_run["n_overall"]))  # functionality not yet added for sim_stoch_notest()
+  # case incidence (new cases)
+  incidence <- unname(model_run["n_trial_cases"] / (model_run["n_overall"]*pars$trial_length))  # functionality not yet added for sim_stoch_notest()
   return(incidence*100000)
 }
 
