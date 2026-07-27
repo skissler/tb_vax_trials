@@ -713,4 +713,6 @@ Thoughts from Stephen:
 
 -\> I have now implemented this (with a coin flip 7.5% probability of being a reverter, and if you are a reverter, most of the probability mass (78%) is within 2 years using Exp(0.75) - informed by the German study above). I am now exploring 1-10% foi to find a good model fit (around 3-7% age-varying looks promising). We still have the exponential race for case vs reversion during the trial which we don't really need anymore (because every person now has a tsymp and a trev) - I guess I should remove but will first see if the new approach is likely to meet the conditions.
 
--\> I have also realised that the generic "tsymp \< age" condition may miss some or overclude some reverters. Need to account for the fact that only one of reversion and symptoms actually happens (the first event, exponential race). I have 4 processes in play that can happen in any order. Will continue thinking on Monday.
+-\> I have also realised that the generic "tsymp \< age" condition may miss some or overinclude some reverters. Need to account for the fact that only one of reversion and symptoms actually happens (the first event, exponential race). I have 4 processes in play that can happen in any order. Will continue thinking on Monday.
+
+SOLUTION: If tsymp \> trev, set tsymp to Inf. And if trev \> tsymp, set trev to Inf. Then only one of reversion and symptoms can happen.

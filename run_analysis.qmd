@@ -102,7 +102,7 @@ pars_lit_igra <- list(
 	mu_slow=mu_slow_lit,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
 	p_revert=0.075,  # from lit
-	mu_revert1=0.75, #mu_revert_lit, # for most reverters reverting within three years, assuming exponential dist
+	mu_revert1=0.75, #mu_revert_lit, # for most reverters reverting within two years, assuming exponential dist
 	mu_revert=mu_revert_lit,
 	sigma=100,  # IGRA test is essentially lifelong
 	ve=0.55, # taken from above, currently unused
@@ -231,7 +231,7 @@ with_progress({
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.2), casetarget=50, agedist=agedist)
 
 #' Plot all results
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
@@ -241,7 +241,7 @@ ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
 from_model <- tibble()
 for (i in 1:10) {
-  cases <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+  cases <- calculate_case_incidence_at_time_of_recruitment_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
                                              inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
@@ -290,7 +290,7 @@ for (progression_structure in progression_structures) {
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
     from_model <- tibble()
     for (i in 1:reps) {
-      cases <- calculate_case_incidence_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
+      cases <- calculate_case_incidence_at_time_of_recruitment_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
       ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
       from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
                                              inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
@@ -480,7 +480,7 @@ for (i in 1:nrow(combos_7a)) {
     select(sigma, rep, n_tested, n_enrolled, n_fast, n_cases, n_overall)
 
   reps_i   <- unique(stoch_i$rep)
-  cases_vec <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
+  cases_vec <- sapply(reps_i, function(r) calculate_case_incidence_at_time_of_recruitment_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80))
   inf_vec1  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_15to24"])
   inf_vec2  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_25to34"])
   ARTI_vec  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["ARTI"])
@@ -612,7 +612,7 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
 #     select(rep, n_fast, n_cases, n_overall, n_infected)
 # 
 #   reps_i     <- unique(stoch_i$rep)
-#   cases_vec  <- sapply(reps_i, function(r) calculate_case_incidence_from_model(stoch_i, pars=pars_i, my_rep=r))
+#   cases_vec  <- sapply(reps_i, function(r) calculate_case_incidence_at_time_of_recruitment_from_model(stoch_i, pars=pars_i, my_rep=r))
 #   inf_vec1  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_15to24"])
 #   inf_vec2  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_25to34"])
 #   ARTI_vec   <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r))

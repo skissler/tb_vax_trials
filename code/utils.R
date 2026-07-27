@@ -288,7 +288,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
       sigma=sigma,
       n_tested=tests_to_casetarget,
       n_enrolled=enrolls_to_casetarget,
-      n_cases=casetarget,
+      exp_trial_cases=casetarget,
       n_overall=overall_to_casetarget)
     counter <- counter + 1
   }
@@ -301,11 +301,12 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	with(as.list(pars), {
 
 	# Initialize tracking variables  
+	n_overall <- 0
 	n_tested <- 0
 	n_enrolled <- 0
 	n_fast <- 0
-	n_cases <- 0
-	n_overall <- 0
+	exp_trial_cases <- 0
+	n_trial_cases <- 0
 	n_overall_15to24 <- 0  # only used for estimating inf prev
 	n_overall_25to34 <- 0  # only used for estimating inf prev
 	n_infected_15to24 <- 0  # only used for estimating inf prev
@@ -322,11 +323,11 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
-	# Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
-	fast_endpt_fraction <- (1 - exp(-(pars$mu_fast + pars$mu_revert) * pars$trial_length))*pars$mu_fast/(pars$mu_fast + pars$mu_revert)
-	slow_endpt_fraction <- (1 - exp(-(pars$mu_slow + pars$mu_revert) * pars$trial_length))*pars$mu_slow/(pars$mu_slow + pars$mu_revert)
+	# Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial - currently unused
+	fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert) * trial_length))*mu_fast/(mu_fast + mu_revert)
+	slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert) * trial_length))*mu_slow/(mu_slow + mu_revert)
 	
-	while(n_cases < casetarget){
+	while(n_trial_cases < casetarget){
 	  # Grab their age from the age distribution
 	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
 
@@ -361,13 +362,14 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  
 		# Simulate their time to symptoms and time to reversion
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {101})  # 101 = doesn't revert during lifetime
-		still_infected <- (if(reversion_status==T & trev < age) {F} else {T})
-		# Which process happens first? - EDIT HERE
-		#if ()
+		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {Inf})  # Inf = doesn't revert
+		# But ensure only the first process of reversion/symptoms occurs
+		tsymp <- if (tsymp > trev) Inf else tsymp
+		trev <- if (trev > tsymp) Inf else trev
+		still_infected <- (if(reversion_status==T & trev <= age) {F} else {T})
 		
 		# ELIGIBILITY
-		if(tsymp > age){  # this misses reverters a bit - EDIT HERE
+		if(tsymp > age){
 			# They are asymptomatic, so let's test them: 
 			n_tested <- n_tested + 1
 			if((tinf >= age-sigma) && (tinf <= age)){
@@ -376,15 +378,11 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
 				  n_enrolled <- n_enrolled + 1
 				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				  n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases
-				  n_actual_cases
+				  exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases during trial - exponential race method for interest
+				  if(tsymp > age & tsymp <= age + trial_length) n_trial_cases <- n_trial_cases + 1  # record actual no of trial cases that would occur
 				}
-
 			}
-		} else if (tsymp <= age) {
-		  n_actual_cases <- n_actual_cases + 1
-		  n_exluded_symps <- n_excluded_symps + 1
-		  }
+		}
 
 		# Also record those from n_overall who are positive, and by age (only used in ARTI/ inf prev calculations)
 		if (age >= 15 & age < 25) {
@@ -401,7 +399,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
 	inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
 	
-	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_expected_cases=n_expected_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, exp_trial_cases=exp_trial_cases, n_trial_cases=n_trial_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
 	
 	return(out)
 	})
@@ -415,7 +413,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     n_enrolled <- 0
     n_fast <- 0
     n_slow <- 0
-    n_cases <- 0
+    exp_trial_cases <- 0
     n_overall <- 0
     n_infected <- 0  # only used for calculating ARTI
     n_overall_15to24 <- 0  # only used for estimating inf prev
@@ -438,7 +436,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     fast_endpt_fraction <- (1 - exp(-(pars$mu_fast + pars$mu_revert) * pars$trial_length))*pars$mu_fast/(pars$mu_fast + pars$mu_revert)
     slow_endpt_fraction <- (1 - exp(-(pars$mu_slow + pars$mu_revert) * pars$trial_length))*pars$mu_slow/(pars$mu_slow + pars$mu_revert)
     
-    while(n_cases < casetarget){
+    while(exp_trial_cases < casetarget){
       # Grab their age from the age distribution
       age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
       
@@ -482,7 +480,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
           if (still_infected == T) {
             # They were infected in past sigma years and haven't reverted yet
             (if (progressor_type=="fast") {n_fast <- n_fast + 1} else {n_slow <- n_slow + 1})
-            n_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_slow)  # expected no of cases
+            exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_slow)  # expected no of cases
           }
         }
       }
@@ -503,7 +501,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
     inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
     
-    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_cases=n_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, exp_trial_cases=exp_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
     
     return(out)
   })
@@ -575,7 +573,8 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_enrolled=stoch_output$n_enrolled,
-	    n_fast=stoch_output$n_fast, n_expected_cases=stoch_output$n_expected_cases, n_overall=stoch_output$n_overall,
+	    n_fast=stoch_output$n_fast, exp_trial_cases=stoch_output$exp_trial_cases, 
+	    n_trial_cases=stoch_output$n_trial_cases, n_overall=stoch_output$n_overall,
 	    inf_prev_15to24=stoch_output$inf_prev_15to24, inf_prev_25to34=stoch_output$inf_prev_25to34)
 	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
 	
@@ -583,14 +582,14 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 }
 
 # Plot functions
-plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_cases")){
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","exp_trial_cases")){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested"~"Tested",
 			name=="n_enrolled"~"Enrolled",
-			name=="n_cases"~"Cases",
+			name=="exp_trial_cases"~"Cases",
 			name=="n_overall"~"Contacted"
 			))
 
@@ -600,7 +599,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		mutate(name=case_when(
 			name=="n_tested"~"Tested",
 			name=="n_enrolled"~"Enrolled",
-			name=="n_cases"~"Cases",
+			name=="exp_trial_cases"~"Cases",
 			name=="n_overall"~"Contacted"
 			))
 
@@ -639,12 +638,13 @@ pull_mean <- function(x, life_exp=99){
   (pull_first(x) + pull_last(x, life_exp)) / 2
 }
 
-# Functions outside the model
-calculate_case_incidence_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
+# Functions outside the model, at time of recruitment
+calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
-  incidence <- unname(model_run["n_cases"] / (model_run["n_overall"]*pars$trial_length))
+  # case incidence at time of recruitment is the excluded symptomatics
+  incidence <- unname((model_run["n_overall"] - model_run["n_tested"]) / (model_run["n_overall"]))
   return(incidence*100000)
 }
 
@@ -664,4 +664,4 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   inf_prev_15to24 <- unname(model_run["inf_prev_15to24"])
   inf_prev_25to34 <- unname(model_run["inf_prev_25to34"])
   return(c(ARTI = ARTI, inf_prev_15to24 = inf_prev_15to24, inf_prev_25to34 = inf_prev_25to34))
-  }
+}
