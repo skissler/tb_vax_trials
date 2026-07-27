@@ -434,8 +434,8 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     prog_types     <- c("slow","fast")
     
     # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial
-    fast_endpt_fraction <- (1 - exp(-(pars$mu_fast + pars$mu_revert) * pars$trial_length))*pars$mu_fast/(pars$mu_fast + pars$mu_revert)
-    slow_endpt_fraction <- (1 - exp(-(pars$mu_slow + pars$mu_revert) * pars$trial_length))*pars$mu_slow/(pars$mu_slow + pars$mu_revert)
+    fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert) * trial_length))*mu_fast/(mu_fast + mu_revert)
+    slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert) * trial_length))*mu_slow/(mu_slow + mu_revert)
     
     while(n_trial_cases < casetarget){
       # Grab their age from the age distribution
@@ -574,7 +574,6 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
             # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
             n_enrolled <- n_enrolled + 1
             if (progressor_type == "fast") n_fast <- n_fast + 1
-            if(progressor_type=="fast") {n_fast <- n_fast + 1}
             if(tsymp > age & tsymp <= age + trial_length) n_trial_cases <- n_trial_cases + 1  # record actual no of trial cases that would occur
           }
         }
@@ -683,7 +682,7 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   if ("n_tested" %in% names(df)) {
     infection_prevalence <- unname((model_run["n_overall"] - model_run["n_tested"] + model_run["n_enrolled"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
   } else {
-    infection_prevalence <- unname(model_run["n_infected"] / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
+    infection_prevalence <- unname((model_run["n_overall"] - model_run["n_enrolled"] + model_run["n_infected"]) / model_run["n_overall"])  # total infection prevalence at start of trial (for all trial ages)
   }
   meanage <- ((pars$maxage - pars$minage)/2) + pars$minage
   ARTI <- 1 - ((1 - infection_prevalence)^(1/meanage))
