@@ -181,8 +181,6 @@ with_progress({
         setNames(rep(val, 100), 0:99)
       }
     out <- sim_stoch_trial(pars_fit, enrol_target=target_enrolled, agedist=agedist)
-    fast_endpt_fraction <- (1 - exp(-(pars_fit$mu_fast + pars_fit$mu_revert) * pars_fit$trial_length))*pars_fit$mu_fast/(pars_fit$mu_fast + pars_fit$mu_revert)
-	slow_endpt_fraction <- (1 - exp(-(pars_fit$mu_slow + pars_fit$mu_revert) * pars_fit$trial_length))*pars_fit$mu_slow/(pars_fit$mu_slow + pars_fit$mu_revert)
     p()
     tibble(
       p_slow_structure= param_grid$p_slow_label[i],
@@ -190,9 +188,10 @@ with_progress({
       foi_structure  = param_grid$foi_structure[i],
       rep            = param_grid$rep[i],
       n_overall      = out$n_overall,
-      n_enrolled    = out$n_enrolled,
+      n_tested       = out$n_tested,
+      n_enrolled     = out$n_enrolled,
       n_fast         = out$n_fast,
-      exp_cases      = fast_endpt_fraction*out$n_fast + slow_endpt_fraction*out$n_slow  
+      n_trial_cases  = out$n_trial_cases  
     )
   }, future.seed=TRUE)
 })
@@ -204,14 +203,13 @@ m72IIb_fit_trial <- trial_results %>%
   group_by(p_slow_structure, mu_slow) %>%
   summarise(
     n_fast_med    = round(median(n_fast)),
-    n_slow_med    = round(median(n_slow)),
     n_overall_med = round(median(n_overall)),
-    exp_cases_med = round(median(exp_cases), 1),
-    exp_cases_lo  = round(quantile(exp_cases, 0.1), 1),
-    exp_cases_hi  = round(quantile(exp_cases, 0.9), 1),
+    n_trial_cases_med = round(median(n_trial_cases), 1),
+    n_trial_cases_lo  = round(quantile(n_trial_cases, 0.1), 1),
+    n_trial_cases_hi  = round(quantile(n_trial_cases, 0.9), 1),
     .groups       = "drop"
   ) %>%
-  mutate(conditions_met = between(exp_cases_med, target_cases * 0.8, target_cases * 1.2))
+  mutate(conditions_met = between(n_trial_cases, target_cases * 0.8, target_cases * 1.2))
 
 head(m72IIb_fit_trial)
 #write.csv(m72IIb_fit_trial, file="output/m72IIb_fit_results2.csv", row.names=FALSE)
