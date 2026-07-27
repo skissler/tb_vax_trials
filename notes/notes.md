@@ -715,4 +715,6 @@ Thoughts from Stephen:
 
 -\> I have also realised that the generic "tsymp \< age" condition may miss some or overinclude some reverters. Need to account for the fact that only one of reversion and symptoms actually happens (the first event, exponential race). I have 4 processes in play that can happen in any order. Some thinking here:
 
+![](images/CamScanner 27-07-2026 12.30-1-01.png){width="396"}
+
 SOLUTION: If tsymp \> trev, set tsymp to Inf. And if trev \> tsymp, set trev to Inf. Then only one of reversion and symptoms can happen.
