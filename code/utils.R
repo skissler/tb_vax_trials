@@ -598,13 +598,14 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 }
 
 # Plot functions
-plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_trial_cases")){
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_overall","n_trial_cases")){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
-		pivot_longer(-sigma) %>% 
 	  mutate(n_tested_1 = n_tested / n_trial_cases,  # scaling for no tested/enrolled/overall per 1 case
 	         n_enrolled_1 = n_enrolled / n_trial_cases,
 	         n_overall_1 = n_overall / n_trial_cases) %>%
+	  select(sigma, n_tested_1, n_enrolled_1, n_overall_1) %>%
+		pivot_longer(-sigma) %>%
 		mutate(name=case_when(
 			name=="n_tested_1"~"Tested",
 			name=="n_enrolled_1"~"Enrolled",
@@ -613,10 +614,11 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 
 	analytical_df_toplot <- analytical_df %>% 
 		select(sigma, all_of(cols)) %>% 
-		pivot_longer(-sigma) %>% 
 	  mutate(n_tested_1 = n_tested / n_trial_cases,  # scaling for no tested/enrolled/overall per 1 case
 	         n_enrolled_1 = n_enrolled / n_trial_cases,
 	         n_overall_1 = n_overall / n_trial_cases) %>%
+	  select(sigma, n_tested_1, n_enrolled_1, n_overall_1) %>%
+		pivot_longer(-sigma) %>% 
 		mutate(name=case_when(
 			name=="n_tested_1"~"Tested",
 			name=="n_enrolled_1"~"Enrolled",

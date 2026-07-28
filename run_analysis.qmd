@@ -57,10 +57,11 @@ mu_slow_lit <- define_mu_slow(slow_structure)
 p_revert_lit <- Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected)
 
 #' shorthand names for plots
+foi_name <- "36765"
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
 shorthand_progstructure <- if (progression_structure=="Vynnycky-1997") "Vynn" else if (progression_structure=="uniform") "unif"
-fig_name <- paste0(iso3_agestructure,"_",foi_structure,"_",shorthand_progstructure, "_", slow_structure)  # pattern is agedist method _ foi _ p_slow method _ mu_slow
-fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_structure,"; p_slow = ",shorthand_progstructure)
+fig_name <- paste0(iso3_agestructure,"_",foi_name,"_",shorthand_progstructure, "_", slow_structure)  # pattern is agedist method _ foi _ p_slow method _ mu_slow
+fig_labels <- paste0("pop agedist = ",iso3_agestructure,"; foi = ",foi_name,"; p_slow = ",shorthand_progstructure)
 ```
 
 ## 3. define parameter values
@@ -217,15 +218,15 @@ head(m72IIb_fit_trial)
 pars_lit_igra$rho <- make_foi(3,6,7,6,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=100)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.2), casetarget=50, agedist=agedist)
 
-#' Plot all results
-fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
+#' Plot all results (per 1)
+fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit)
 fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=7.29, height=4.51)
 
