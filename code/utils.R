@@ -598,7 +598,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 }
 
 # Plot functions
-plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_overall","n_trial_cases")){
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_overall","n_trial_cases"), ylimit=F){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
 	  mutate(n_tested_1 = n_tested / n_trial_cases,  # scaling for no tested/enrolled/overall per 1 case
@@ -626,7 +626,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 			))
 
 	fig_stochastic_analytic <- ggplot() + 
-		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), size=0.5, alpha=0.2) + 
+		geom_point(data=stochastic_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), size=0.5, alpha=0.1) + 
 		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), linewidth=0.7, alpha=0.5) + 
 		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Cases"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
@@ -635,6 +635,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		theme(legend.title=element_blank()) + 
 		labs(x="Test span (years)", y="Number (for 1 case)")
 
+	if (ylimit) fig_stochastic_analytic <- fig_stochastic_analytic + ylim(0,ylimit)
 	return(fig_stochastic_analytic)
 }
 

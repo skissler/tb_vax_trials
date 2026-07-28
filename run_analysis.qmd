@@ -226,9 +226,9 @@ with_progress({
 analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.2), casetarget=50, agedist=agedist)
 
 #' Plot all results (per 1)
-fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit)
+fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, ylimit=1000)
 fig_stochastic_analytic_lit
-ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=7.29, height=4.51)
+ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".png"), width=7.29, height=4.51)
 
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
 from_model <- tibble()
@@ -626,18 +626,29 @@ ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=7.29, height=4.51)
 #| label: match_approaches
 #| eval: FALSE
 
-#Set non-age-varying params TODO
+# Set non-age-varying params TODO
+pars_lit_uniform <- list(
+	minage=15, # taken from above
+	maxage=49, # taken from above
+	rho=make_foi(6,6,6,6,6),
+	p_slow=extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
+	mu_slow=mu_slow_lit,  # from lit
+	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
+	p_revert=0,  # no reversion for analytic match
+	mu_revert=0, # no reversion for analytic match
+	sigma=100,  # IGRA test is essentially lifelong
+	trial_length=3)
 
-#' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
+# Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_match <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=25)
+  stochastic_df_match <- sim_stoch_over_sigma(pars=pars_lit_uniform, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=25)
 })
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
+analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_uniform, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
 
 #' Plot all results
-fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, analytical_df_match, cols=c("n_tested","n_enrolled","n_overall"))
+fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, analytical_df_match)
 fig_stochastic_analytic_match
-ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=7.29, height=4.51)
+ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".png"), width=7.29, height=4.51)
 ```
