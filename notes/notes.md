@@ -685,7 +685,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 - Reversion now added. Results of model fitting show that now none of the parameter combinations fulfill all the criteria! Cases is too low. But infection prevalence is still quite high – perhaps because my calculation of infection prevalence is done determinsitically and wouldn't include reversion. Will see if i can fix. -\> I have now fixed this.
 
-# 23rd july
+# 23rd july (LH)
 
 - Reversion is much too high now – we are only seeing around 20% infection prevalence in model fitting now and none of the parameter combinations fulfill all the criteria. I think better to try Stephen's approach of a 7.5% chance of reverting (and then draw a trev), rather than compounded 7.5% chance per year.
 
@@ -715,6 +715,6 @@ Thoughts from Stephen:
 
 -\> I have also realised that the generic "tsymp \< age" condition may miss some or overinclude some reverters. Need to account for the fact that only one of reversion and symptoms actually happens (the first event, exponential race). I have 4 processes in play that can happen in any order. Some thinking here:
 
-![](images/CamScanner 27-07-2026 12.30-1-01.png){width="396"}
+![](images/CamScanner%2027-07-2026%2012.30-1-01.png){width="396"}
 
 SOLUTION: If tsymp \> trev, set tsymp to Inf. And if trev \> tsymp, set trev to Inf. Then only one of reversion and symptoms can happen.

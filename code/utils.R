@@ -288,7 +288,7 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
       sigma=sigma,
       n_tested=tests_to_casetarget,
       n_enrolled=enrolls_to_casetarget,
-      exp_trial_cases=casetarget,
+      n_trial_cases=casetarget,
       n_overall=overall_to_casetarget)
     counter <- counter + 1
   }
@@ -305,7 +305,6 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	n_tested <- 0
 	n_enrolled <- 0
 	n_fast <- 0
-	exp_trial_cases <- 0
 	n_trial_cases <- 0
 	n_overall_15to24 <- 0  # only used for estimating inf prev
 	n_overall_25to34 <- 0  # only used for estimating inf prev
@@ -323,9 +322,9 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
-	# Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial - currently unused
-	fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert) * trial_length))*mu_fast/(mu_fast + mu_revert)
-	slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert) * trial_length))*mu_slow/(mu_slow + mu_revert)
+	# # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial - currently unused
+	# fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert2) * trial_length))*mu_fast/(mu_fast + mu_revert2)
+	# slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert2) * trial_length))*mu_slow/(mu_slow + mu_revert2)
 	
 	while(n_trial_cases < casetarget){
 	  # Grab their age from the age distribution
@@ -362,7 +361,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  
 		# Simulate their time to symptoms and time to reversion
 		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {Inf})  # Inf = doesn't revert
+		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
 		# But ensure only the first process of reversion/symptoms occurs
 		tsymp <- if (tsymp > trev) Inf else tsymp
 		trev <- if (trev > tsymp) Inf else trev
@@ -378,7 +377,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
 				  n_enrolled <- n_enrolled + 1
 				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				  exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases during trial - exponential race method for interest
+				  # exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases during trial - exponential race method for interest
 				  if(tsymp > age & tsymp <= age + trial_length) n_trial_cases <- n_trial_cases + 1  # record actual no of trial cases that would occur
 				}
 			}
@@ -399,7 +398,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
 	inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
 	
-	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, exp_trial_cases=exp_trial_cases, n_trial_cases=n_trial_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_trial_cases=n_trial_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
 	
 	return(out)
 	})
@@ -467,7 +466,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       
       # Simulate their time to symptoms and time to reversion
       tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {Inf})  # Inf = doesn't revert
+      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
       # But ensure only the first process of reversion/symptoms occurs
       tsymp <- if (tsymp > trev) Inf else tsymp
       trev <- if (trev > tsymp) Inf else trev
@@ -518,7 +517,6 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
     n_tested    <- 0
     n_enrolled <- 0
     n_fast      <- 0
-    exp_trial_cases <- 0
     n_trial_cases <- 0
     still_infected <- 1
 
@@ -551,7 +549,7 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
       
       # Simulate their time to symptoms and time to reversion
       tsymp <- tinf + rexp(1, if (progressor_type=="slow") mu_slow else mu_fast)
-      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert1)} else {Inf})  # Inf = doesn't revert
+      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
       # But ensure only the first process of reversion/symptoms occurs
       tsymp <- if (tsymp > trev) Inf else tsymp
       trev <- if (trev > tsymp) Inf else trev
@@ -601,25 +599,29 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 }
 
 # Plot functions
-plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","exp_trial_cases")){
+plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tested","n_enrolled","n_trial_cases")){
 	stochastic_df_toplot <- stochastic_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
+	  mutate(n_tested_1 = n_tested / n_trial_cases,  # scaling for no tested/enrolled/overall per 1 case
+	         n_enrolled_1 = n_enrolled / n_trial_cases,
+	         n_overall_1 = n_overall / n_trial_cases) %>%
 		mutate(name=case_when(
-			name=="n_tested"~"Tested",
-			name=="n_enrolled"~"Enrolled",
-			name=="exp_trial_cases"~"Cases",
-			name=="n_overall"~"Contacted"
+			name=="n_tested_1"~"Tested",
+			name=="n_enrolled_1"~"Enrolled",
+			name=="n_overall_1"~"Contacted"
 			))
 
 	analytical_df_toplot <- analytical_df %>% 
 		select(sigma, all_of(cols)) %>% 
 		pivot_longer(-sigma) %>% 
+	  mutate(n_tested_1 = n_tested / n_trial_cases,  # scaling for no tested/enrolled/overall per 1 case
+	         n_enrolled_1 = n_enrolled / n_trial_cases,
+	         n_overall_1 = n_overall / n_trial_cases) %>%
 		mutate(name=case_when(
-			name=="n_tested"~"Tested",
-			name=="n_enrolled"~"Enrolled",
-			name=="exp_trial_cases"~"Cases",
-			name=="n_overall"~"Contacted"
+			name=="n_tested_1"~"Tested",
+			name=="n_enrolled_1"~"Enrolled",
+			name=="n_overall_1"~"Contacted"
 			))
 
 	fig_stochastic_analytic <- ggplot() + 
@@ -630,7 +632,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
-		labs(x="Test span (years)", y="Number (for 50 cases)")
+		labs(x="Test span (years)", y="Number (for 1 case)")
 
 	return(fig_stochastic_analytic)
 }

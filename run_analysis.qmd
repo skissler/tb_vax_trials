@@ -37,8 +37,7 @@ progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-est
 Dagnew_reversion_data <- left_join(read.csv("data/Dagnew_2026_IGRA_status_at_day_1_table_s4.csv"), read.csv("data/Dagnew_2026_IGRA_reversion_conversion_table_s6.csv"), by = c("country", "site_no" = "site_number")) %>%  # reversion data from Dagnew et al.
   select(country, site_no, N_D1, n_positive_D1, N_M12, reversion_n) %>%
   group_by(country) %>% summarise(across(c(N_D1, n_positive_D1, N_M12, reversion_n), sum)) %>%  # summing across sites
-  mutate(prob_of_reversion_once_infected = reversion_n / (n_positive_D1*N_M12/N_D1)) %>%  # probability of reverting once infected = no of reversions / approx no of initial positives who completed the study
-  mutate(mu_revert = -log(1-prob_of_reversion_once_infected))  # rate of reversion once infected
+  mutate(prob_of_reversion_once_infected = reversion_n / (n_positive_D1*N_M12/N_D1))  # probability of reverting once infected = no of reversions / approx no of initial positives who completed the study
 ```
 
 ## 2. define age structure for the model e.g. uniform
@@ -47,15 +46,15 @@ Dagnew_reversion_data <- left_join(read.csv("data/Dagnew_2026_IGRA_status_at_day
 #| label: define_age_structure
 
 age_structure <- "South Africa"  # works for "uniform" or any UN-recognised country, e.g. "South Africa"
-foi_structure <- "uniform_4"  # works for "uniform4", "uniform6", ...
-progression_structure <- "Vynnycky-1997"  # works for "uniform" or "Vynnycky-1997"
+#foi_structure <- "uniform_4"  # works for "uniform4", "uniform6", ... with define_foi_by_age()
+progression_structure <- "Vynnycky-high"  # works for "uniform" or "Vynnycky-1997" or "Vynnycky-high"
 slow_structure <- "0.003"
 
 agedist <- extract_age_distribution(unwpp, age_structure)  # population age distribution
-rho_lit <- define_foi_by_age(foi_structure)  # force of infection by age
+rho_lit <- make_foi(3,6,7,6,5)  # force of infection by age
 p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)  # prob of being a slow progressor, by age
 mu_slow_lit <- define_mu_slow(slow_structure)
-mu_revert_lit <- Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(mu_revert)
+p_revert_lit <- Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected)
 
 #' shorthand names for plots
 iso3_agestructure <- if (age_structure!="uniform") countrycode(age_structure, origin="country.name.en", destination="iso3c") else "unif"
@@ -85,11 +84,9 @@ pars_m72IIb_igra <- list(
 	p_slow=p_slow_m72IIb,  # modelled value (range considered: ...)
 	mu_slow=mu_slow_lit,  # assumed, informed by lit - could play around with this
 	mu_fast=1.5,  # from lit
-	p_revert=0, # tbd
-	mu_revert=0,  # tbd - could take from trial data?
-	mu_revert1=0, # tbd
+	p_revert=p_revert_lit, # tbd
+	mu_revert=0.75, # tbd
 	sigma=100,  # IGRA test is essentially lifelong
-	ve=0.55,  # from trial (technically 54% VE)
 	trial_length=3)  # from trial (technically 2.3 years in Van Der Meeren)
 # pars_m72IIb_tasa <- pars_m72IIb_igra
 # pars_m72IIb_tasa$sigma <- 2
@@ -101,14 +98,10 @@ pars_lit_igra <- list(
 	p_slow=p_slow_lit,  # from lit
 	mu_slow=mu_slow_lit,  # from lit
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
-	p_revert=0.075,  # from lit
-	mu_revert1=0.75, #mu_revert_lit, # for most reverters reverting within two years, assuming exponential dist
-	mu_revert=mu_revert_lit,
+	p_revert=p_revert_lit,  # from lit
+	mu_revert=0.75, # for most reverters reverting within two years, assuming exponential dist
 	sigma=100,  # IGRA test is essentially lifelong
-	ve=0.55, # taken from above, currently unused
 	trial_length=3) # taken from above
-#pars_lit_tasa <- pars_lit_igra 
-#pars_lit_tasa$sigma <- 2
 ```
 
 ## 4. simulate trials under m72IIb conditions (analytic and stochastic approaches)
@@ -131,7 +124,7 @@ fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb,
                                            cols=c("n_tested","n_enrolled","n_overall")) + 
 	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
 fig_stochastic_analytic_m72IIb
-ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".pdf"), width=7.29, height=4.51)
 ```
 
 ## 4b. parameter fitting: m72IIb trial
@@ -221,10 +214,10 @@ head(m72IIb_fit_trial)
 #| label: simulate_with_lit
 #| eval: FALSE
 
-pars_lit_igra$rho <- make_foi(4,5,3,5,5)
+pars_lit_igra$rho <- make_foi(3,6,7,6,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=1)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
@@ -234,11 +227,11 @@ analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(fr
 #' Plot all results
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_enrolled","n_overall"))
 fig_stochastic_analytic_lit
-ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".pdf"), width=7.29, height=4.51)
 
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
 from_model <- tibble()
-for (i in 1:10) {
+for (i in 1:25) {
   cases <- calculate_case_incidence_at_time_of_recruitment_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
   from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
@@ -354,7 +347,8 @@ fig_6 <- summary_table %>%
        col="All conditions met", shape="p_f")
 
 fig_6
-ggsave(fig_6, file="figures/6_parameter_fit.pdf", width=10, height=4)
+ggsave(fig_6, file="figures/6_parameter_fit.pdf", width=7.29, height=4.51)
+ggsave(fig_6, file="figures/6_parameter_fit.png", width=7.29, height=4.51)
 
 # summary table
 library(flextable)
@@ -456,7 +450,7 @@ fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure)) +
   theme(strip.background=element_blank()) +
   labs(x="Duration of positivity of test (years)", y="Number (for 50 cases)", col="Force of infection")
 fig_7a
-ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=10, height=10/1.6)
+ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=7.29, height=4.51)
 
 #' Epidemiological benchmarks: infection prevalence at ages 20/30, ARTI, case incidence
 #' Computed analytically from FOI (infection prevalence) and stochastic output at sigma=80 (ARTI, cases)
@@ -588,7 +582,7 @@ fig_7b <- notest_df_7b %>%
   theme(strip.background=element_blank(), axis.text.x=element_text(angle=25, hjust=1)) +
   labs(x=NULL, y="Enrolled (for 50 cases)", fill="Force of infection")
 fig_7b
-ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=10, height=10/2.5)
+ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=7.29, height=4.51)
 
 # #' Epidemiological benchmarks
 # combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure, minage, maxage) 
@@ -644,5 +638,5 @@ analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(
 #' Plot all results
 fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, analytical_df_match, cols=c("n_tested","n_enrolled","n_overall"))
 fig_stochastic_analytic_match
-ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=5, height=5/1.6)
+ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match_",fig_name,".pdf"), width=7.29, height=4.51)
 ```
