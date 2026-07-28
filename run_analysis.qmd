@@ -259,10 +259,10 @@ start.time <- Sys.time()
 # define parameter search space
 foi_grid_1 <- tibble(a0_4=1:10, a5_24=1:10, a25_34=1:10, a35_49=1:10, a50plus=1:10)  # initial uniform fits
 foi_grid_2 <- expand.grid(a0_4=3:7, a5_24=3:7, a25_34=3:7, a35_49=3:7, a50plus=3:7)  # closer inspection of 3-7% as this looked promising from initial fits
-foi_grid <- bind_rows(foi_grid_1) %>% distinct()  #bind_rows(foi_grid_1, foi_grid_2) %>% distinct()
+foi_grid <- bind_rows(foi_grid_1, foi_grid_2) %>% distinct()
 foi_structures <- make_foi(foi_grid)  # named list of 3125 vectors
 progression_structures <- c("Vynnycky-1997", "Vynnycky-high")
-slow_structures <- c("max", "0.003")  #c("base", "min", "max", "0.003")
+slow_structures <- c("base", "min")  #c("base", "min", "max", "0.003")
 summary_table <- tibble()
 reps <- 5
 
@@ -315,14 +315,8 @@ dagnew_age30_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & 
 dagnew_age30_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(max_positivity)
 
 # compute summary table and save
-summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI, 0.04, 0.06) & between(cases, 242, 571)) %>%
-  mutate(three_conditions_met = (
-  between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) +
-  between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) +
-  between(ARTI, 0.04, 0.06) +
-  between(cases, 242, 571)
-) >= 3)
-write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE) 
+summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI, 0.04, 0.06) & between(cases, 242, 571))
+write.csv(summary_table, file="output/parameter_fit_results_lowerhalf.csv", row.names=FALSE) 
 end.time <- Sys.time()
 ```
 
@@ -342,10 +336,10 @@ prog_labels <- c(
 )
 
 fig_6 <- summary_table %>%
-  ggplot(aes(x=inf_prev_age20, y=ARTI1, shape=progression_structure, col=conditions_met)) +
-  annotate("rect", xmin=dagnew_age20_min, xmax=dagnew_age20_max + 0.05,
+  ggplot(aes(x=inf_prev_15to24, y=ARTI, shape=progression_structure, col=conditions_met)) +
+  annotate("rect", xmin=dagnew_age20_min, xmax=dagnew_age20_max,
            ymin=0.04, ymax=0.06, alpha=0.1, fill="steelblue") +
-  geom_vline(xintercept=c(dagnew_age20_min, dagnew_age20_max + 0.05),
+  geom_vline(xintercept=c(dagnew_age20_min, dagnew_age20_max),
              linetype="dashed", col="steelblue", linewidth=0.4) +
   geom_hline(yintercept=c(0.04, 0.06),
              linetype="dashed", col="steelblue", linewidth=0.4) +
@@ -356,7 +350,7 @@ fig_6 <- summary_table %>%
   facet_wrap(~slow_structure, labeller=as_labeller(slow_labels)) +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Infection prevalence, age 20", y="ARTI",
+  labs(x="Infection prevalence, age 15-24", y="ARTI",
        col="All conditions met", shape="p_f")
 
 fig_6
@@ -367,10 +361,10 @@ library(flextable)
 summary_table %>%
   filter(conditions_met) %>%
   select(foi_structure, progression_structure, slow_structure,
-         inf_prev_age20, inf_prev_age30, ARTI1, cases_min1, cases_max1) %>%
-  mutate(across(c(inf_prev_age20, inf_prev_age30), ~ round(.x, 2)),
-         across(c(ARTI1), ~ round(.x, 3)),
-         across(c(cases_min1, cases_max1), ~ round(.x, 0))) %>%
+         inf_prev_15to24, inf_prev_25to34, ARTI, cases) %>%
+  mutate(across(c(inf_prev_15to24, inf_prev_25to34), ~ round(.x, 2)),
+         across(c(ARTI), ~ round(.x, 3)),
+         across(c(cases), ~ round(.x, 0))) %>%
   arrange(slow_structure, progression_structure) %>%
   flextable() %>%
   autofit() %>%
