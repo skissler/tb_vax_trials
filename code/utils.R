@@ -476,7 +476,6 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       if(tsymp > age){
         # They are asymptomatic, so let's enrol them: 
         n_enrolled <- n_enrolled + 1
-        # If they are fast (and actually infected), add 1 to n_fast:
         if (tinf <= age) {
           # They were infected in past sigma years but may have reverted. Check reversion.
           if (still_infected == T) {
@@ -502,7 +501,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
     inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
     
-    out <- list(n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_slow, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
+    out <- list(n_enrolled=n_enrolled, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
     
     return(out)
   })
@@ -665,7 +664,7 @@ calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars,
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
   # case incidence (new cases)
-  incidence <- unname(model_run["n_trial_cases"] / (model_run["n_overall"]*pars$trial_length))  # functionality not yet added for sim_stoch_notest()
+  incidence <- unname(model_run["n_trial_cases"] / (model_run["n_overall"]*pars$trial_length))
   return(incidence*100000)
 }
 
