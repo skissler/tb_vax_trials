@@ -347,7 +347,6 @@ fig_6 <- summary_table %>%
        col="All conditions met", shape="p_f")
 
 fig_6
-ggsave(fig_6, file="figures/6_parameter_fit.pdf", width=7.29, height=4.51)
 ggsave(fig_6, file="figures/6_parameter_fit.png", width=7.29, height=4.51)
 
 # summary table
@@ -363,6 +362,66 @@ summary_table %>%
   flextable() %>%
   autofit() %>%
   save_as_docx(path="output/parameter_fit_passing.docx")
+```
+```{r}
+# Example code to rerun the 523 successful param combinations for more repetitions
+passing_combos <- summary_table %>% filter(conditions_met)
+reps_rerun     <- 100
+
+rerun_grid <- passing_combos %>%
+  select(progression_structure, slow_structure, foi_structure) %>%
+  crossing(rep = 1:reps_rerun)
+
+plan(multisession, workers=8)
+with_progress({
+  p <- progressr::progressor(steps=nrow(rerun_grid))
+  rerun_list <- future.apply::future_lapply(1:nrow(rerun_grid), function(i) {
+    pars_fit         <- pars_lit_igra
+    pars_fit$p_slow  <- extract_probability_of_being_slow(progressor_type_by_age_studies, rerun_grid$progression_structure[i])
+    pars_fit$mu_slow <- define_mu_slow(rerun_grid$slow_structure[i])
+    pars_fit$rho     <- foi_structures[[rerun_grid$foi_structure[i]]]
+    pars_fit$sigma   <- 80
+    out              <- sim_stoch(pars_fit, casetarget=50, agedist=agedist)
+    p()
+    tibble(
+      progression_structure = rerun_grid$progression_structure[i],
+      slow_structure        = rerun_grid$slow_structure[i],
+      foi_structure         = rerun_grid$foi_structure[i],
+      rep                   = rerun_grid$rep[i],
+      n_tested              = out$n_tested,
+      n_enrolled            = out$n_enrolled,
+      n_overall             = out$n_overall,
+      n_trial_cases         = out$n_trial_cases,
+      inf_prev_15to24       = out$inf_prev_15to24,
+      inf_prev_25to34       = out$inf_prev_25to34
+    )
+  }, future.seed=TRUE)
+})
+
+rerun_df <- bind_rows(rerun_list)
+
+summary_table_rerun <- rerun_df %>%
+  mutate(
+    inf_prev_all = (n_overall - n_tested + n_enrolled) / n_overall,
+    meanage      = ((pars_lit_igra$maxage - pars_lit_igra$minage) / 2) + pars_lit_igra$minage,
+    ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
+    cases        = n_trial_cases / (n_overall * pars_lit_igra$trial_length) * 100000
+  ) %>%
+  group_by(progression_structure, slow_structure, foi_structure) %>%
+  summarise(
+    inf_prev_15to24 = median(inf_prev_15to24),
+    inf_prev_25to34 = median(inf_prev_25to34),
+    ARTI            = median(ARTI),
+    cases           = median(cases),
+    .groups = "drop"
+  ) %>%
+  mutate(conditions_met =
+    between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) &
+    between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) &
+    between(ARTI, 0.04, 0.06) &
+    between(cases, 242, 571))
+
+write.csv(summary_table_rerun, file="output/parameter_fit_results_rerun.csv", row.names=FALSE)
 ```
 
 
