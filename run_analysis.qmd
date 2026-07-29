@@ -397,14 +397,12 @@ p_revert_7a <- list(
   "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh") %>% pull(prob_of_reversion_once_infected))  # Bangladesh used as proxy for India
 
 # Flat grid over all combinations: country x FOI x sigma x rep
-sim_grid_7a <- expand.grid(
-  country       = countries_7a,
-  foi_structure = foi_structures_7a,
-  slow_structure = names(p_slow_structures_7a),
-  sigma = c(1:10, seq(15, 80, by=5)),
-  rep           = 1:5,
-  stringsAsFactors = FALSE
-)
+sim_grid_7a <- bind_rows(tibble(country="India",        foi_structure=c("uniform_1","uniform_2")),
+                         tibble(country="Kenya",        foi_structure=c("uniform_3","uniform_4")),
+                         tibble(country="South Africa", foi_structure=c("uniform_5","uniform_6","uniform_7"))) %>%
+  crossing(slow_structure = names(p_slow_structures_7a),
+           sigma          = c(1:10, seq(15, 80, by=5)),
+           rep            = 1:25)
 
 # Single flat future_lapply — avoids nested parallelism and memory spikes
 with_progress({
@@ -437,9 +435,9 @@ stoch_df_7a_long <- stoch_df_7a %>%
   pivot_longer(cols=c(n_enrolled_1, n_tested_1), names_to="metric", values_to="value") %>%
   mutate(metric = case_when(metric=="n_enrolled_1"~"Enrolled", metric=="n_tested_1"~"Tested"),
          metric = factor(metric, levels=c("Enrolled","Tested"))) #%>%
-  # filter(!(country=="Kenya" & foi_structure %in% c("uniform_1", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
-  # filter(!(country=="India" & foi_structure %in% c("uniform_4", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
-  # filter(!(country=="South Africa" & foi_structure %in% c("uniform_1", "uniform_2", "uniform_3")))  # filter out foi's that do not give plausible outputs
+  # filter(!(country=="Kenya" & slow_structure %in% c("uniform_1", "uniform_5"))) %>%  # filter out p_f's that do not give plausible outputs
+  # filter(!(country=="India" & slow_structure %in% c("uniform_4", "uniform_5"))) %>%  # filter out p_f's that do not give plausible outputs
+  # filter(!(country=="South Africa" & slow_structure %in% c("uniform_1", "uniform_2", "uniform_3")))  # filter out p_f's that do not give plausible outputs
 
 median_df_7a <- stoch_df_7a_long %>%
   group_by(country, foi_structure, slow_structure, sigma, metric) %>%
@@ -460,20 +458,17 @@ ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=7.29, height=4.51)
 #' Summary table: infection prevalence at ages 20/30, ARTI, case incidence
 #' Computed from stochastic output at sigma=80 (infection prevs, ARTI, cases)
 summary_table_7a <- stoch_df_7a %>%
-  mutate(
-    inf_prev_all = (n_overall - n_tested + n_enrolled) / n_overall,
+  filter(sigma == 80) %>%
+  mutate(inf_prev_all = (n_overall - n_tested + n_enrolled) / n_overall,
     meanage      = ((pars_7a$maxage - pars_7a$minage) / 2) + pars_7a$minage,
     ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
-    cases_per100k = n_trial_cases / (n_overall * pars_7a$trial_length) * 100000
-  ) %>%
+    cases_per100k = n_trial_cases / (n_overall * pars_7a$trial_length) * 100000) %>%
   group_by(country, foi_structure, slow_structure) %>%
-  summarise(
-    inf_prev_15to24 = median(inf_prev_15to24),
+  summarise(inf_prev_15to24 = median(inf_prev_15to24),
     inf_prev_25to34 = median(inf_prev_25to34),
     ARTI            = median(ARTI),
     cases_per100k   = median(cases_per100k),
-    .groups = "drop"
-  )
+    .groups = "drop")
 
 # # Literature for criteria
 Dagnew_positivity_data <- read.csv("data/Dagnew_2026_IGRA_positivity_by_age_table_s5.csv") %>%
@@ -485,13 +480,13 @@ dagnew_bounds_15to24 <- Dagnew_positivity_data %>%
   filter(country %in% countries_7a, age_group == "15-24") %>%
   select(country, min_positivity, max_positivity) %>%
   rename(min_15to24 = min_positivity, max_15to24 = max_positivity) %>%
-  add_row(country="India_Selvaraju", min_15to24 = 0.098, max_15to24 = 0.158)  # adding india data from Selvaraju et al 2023
+  rows_update(tibble(country="India", min_15to24 = 0.098, max_15to24 = 0.158), by="country")  # adding india data from Selvaraju et al 2023
 
 dagnew_bounds_25to34 <- Dagnew_positivity_data %>%
   filter(country %in% countries_7a, age_group == "25-34") %>%
   select(country, min_positivity, max_positivity) %>%
   rename(min_25to34 = min_positivity, max_25to34 = max_positivity) %>%
-  add_row(country="India_Selvaraju", min_25to34 = 0.171, max_25to34 = 0.252)  # adding india data from Selvaraju et al 2023
+  rows_update(tibble(country="India", min_25to34 = 0.171, max_25to34 = 0.252), by="country")  # adding india data from Selvaraju et al 2023
 
 country_thresholds_7a <- tibble(
   country       = c("South Africa", "Kenya",   "India"),
@@ -509,7 +504,8 @@ summary_table_7a <- summary_table_7a %>%
     between(inf_prev_15to24, min_15to24, max_15to24) &  # might want to change India inf prev conditions to Selvaraju study
     between(inf_prev_25to34, min_25to34, max_25to34) &
     between(ARTI, arti_lo, arti_hi) &
-    between(cases_per100k, cases_lo, cases_hi))
+    between(cases_per100k, cases_lo, cases_hi)) #%>%
+  #select(country, foi_structure, slow_structure, inf_prev_15to24, inf_prev_25to34, ARTI, cases_per100k, conditions_met)
 
 write.csv(summary_table_7a, file="output/variedsite_results.csv", row.names=FALSE)
 ```
