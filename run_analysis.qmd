@@ -309,7 +309,7 @@ dagnew_age30_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & 
 
 # compute summary table and save
 summary_table <- summary_table %>% mutate(conditions_met = between(inf_prev_15to24, dagnew_age20_min, dagnew_age20_max) & between(inf_prev_25to34, dagnew_age30_min, dagnew_age30_max) & between(ARTI, 0.04, 0.06) & between(cases, 242, 571))
-write.csv(summary_table, file="output/parameter_fit_results_lowerhalf.csv", row.names=FALSE) 
+write.csv(summary_table, file="output/parameter_fit_results.csv", row.names=FALSE) 
 end.time <- Sys.time()
 ```
 
