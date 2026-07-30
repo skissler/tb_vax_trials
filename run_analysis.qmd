@@ -401,7 +401,7 @@ sim_grid_7a <- bind_rows(tibble(country="India",        foi_structure=c("uniform
                          tibble(country="Kenya",        foi_structure=c("uniform_3","uniform_4")),
                          tibble(country="South Africa", foi_structure=c("uniform_5","uniform_6","uniform_7"))) %>%
   crossing(slow_structure = names(p_slow_structures_7a),
-           sigma          = c(1:10, seq(15, 80, by=5)),
+           sigma          = c(0.5, 1:10, seq(15, 80, by=5)),
            rep            = 1:25)
 
 # Single flat future_lapply — avoids nested parallelism and memory spikes
@@ -463,21 +463,18 @@ fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure, line
 fig_7a
 ggsave(fig_7a, file="figures/7a_varied_sites.png", width=7.29, height=4.51)
 
-# fig_7a_zoom <- ggplot(stoch_df_7a_long %>% filter(sigma <= 5), 
-#                       aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
-#   geom_point(size=0.4, alpha=0.1) +
-#   geom_line(data=median_df_7a %>% filter(sigma <= 5), linewidth=0.7) +
-#   facet_grid(metric ~ country, scales="free_y") +
-#   scale_colour_brewer(palette="Set1",
-#                       labels=foi_labels) +
-#   scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
-#                         labels=p_slow_labels) +
-#   theme_classic() +
-#   theme(strip.background=element_blank()) +
-#   labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection (%)", linetype="p_f")
-fig_7a_zoom <- fig_7a %+% 
-  list(data        = stoch_df_7a_long %>% filter(sigma <= 5),
-       data_median = median_df_7a     %>% filter(sigma <= 5))
+fig_7a_zoom <- ggplot(stoch_df_7a_long %>% filter(sigma <= 15),
+                      aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
+  geom_point(size=0.4, alpha=0.1) +
+  geom_line(data=median_df_7a %>% filter(sigma <= 15), linewidth=0.7) +
+  facet_grid(metric ~ country, scales="free_y") +
+  scale_colour_brewer(palette="Set1",
+                      labels=foi_labels) +
+  scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
+                        labels=p_slow_labels) +
+  theme_classic() +
+  theme(strip.background=element_blank()) +
+  labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection (%)", linetype="p_f")
 fig_7a_zoom
 ggsave(fig_7a_zoom, file="figures/7a_varied_sites_zoom.pdf", width=7.29, height=4.51)
 
