@@ -453,7 +453,7 @@ fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure, line
   theme(strip.background=element_blank()) +
   labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection", linetype="p_f")
 fig_7a
-ggsave(fig_7a, file="figures/7a_varied_sites.pdf", width=7.29, height=4.51)
+ggsave(fig_7a, file="figures/7a_varied_sites.png", width=7.29, height=4.51)
 
 #' Summary table: infection prevalence at ages 20/30, ARTI, case incidence
 #' Computed from stochastic output at sigma=80 (infection prevs, ARTI, cases)
