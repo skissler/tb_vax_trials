@@ -438,22 +438,48 @@ stoch_df_7a_long <- stoch_df_7a %>%
   filter(!(country=="Kenya" & foi_structure %in% c("uniform_4"))) %>%  # filter out foi's that do not give plausible outputs
   filter(!(country=="India" & foi_structure %in% c("uniform_1"))) %>%  # filter out foi's that do not give plausible outputs
   filter(!(country=="South Africa" & foi_structure %in% c("uniform_5", "uniform_7")))  # filter out foi's that do not give plausible outputs
+write.csv(stoch_df_7a_long, file="output/variedsite_results_stochoutput.csv", row.names=FALSE)
+
+foi_labels    <- c("uniform_1"="1%","uniform_2"="2%","uniform_3"="3%","uniform_4"="4%",
+                   "uniform_5"="5%","uniform_6"="6%","uniform_7"="7%","uniform_8"="8%",
+                   "uniform_9"="9%","uniform_10"="10%")
+p_slow_labels <- c("uniform_95"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")
 
 median_df_7a <- stoch_df_7a_long %>%
   group_by(country, foi_structure, slow_structure, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
-#write.csv(median_df_7a, file="output/variedsite_results_full.csv", row.names=FALSE)
+write.csv(median_df_7a, file="output/variedsite_results_medians.csv", row.names=FALSE)
 
 fig_7a <- ggplot(stoch_df_7a_long, aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
   geom_point(size=0.4, alpha=0.1) +
   geom_line(data=median_df_7a, linewidth=0.7) +
   facet_grid(metric ~ country, scales="free_y") +
-  scale_colour_brewer(palette="Set1") +
+  scale_colour_brewer(palette="Set1", labels=foi_labels) +
+  scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
+                      labels=p_slow_labels) +
   theme_classic() +
   theme(strip.background=element_blank()) +
   labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection", linetype="p_f")
 fig_7a
 ggsave(fig_7a, file="figures/7a_varied_sites.png", width=7.29, height=4.51)
+
+# fig_7a_zoom <- ggplot(stoch_df_7a_long %>% filter(sigma <= 5), 
+#                       aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
+#   geom_point(size=0.4, alpha=0.1) +
+#   geom_line(data=median_df_7a %>% filter(sigma <= 5), linewidth=0.7) +
+#   facet_grid(metric ~ country, scales="free_y") +
+#   scale_colour_brewer(palette="Set1",
+#                       labels=foi_labels) +
+#   scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
+#                         labels=p_slow_labels) +
+#   theme_classic() +
+#   theme(strip.background=element_blank()) +
+#   labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection (%)", linetype="p_f")
+fig_7a_zoom <- fig_7a %+% 
+  list(data        = stoch_df_7a_long %>% filter(sigma <= 5),
+       data_median = median_df_7a     %>% filter(sigma <= 5))
+fig_7a_zoom
+ggsave(fig_7a_zoom, file="figures/7a_varied_sites_zoom.pdf", width=7.29, height=4.51)
 
 #' Summary table: infection prevalence at ages 20/30, ARTI, case incidence
 #' Computed from stochastic output at sigma=80 (infection prevs, ARTI, cases)
