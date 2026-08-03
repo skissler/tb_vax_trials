@@ -341,7 +341,7 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	  # HOUSEHOLDS step
 	  if (households) {
 	    if (tinf > age) {  # not already infected
-	      household_infection <- rbinom(1, size=1, prob=0.3)  # true or false coin flip
+	      household_infection <- rbinom(1, size=1, prob=0.26)  # true or false coin flip
 	      if (household_infection == TRUE) tinf <- age  # new tinf is current age
 	    } else if (tinf <= age) {
 	      # do nothing
@@ -446,7 +446,7 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       # HOUSEHOLDS step
       if (households) {
         if (tinf > age) {  # not already infected
-          household_infection <- rbinom(1, size=1, prob=0.3)  # true or false coin flip
+          household_infection <- rbinom(1, size=1, prob=0.26)  # true or false coin flip
           if (household_infection == TRUE) tinf <- age  # new tinf is current age
         } else if (tinf <= age) {
           # do nothing

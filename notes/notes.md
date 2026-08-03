@@ -718,3 +718,11 @@ Thoughts from Stephen:
 ![](images/CamScanner%2027-07-2026%2012.30-1-01.png){width="396"}
 
 SOLUTION: If tsymp \> trev, set tsymp to Inf. And if trev \> tsymp, set trev to Inf. Then only one of reversion and symptoms can happen.
+
+# 3rd Aug (LH)
+
+Non-test-based enrolment:
+
+Considered this for a long time and did some wider reading. Cobelens does the following: "In the Mixed trial, the age-specific proportions IGRA-positive and negative were assumed to reflect those of the population, i.e., enrolment was population representative". Kristin suggested something similar: "Could you base p(infection) on country-specific IGRA positivity prevalence by age?". I think this is what we do already, implicitly (encoded by the fitted force of infection). We enrol everyone who is asymptomatic and the right age, and continually recruit until we observe 50 disease endpoints (those individuals whose tsymp is within three years of the enrolment age).
+
+In conclusion, I think no changes are needed to the non-test-based enrolment model.

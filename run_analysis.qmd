@@ -544,14 +544,20 @@ Three scenarios using `sim_stoch_notest`: standard ages (15-49), younger ages (1
 plan(multisession, workers=8)
 
 countries_7b      <- c("South Africa", "India", "Kenya")
-foi_structures_7b <- c("uniform_1", "uniform_2", "uniform_3", "uniform_4", "uniform_5")
-p_slow_7b         <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
+p_slow_structures_7b <- list(
+  "uniform_95"    = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
+  "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
+  "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high")
+)
+p_revert_7b <- list(
+  "South Africa" = Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected),
+  "Kenya"        = Dagnew_reversion_data %>% filter(country=="Kenya")        %>% pull(prob_of_reversion_once_infected),
+  "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh")   %>% pull(prob_of_reversion_once_infected))
 mu_slow_7b        <- define_mu_slow("0.003")
 agedists_7b       <- setNames(lapply(countries_7b, function(c) extract_age_distribution(unwpp, c)), countries_7b)
 
 # Build base parameter list
 pars_7b <- pars_lit_igra
-pars_7b$p_slow  <- p_slow_7b
 pars_7b$mu_slow <- mu_slow_7b
 
 # Flat grid: scenario x country x FOI x rep
@@ -559,8 +565,12 @@ scenarios_7b <- tibble(scenario = c("no test standard", "no test young", "no tes
                        minage   = c(15, 12, 6),
                        maxage   = c(49, 34, 99))
 
-sim_grid_7b <- scenarios_7b %>%
-  expand_grid(country = countries_7b, foi_structure = foi_structures_7b, rep = 1:25)
+sim_grid_7b <- crossing(
+  bind_rows(tibble(country="South Africa", foi_structure="uniform_6", slow_structure="Vynnycky-high"),
+    tibble(country="Kenya", foi_structure="uniform_3", slow_structure=c("uniform_95","Vynnycky-1997")),
+    tibble(country="India", foi_structure="uniform_2", slow_structure=c("uniform_95","Vynnycky-1997"))),
+  scenarios_7b,
+  rep = 1:25)
 
 with_progress({
   p <- progressr::progressor(steps=nrow(sim_grid_7b))
@@ -569,6 +579,8 @@ with_progress({
     pars_i$rho    <- define_foi_by_age(sim_grid_7b$foi_structure[i])
     pars_i$minage <- sim_grid_7b$minage[i]
     pars_i$maxage <- sim_grid_7b$maxage[i]
+    pars_i$p_slow   <- p_slow_structures_7b[[sim_grid_7b$slow_structure[i]]]
+    pars_i$p_revert <- p_revert_7b[[sim_grid_7b$country[i]]]
     agedist_i     <- agedists_7b[[sim_grid_7b$country[i]]]
     out           <- sim_stoch_notest(pars_i, casetarget=50, agedist=agedist_i, 
                                       households = (sim_grid_7b$scenario[i] == "no test household"))
@@ -577,13 +589,17 @@ with_progress({
       scenario      = sim_grid_7b$scenario[i],
       country       = sim_grid_7b$country[i],
       foi_structure = sim_grid_7b$foi_structure[i],
+      slow_structure  = sim_grid_7b$slow_structure[i],
       rep           = sim_grid_7b$rep[i],
       n_enrolled   = out$n_enrolled,
       n_fast        = out$n_fast,
-      n_cases        = out$n_cases,
+      n_trial_cases = out$n_trial_cases,
       n_overall     = out$n_overall,
-      n_infected    = out$n_infected
-    )
+      n_infected    = out$n_infected,
+      inf_prev_15to24 = out$inf_prev_15to24,
+      inf_prev_25to34 = out$inf_prev_25to34,
+      minage = sim_grid_7b$minage[i],
+      maxage = sim_grid_7b$maxage[i])
   }, future.seed=TRUE)
 })
 
@@ -591,7 +607,7 @@ notest_df_7b <- bind_rows(notest_list_7b)
 
 #' Summarise over reps: median + 10th/90th percentile
 notest_summary_7b <- notest_df_7b %>%
-  group_by(scenario, country, foi_structure) %>%
+  group_by(scenario, country, foi_structure, slow_structure) %>%
   summarise(
     n_enrolled_med = median(n_enrolled),
     n_enrolled_lo  = quantile(n_enrolled, 0.1),
@@ -603,58 +619,22 @@ notest_summary_7b <- notest_df_7b %>%
   )
 write.csv(notest_summary_7b, file="output/notest_results.csv", row.names=FALSE)
 
-#' Plot: x = scenario, facet = country, line = foi
-fig_7b <- notest_df_7b %>% 
-  mutate(country  = factor(country, levels=countries_7b),
-         scenario = factor(scenario, levels=c("no test standard", "no test young", "no test household")),
-         foi_structure = factor(foi_structure, levels=foi_structures_7b)) %>%
-  filter(!(country=="Kenya" & foi_structure %in% c("uniform_1", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
-  filter(!(country=="India" & foi_structure %in% c("uniform_4", "uniform_5"))) %>%  # filter out foi's that do not give plausible outputs
-  filter(!(country=="South Africa" & foi_structure %in% c("uniform_1", "uniform_2", "uniform_3"))) %>% # filter out foi's that do not give plausible outputs
-  ggplot(aes(x=scenario, y=n_enrolled, fill=foi_structure)) +
+#' Plot: x = scenario, facet = country, line = p_f
+fig_7b <- notest_df_7b %>%
+  mutate(country       = factor(country, levels=countries_7b),
+         scenario      = factor(scenario, levels=c("no test standard","no test young","no test household")),
+         slow_structure = factor(slow_structure, levels=names(p_slow_structures_7b)),
+         n_enrolled_1  = n_enrolled / n_trial_cases) %>%
+  ggplot(aes(x=scenario, y=n_enrolled_1, fill=slow_structure)) +
   geom_boxplot(coef=Inf) +
-  scale_fill_brewer(palette = "Set1") +
+  scale_fill_brewer(palette="Set1",
+                    labels=c("uniform_95"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")) +
   facet_wrap(~country, nrow=1) +
   theme_classic() +
   theme(strip.background=element_blank(), axis.text.x=element_text(angle=25, hjust=1)) +
-  labs(x=NULL, y="Enrolled (for 50 cases)", fill="Force of infection")
+  labs(x=NULL, y="Number enrolled (for 1 case)", fill="p_f")
 fig_7b
-ggsave(fig_7b, file="figures/7b_notest_scenarios.pdf", width=7.29, height=4.51)
-
-# #' Epidemiological benchmarks
-# combos_7b    <- sim_grid_7b %>% distinct(scenario, country, foi_structure, minage, maxage) 
-# benchmarks_7b <- tibble()
-# for (i in 1:nrow(combos_7b)) {
-#   pars_i        <- pars_7b
-#   pars_i$rho    <- define_foi_by_age(combos_7b$foi_structure[i])
-#   pars_i$minage <- combos_7b$minage[i]
-#   pars_i$maxage <- combos_7b$maxage[i]
-# 
-#   stoch_i  <- notest_df_7b %>%
-#     filter(scenario==combos_7b$scenario[i], country==combos_7b$country[i], foi_structure==combos_7b$foi_structure[i]) %>%
-#     select(rep, n_fast, n_cases, n_overall, n_infected)
-# 
-#   reps_i     <- unique(stoch_i$rep)
-#   cases_vec  <- sapply(reps_i, function(r) calculate_case_incidence_at_time_of_recruitment_from_model(stoch_i, pars=pars_i, my_rep=r))
-#   inf_vec1  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_15to24"])
-#   inf_vec2  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r, sig=80)["inf_prev_25to34"])
-#   ARTI_vec   <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_i, pars=pars_i, my_rep=r))
-# 
-#   benchmarks_7b <- bind_rows(benchmarks_7b, tibble(
-#     scenario      = combos_7b$scenario[i],
-#     country       = combos_7b$country[i],
-#     foi_structure = combos_7b$foi_structure[i],
-#     inf_prev_15to24 = median(inf_vec1),
-#     inf_prev_25to34 = median(inf_vec2),
-#     ARTI          = median(ARTI_vec),
-#     cases_per100k = median(cases_vec)
-#   ))
-# }
-# 
-# benchmarks_7b <- benchmarks_7b %>%
-#   mutate(conditions_met = TRUE)  # TODO: fill in conditions per scenario/country
-# 
-# write.csv(benchmarks_7b, file="output/notest_benchmarks.csv", row.names=FALSE)
+ggsave(fig_7b, file="figures/7b_notest_scenarios.png", width=7.29, height=4.51)
 ```
 
 ## 8 Match analytic & stochastic (on non-age-varying params)
