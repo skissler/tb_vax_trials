@@ -29,7 +29,6 @@ global_TB_inc_report <- read.csv(file = "data/TB_burden_age_sex_2026-02-20.csv")
   mutate(pop = unlist(unname(mapply(get_pop, age_group, country, MoreArgs = list(unwpp = unwpp))))) %>%  # append population
   mutate(inc = cases/pop, inc_lo=cases_lo/pop, inc_hi=cases_hi/pop) %>%  # compute incidence
   select(country, year, age_group, inc, inc_lo, inc_hi) %>% numericize(age_group) %>% arrange(country, age_group)  # expand to single-year ages
-#ARTI_by_age_studies <- read.csv(file="data/ARTI-by-age-estimates-from-literature_2010-2026.csv") %>% select(-notes) %>% numericize(age) %>% impute_ARTI_by_age()
 progressor_type_by_age_studies <- read.csv(file="data/progressor-type-by-age-estimates-from-literature.csv") %>%
   numericize(age) %>% impute_probability_of_being_slow()
 

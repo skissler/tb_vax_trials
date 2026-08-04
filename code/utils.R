@@ -69,23 +69,6 @@ p_asymp_given_age <- function(   # Used in calculating no. needed to screen (pag
 	return(out)
 }
 
-p_inf_and_type_given_asymp_and_age <- function(  # Used in calculating no. needed to screen and to enroll (page 14/~17)  # Unused in code
-	prog_type, age, sigma, p_slow, foi, prograte_slow, prograte_fast){
-	  
-	if (!(prog_type %in% c("slow", "fast"))) stop("Invalid prog_type")
-
-	# Calculate the joint probability, i.e. 
-	# P(infected in [a, a-sigma], type, asymp at age a)
-	num <- p_inf_and_type_and_asymp_given_age(prog_type=prog_type, age=age, sigma=sigma, p_slow=p_slow, foi=foi, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
-
-	# Calculate the marginal probability of being asymptomatic at age a: 
-	den <- p_asymp_given_age(age=age, p_slow=p_slow, foi=foi, prograte_slow=prograte_slow, prograte_fast=prograte_fast)
-
-	out <- num / den
-	
-	return(out)
-}
-
 # Age structure functions
 extract_age_distribution <- function(df, method="uniform"){
   if (method=="uniform") {
@@ -94,7 +77,7 @@ extract_age_distribution <- function(df, method="uniform"){
   } else if (method %in% df$country) {
     agedist <- df %>% filter(country==method) %>% select(-country) %>% unlist()
   } else {
-    print("method must be \"uniform\" or any UN-recognised country")
+    stop("extract_age_distribution: method must be \"uniform\" or any UN-recognised country")
   }
   
   agedist <- agedist/sum(agedist)
@@ -107,7 +90,7 @@ extract_incidence_by_age <- function(df, method="uniform"){
   } else if (method %in% df$country) {
     inc_by_age <- df %>% filter(country==method) %>% pull(inc)
   } else {
-    print("method must be \"uniform\" or any UN-recognised country")
+    stop("extract_incidence_by_age: method must be \"uniform\" or any UN-recognised country")
   }
   
   names(inc_by_age) <- 0:99
@@ -144,7 +127,7 @@ extract_ARTI_by_age <- function(df, method="uniform", lo=F) {
   } else if (method %in% unique(df$country)) {
     ARTI_by_age <- df %>% filter(country==method) %>% pull(ARTI)
   } else {
-    print("method must be \"uniform\" or any country from `unique(ARTI_by_age_studies$country)`")
+    stop("extract_ARTI_by_age: method must be \"uniform\" or any country from `unique(ARTI_by_age_studies$country)`")
   }
   
   names(ARTI_by_age) <- 0:99
@@ -225,7 +208,8 @@ define_mu_slow <- function(method) {
   } else if (method=="0.003") {
     mu_slow=0.003
   } else if (method=="Vynnycky") {
-    print("Functionality not yet added for Vynnycky (i.e. age-varying mu_slow)")
+    message("Functionality not yet added for Vynnycky (i.e. age-varying mu_slow) - returning NA")
+    mu_slow <- NA
   } else {
     message("define_mu_slow: unrecognised method '", method, "' - returning NA")
     mu_slow <- NA
@@ -262,8 +246,6 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
   # Fraction of fast inf and slow inf individuals expected to progress to disease during trial
   fast_endpt_fraction <- 1 - exp(-pars$mu_fast * pars$trial_length)
   slow_endpt_fraction <- 1 - exp(-pars$mu_slow * pars$trial_length)
-  print(fast_endpt_fraction)
-  print(slow_endpt_fraction)
 
   analytical_df <- vector("list", length(sigmavec))
   counter <- 1
@@ -325,10 +307,6 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	eligible_probs <- agedist[as.character(eligible_ages)]
 	prog_types     <- c("slow","fast")
 	
-	# # Pre-compute fraction of fast inf and slow inf individuals expected to progress to disease during trial - currently unused
-	# fast_endpt_fraction <- (1 - exp(-(mu_fast + mu_revert2) * trial_length))*mu_fast/(mu_fast + mu_revert2)
-	# slow_endpt_fraction <- (1 - exp(-(mu_slow + mu_revert2) * trial_length))*mu_slow/(mu_slow + mu_revert2)
-	
 	while(n_trial_cases < casetarget){
 	  # Grab their age from the age distribution
 	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
@@ -380,7 +358,6 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 				  # They were infected in past sigma years and haven't reverted yet, so test positive. Enrol!
 				  n_enrolled <- n_enrolled + 1
 				  if(progressor_type=="fast") {n_fast <- n_fast + 1}
-				  # exp_trial_cases <- fast_endpt_fraction*n_fast + slow_endpt_fraction*(n_enrolled - n_fast)  # expected no of cases during trial - exponential race method for interest
 				  if(tsymp > age & tsymp <= age + trial_length) n_trial_cases <- n_trial_cases + 1  # record actual no of trial cases that would occur
 				}
 			}
@@ -414,8 +391,6 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     # Initialize tracking variables
     n_overall <- 0
     n_enrolled <- 0
-    n_fast <- 0
-    n_slow <- 0
     n_infected <- 0  # only used for calculating ARTI
     n_trial_cases <- 0
     n_overall_15to24 <- 0  # only used for estimating inf prev
@@ -592,8 +567,7 @@ sim_stoch_over_sigma <- function(pars, sigmavec, casetarget=50, agedist, reps=25
 	  p()  # report progress
 	  list(sigma=grid$sigma[i], rep=grid$rep[i],
 	    n_tested=stoch_output$n_tested, n_enrolled=stoch_output$n_enrolled,
-	    n_fast=stoch_output$n_fast, exp_trial_cases=stoch_output$exp_trial_cases, 
-	    n_trial_cases=stoch_output$n_trial_cases, n_overall=stoch_output$n_overall,
+	    n_fast=stoch_output$n_fast, n_trial_cases=stoch_output$n_trial_cases, n_overall=stoch_output$n_overall,
 	    inf_prev_15to24=stoch_output$inf_prev_15to24, inf_prev_25to34=stoch_output$inf_prev_25to34)
 	}, future.seed=T)  # future.seed does something important (each core does its own indep random number generation)
 	
