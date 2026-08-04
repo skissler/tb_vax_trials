@@ -17,7 +17,8 @@ library(progressr)
 library(countrycode)
 library(zoo)
 source('code/utils.R')
-plan(multisession, workers=10)  # use multiple cores for speed
+n_workers <- 8  # shared worker count for all plan(multisession, ...) calls below
+plan(multisession, workers=n_workers)  # use multiple cores for speed
 
 # Extract and pre-process data sets
 unwpp <- read_excel("data/WPP2024_POP_F01_1_POPULATION_SINGLE_AGE_BOTH_SEXES.xlsx", skip = 16) %>%  # populations from UNWPP
@@ -37,6 +38,13 @@ Dagnew_reversion_data <- left_join(read.csv("data/Dagnew_2026_IGRA_status_at_day
   select(country, site_no, N_D1, n_positive_D1, N_M12, reversion_n) %>%
   group_by(country) %>% summarise(across(c(N_D1, n_positive_D1, N_M12, reversion_n), sum)) %>%  # summing across sites
   mutate(prob_of_reversion_once_infected = reversion_n / (n_positive_D1*N_M12/N_D1))  # probability of reverting once infected = no of reversions / approx no of initial positives who completed the study
+
+# Infection prevalence by age, for fitting/benchmarking (used in chunks 6, 7a)
+Dagnew_positivity_data <- read.csv("data/Dagnew_2026_IGRA_positivity_by_age_table_s5.csv") %>%
+  select(country, site_no, age_group, pct_positive, ci_lo_positive, ci_hi_positive) %>%
+  mutate(across(c(pct_positive, ci_lo_positive, ci_hi_positive), ~ .x / 100)) %>%  # convert % to proportion
+  group_by(country, age_group) %>% summarise(min_positivity = min(ci_lo_positive), max_positivity = max(ci_hi_positive)) %>%
+  ungroup()
 ```
 
 ## 2. define age structure for the model e.g. uniform
@@ -104,28 +112,6 @@ pars_lit_igra <- list(
 	trial_length=3) # taken from above
 ```
 
-## 4. simulate trials under m72IIb conditions (analytic and stochastic approaches)
-
-```{r}
-#| label: simulate_with_m72IIb
-#| eval: FALSE
-
-#' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
-with_progress({
-  stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, casetarget=50, agedist=agedist, reps=1)  ## NB: THIS JUST USES sim_stoch() NOT sim_stoch_trial() - MIGHT WANT TO CHANGE
-})
-#stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")  # uniform agedist
-
-#' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
-analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.1), casetarget=50, agedist=agedist)
-
-#' Plot all results
-fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                           cols=c("n_tested","n_enrolled","n_overall")) + 
-	labs(title="M72/AS01E trial emulation", subtitle=fig_labels)
-fig_stochastic_analytic_m72IIb
-ggsave(fig_stochastic_analytic_m72IIb, file=paste0("figures/stochastic_analytic_m72IIb_",fig_name,".png"), width=7.29, height=4.51)
-```
 
 ## 4b. parameter fitting: m72IIb trial
 
@@ -141,7 +127,6 @@ target_cases    <- 52
 foi_m72IIb  <- make_foi(3,6,7,6,5)
 slow_structures_m72IIb <- c("base", "min", "max", "0.003")
 p_slow_m72IIb_vals     <- seq(0.5, 1.0, by=0.05)
-p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997")
 reps <- 25
 
 # Build a flat grid of all parameter combinations x reps
@@ -166,7 +151,7 @@ with_progress({
     pars_fit$mu_slow <- define_mu_slow(param_grid$slow_structure[i])
     pars_fit$rho     <- foi_m72IIb
     pars_fit$p_slow <- if (param_grid$p_slow_label[i] == "Vynnycky-1997") {
-      p_slow_lit 
+      extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997") 
       } else if (param_grid$p_slow_label[i] == "Vynnycky-high") {
         extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high")
       } else {
@@ -203,7 +188,6 @@ m72IIb_fit_trial <- trial_results %>%
   ) %>%
   mutate(case_target_met = between(n_trial_cases_med, target_cases * 0.8, target_cases * 1.2))
 
-head(m72IIb_fit_trial)
 write.csv(m72IIb_fit_trial, file="output/m72IIb_fit_results.csv", row.names=FALSE)
 ```
 
@@ -216,7 +200,7 @@ write.csv(m72IIb_fit_trial, file="output/m72IIb_fit_results.csv", row.names=FALS
 pars_lit_igra$rho <- make_foi(3,6,7,6,5)
 #' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=1)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=25)
 })
 #stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")  # uniform agedist
 
@@ -229,17 +213,10 @@ fig_stochastic_analytic_lit
 ggsave(fig_stochastic_analytic_lit, file=paste0("figures/stochastic_analytic_lit_",fig_name,".png"), width=7.29, height=4.51)
 
 #' Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
-from_model <- tibble()
-for (i in 1:25) {
-  cases <- calculate_case_incidence_at_time_of_recruitment_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-  from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
-                                             inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
-                                             ARTI = ARTI_and_prev["ARTI"], cases= cases))
-}
+from_model <- summarise_case_incidence_and_ARTI(stochastic_df_lit, pars=pars_lit_igra, reps=25, sig=80)
 ```
 
-## 6. (Optional) Parameter fitting: simulate trials under literature conditions (stochastic approach), for different parameter values
+## 6. (Optional) Parameter fitting: simulate South Africa under literature conditions (stochastic approach), for different parameter values
 
 Note: run code snippets 1-3 first.
 
@@ -278,15 +255,8 @@ for (progression_structure in progression_structures) {
     with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=c(80), casetarget=50, agedist=agedist, reps=reps)})
     
     # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
-    from_model <- tibble()
-    for (i in 1:reps) {
-      cases <- calculate_case_incidence_at_time_of_recruitment_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-      ARTI_and_prev <- estimate_ARTI_from_model(stochastic_df_lit, pars=pars_lit_igra, my_rep=i, sig=80)
-      from_model <- bind_rows(from_model, tibble(i = i, inf_prev_15to24 = ARTI_and_prev["inf_prev_15to24"], 
-                                             inf_prev_25to34 = ARTI_and_prev["inf_prev_25to34"], 
-                                             ARTI = ARTI_and_prev["ARTI"], cases= cases))
-    }
-    summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure, 
+    from_model <- summarise_case_incidence_and_ARTI(stochastic_df_lit, pars=pars_lit_igra, reps=reps, sig=80)
+    summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure,
                                                      foi_structure=foi_structure, 
                                                      inf_prev_15to24=median(stochastic_df_lit$inf_prev_15to24),  # assuming sigmavec=c(80)
                                                      inf_prev_25to34=median(stochastic_df_lit$inf_prev_25to34),  # assuming sigmavec=c(80)
@@ -295,12 +265,7 @@ for (progression_structure in progression_structures) {
   }
 }
 
-# extract infection prevalence data from Dagnew et al. for fitting
-Dagnew_positivity_data <- read.csv("data/Dagnew_2026_IGRA_positivity_by_age_table_s5.csv") %>%
-  select(country, site_no, age_group, pct_positive, ci_lo_positive, ci_hi_positive) %>%
-  mutate(across(c(pct_positive, ci_lo_positive, ci_hi_positive), ~ .x / 100)) %>%  # convert % to proportion
-  group_by(country, age_group) %>% summarise(min_positivity = min(ci_lo_positive), max_positivity = max(ci_hi_positive)) %>%
-  ungroup()
+# Extract South Africa positivity bounds for fitting criteria (Dagnew_positivity_data loaded in setup chunk)
 dagnew_age20_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="15-24") %>% pull(min_positivity)
 dagnew_age20_max <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="15-24") %>% pull(max_positivity)
 dagnew_age30_min <- Dagnew_positivity_data %>% filter(country=="South Africa" & age_group=="25-34") %>% pull(min_positivity)
@@ -313,6 +278,7 @@ end.time <- Sys.time()
 ```
 
 ```{r}
+#| label: parameter_fit_plot
 #| eval: FALSE
 # plot parameter fitting results
 slow_labels <- c(
@@ -368,6 +334,29 @@ summary_table %>%
 
 Note: run code snippets 1-3 first.
 
+Shared setup for the country-scenario chunks below (7a-7c): country list, age distributions, p_revert by country, and the 3 p_slow structures used by 7a/7b. Run this once before 7a, 7b, or 7c.
+
+```{r}
+#| label: 7_scenarios_setup
+#| eval: FALSE
+
+countries_scenarios <- c("South Africa", "Kenya", "India")
+
+# Pre-compute age distributions — keeps unwpp out of the future_lapply workers
+agedists_scenarios <- setNames(lapply(countries_scenarios, function(c) extract_age_distribution(unwpp, c)), countries_scenarios)
+
+p_revert_by_country <- list(
+  "South Africa" = Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected),
+  "Kenya"        = Dagnew_reversion_data %>% filter(country=="Kenya")        %>% pull(prob_of_reversion_once_infected),
+  "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh")   %>% pull(prob_of_reversion_once_infected))  # Bangladesh used as proxy for India
+
+# Shared p_slow structures for 7a/7b (7c uses a single fixed p_slow per country instead)
+p_slow_structures_scenarios <- list(
+  "uniform_95"    = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
+  "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
+  "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"))
+```
+
 ## 7a. Varied vaccine trial sites
 
 Compare trial recruitment requirements across three country populations (South Africa, India, Kenya) under a range of FOI structures and p_slow values. Parameters held constant: minage, maxage, sigma range, trial_length, mu_fast, mu_slow (0.003). Age distribution, FOI, and p_slow vary by scenario.
@@ -376,24 +365,18 @@ Compare trial recruitment requirements across three country populations (South A
 #| label: 7a_varied_sites
 #| eval: FALSE
 
-plan(multisession, workers=8)  # reset worker pool in case of stale state from previous run
+plan(multisession, workers=n_workers)  # reset worker pool in case of stale state from previous run
 
-countries_7a      <- c("South Africa", "Kenya", "India")
+countries_7a      <- countries_scenarios
 foi_structures_7a <- c("uniform_1", "uniform_2", "uniform_3", "uniform_4", "uniform_5", "uniform_6", "uniform_7", "uniform_8", "uniform_9", "uniform_10")
-p_slow_structures_7a <- list(
-  "uniform_95"     = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
-  "Vynnycky-1997"  = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
-  "Vynnycky-high"  = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"))
+p_slow_structures_7a <- p_slow_structures_scenarios
 
 # Pre-compute age distributions — keeps unwpp out of the future_lapply workers
-agedists_7a <- setNames(lapply(countries_7a, function(c) extract_age_distribution(unwpp, c)), countries_7a)
+agedists_7a <- agedists_scenarios
 
 # Build base parameter list (shared across all scenarios)
 pars_7a <- pars_lit_igra
-p_revert_7a <- list(
-  "South Africa" = Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected),
-  "Kenya"        = Dagnew_reversion_data %>% filter(country=="Kenya") %>% pull(prob_of_reversion_once_infected),
-  "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh") %>% pull(prob_of_reversion_once_infected))  # Bangladesh used as proxy for India
+p_revert_7a <- p_revert_by_country
 
 # Flat grid over all combinations: country x FOI x sigma x rep
 sim_grid_7a <- bind_rows(tibble(country="India",        foi_structure=c("uniform_1","uniform_2")),
@@ -492,12 +475,7 @@ summary_table_7a <- stoch_df_7a %>%
     cases_per100k   = median(cases_per100k),
     .groups = "drop")
 
-# Literature for criteria
-Dagnew_positivity_data <- read.csv("data/Dagnew_2026_IGRA_positivity_by_age_table_s5.csv") %>%
-  select(country, site_no, age_group, pct_positive, ci_lo_positive, ci_hi_positive) %>%
-  mutate(across(c(pct_positive, ci_lo_positive, ci_hi_positive), ~ .x / 100)) %>%  # convert % to proportion
-  group_by(country, age_group) %>% summarise(min_positivity = min(ci_lo_positive), max_positivity = max(ci_hi_positive)) %>% ungroup()
-
+# Literature for criteria (Dagnew_positivity_data loaded in setup chunk)
 dagnew_bounds_15to24 <- Dagnew_positivity_data %>%
   filter(country %in% countries_7a, age_group == "15-24") %>%
   select(country, min_positivity, max_positivity) %>%
@@ -540,20 +518,13 @@ Three scenarios using `sim_stoch_notest`: standard ages (15-49), younger ages (1
 #| label: 7b_notest_scenarios
 #| eval: FALSE
 
-plan(multisession, workers=8)
+plan(multisession, workers=n_workers)
 
-countries_7b      <- c("South Africa", "Kenya", "India")
-p_slow_structures_7b <- list(
-  "uniform_95"    = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
-  "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
-  "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high")
-)
-p_revert_7b <- list(
-  "South Africa" = Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected),
-  "Kenya"        = Dagnew_reversion_data %>% filter(country=="Kenya")        %>% pull(prob_of_reversion_once_infected),
-  "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh")   %>% pull(prob_of_reversion_once_infected))
+countries_7b      <- countries_scenarios
+p_slow_structures_7b <- p_slow_structures_scenarios
+p_revert_7b       <- p_revert_by_country
 mu_slow_7b        <- define_mu_slow("0.003")
-agedists_7b       <- setNames(lapply(countries_7b, function(c) extract_age_distribution(unwpp, c)), countries_7b)
+agedists_7b       <- agedists_scenarios
 
 # Build base parameter list
 pars_7b <- pars_lit_igra
@@ -644,19 +615,16 @@ Combines three test-based strategies (sigma = 6 months, 2 years, ~lifetime) with
 #| label: 7c_main_combined
 #| eval: FALSE
 
-plan(multisession, workers=8)
+plan(multisession, workers=n_workers)
 
-countries_7c <- c("South Africa", "Kenya", "India")
+countries_7c <- countries_scenarios
 p_slow_by_country_7c <- list(
   "South Africa" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"),
   "Kenya"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
   "India"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"))
-p_revert_7c <- list(
-  "South Africa" = Dagnew_reversion_data %>% filter(country=="South Africa") %>% pull(prob_of_reversion_once_infected),
-  "Kenya"        = Dagnew_reversion_data %>% filter(country=="Kenya")        %>% pull(prob_of_reversion_once_infected),
-  "India"        = Dagnew_reversion_data %>% filter(country=="Bangladesh")   %>% pull(prob_of_reversion_once_infected))  # Bangladesh used as proxy for India
+p_revert_7c <- p_revert_by_country
 foi_by_country_7c <- c("South Africa"="uniform_6", "Kenya"="uniform_3", "India"="uniform_2")
-agedists_7c <- setNames(lapply(countries_7c, function(c) extract_age_distribution(unwpp, c)), countries_7c)
+agedists_7c <- agedists_scenarios
 
 # Build base parameter list
 pars_7c <- pars_lit_igra

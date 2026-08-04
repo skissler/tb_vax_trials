@@ -84,54 +84,11 @@ extract_age_distribution <- function(df, method="uniform"){
   return(agedist)
 }
 
-extract_incidence_by_age <- function(df, method="uniform"){
-  if (method=="uniform") {
-    inc_by_age <- rep(0.0025, 100)
-  } else if (method %in% df$country) {
-    inc_by_age <- df %>% filter(country==method) %>% pull(inc)
-  } else {
-    stop("extract_incidence_by_age: method must be \"uniform\" or any UN-recognised country")
-  }
-  
-  names(inc_by_age) <- 0:99
-  return(inc_by_age)
-}
-
 get_pop <- function(x, country, unwpp) {
   if (country=="occupied Palestinian territory, including east Jerusalem") country <- "State of Palestine"
   unwpp_row <- unwpp[unwpp$country == country, ]
   ages <- as.character(pull_first(x):pull_last(x))
   as.numeric(rowSums(unwpp_row[, ages]))
-}
-
-impute_ARTI_by_age <- function(df) {
-  df %>%
-    group_by(study, country) %>%
-    tidyr::complete(age = 0:99) %>%
-    mutate(
-      imputed = is.na(ARTI),
-      ARTI = zoo::na.approx(ARTI, x = age, rule = 2)
-    ) %>%
-    ungroup()
-}
-
-extract_ARTI_by_age <- function(df, method="uniform", lo=F) {
-  if (method=="South Africa" & lo==F) {  # specify which South Africa data to use (Wood or Ncayiyana)
-    df <- df %>% filter(study=="Wood-2010") 
-  } else if (method=="South Africa" & lo==T) {
-    df <- df %>% filter(study=="Ncayiyana-2016")
-  }
-  
-  if (method=="uniform") {
-    ARTI_by_age <- rep(0.04, 100)
-  } else if (method %in% unique(df$country)) {
-    ARTI_by_age <- df %>% filter(country==method) %>% pull(ARTI)
-  } else {
-    stop("extract_ARTI_by_age: method must be \"uniform\" or any country from `unique(ARTI_by_age_studies$country)`")
-  }
-  
-  names(ARTI_by_age) <- 0:99
-  return(ARTI_by_age)
 }
 
 impute_probability_of_being_slow <- function(df) {
@@ -154,7 +111,7 @@ extract_probability_of_being_slow <- function(df, method="uniform"){
     p_fast_temp <- c(rep(0.04,11), 0.055, 0.07, 0.085, 0.10, 0.115, 0.13, 0.145, 0.16, 0.175, rep(0.19,80))  # 4% for ages 0-10, then linearly increasing, then 19% for age 20+
     p_slow_by_age <- 1 - p_fast_temp
   } else {
-    print("method must be \"uniform\" or \"Vynnycky-high\" or any study from `unique(progressor_type_by_age_studies$study)`")
+    stop("extract_probability_of_being_slow: method must be \"uniform\" or \"Vynnycky-high\" or any study from `unique(progressor_type_by_age_studies$study)`")
   }
   
   names(p_slow_by_age) <- 0:99
@@ -222,13 +179,27 @@ compute_survival_fn <- function(rho) {  # no reversion!
   # NB: survival_fn[a]  = P(not infected by age a)
   # NB: survival_pmf[a] = P(first infected during year a-1 to a)
   # NB: survival_pmf[101] = P(never infected during lifetime)
-  survival_fn  <- exp(-cumsum(rho[1:100]))
-  survival_pmf <- c(1, survival_fn[-100]) - survival_fn
-  survival_pmf <- c(survival_pmf, survival_fn[100])
+  survival_fn  <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
+  survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
+  survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
   list(survival_fn=survival_fn, survival_pmf=survival_pmf)
 }
 
 # Simulate functions
+# ---------------------------------------------------------------------------
+# `pars` schema, used throughout sim_stoch*() and sim_analytic_over_sigma() via with(as.list(pars), ...): 
+# Every pars field must be present and correctly named, or simulation loop will error (e.g. "missing value where TRUE/FALSE needed").
+#   minage        numeric   youngest trial-eligible age (years)
+#   maxage        numeric   oldest trial-eligible age (years)
+#   rho           num[100]  FOI by single-year age, names "0":"99"        (see make_foi(), define_foi_by_age())
+#   p_slow        num[100]  P(slow progressor) by age at infection, names "0":"99"  (see extract_probability_of_being_slow())
+#   mu_slow       numeric   rate of progression to disease, slow progressors  (see define_mu_slow())
+#   mu_fast       numeric   rate of progression to disease, fast progressors
+#   p_revert      numeric   P(IGRA/TST reversion | ever infected)          (see Dagnew_reversion_data)
+#   mu_revert     numeric   rate of reversion, for those who do revert
+#   sigma         numeric   test/diagnostic window in years (unused by sim_stoch_notest)
+#   trial_length  numeric   follow-up duration (years) for counting trial cases
+# ---------------------------------------------------------------------------
 sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
   # Restrict to eligible age groups
   eligible <- agedist[names(agedist) %in% pars$minage:pars$maxage]
@@ -282,6 +253,53 @@ sim_analytic_over_sigma <- function(pars, sigmavec, casetarget=50, agedist){
   return(analytical_df)
 }
 
+simulate_individual <- function(eligible_ages, eligible_probs, survival_pmf, rho,
+                                 p_slow, mu_slow, mu_fast, p_revert, mu_revert, households=F) {
+  # Function simulates one trial participant: draws age, infection time, progression type, reversion status, and tsymp/trev selection.
+  # Grab their age from the age distribution
+  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
+  
+  # Simulate their time to infection, using survival_pmf probabilities
+  tinf <- sample(0:100, size=1, prob=survival_pmf)
+  if (tinf < 100) {
+    tinf <- tinf + runif(1)  # continuous within that year
+  } else {
+    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
+  }
+  
+  # HOUSEHOLDS step
+  if (households) {
+    if (tinf > age) {  # not already infected
+      household_infection <- rbinom(1, size=1, prob=0.26)  # true or false coin flip
+      if (household_infection == TRUE) tinf <- age  # new tinf is current age
+    } else if (tinf <= age) {
+      # do nothing
+    }
+  }
+  
+  # Grab their (tinf-dependent) progression status
+  if (tinf < 100) {
+    prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
+  } else {
+    prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
+  }
+  progressor_type <- sample(c("slow","fast"), size=1, prob=prog_probs)
+  
+  # Grab their reversion status
+  reversion_status <- rbinom(1, size=1, prob=p_revert)  # true or false coin flip
+  
+  # Simulate their time to symptoms and time to reversion
+  tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
+  trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
+  # But ensure only the first process of reversion/symptoms occurs
+  tsymp <- if (tsymp > trev) Inf else tsymp
+  trev <- if (trev > tsymp) Inf else trev
+  still_infected <- (if(reversion_status==T & trev <= age) {F} else {T})
+
+  list(age=age, tinf=tinf, progressor_type=progressor_type, tsymp=tsymp, trev=trev, still_infected=still_infected)
+}
+simulate_individual <- compiler::cmpfun(simulate_individual)  # R bytecode compiler (for speed)
+
 sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	with(as.list(pars), {
 
@@ -295,59 +313,19 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 	n_overall_25to34 <- 0  # only used for estimating inf prev
 	n_infected_15to24 <- 0  # only used for estimating inf prev
 	n_infected_25to34 <- 0  # only used for estimating inf prev
-	still_infected <- 1
 
-	# Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
-	survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
-	survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
-	survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
+	# Pre-compute survival function pmf
+	survival_pmf <- compute_survival_fn(rho)$survival_pmf
 	
 	# Pre-compute some of the sampling vectors
 	eligible_ages  <- minage:maxage
 	eligible_probs <- agedist[as.character(eligible_ages)]
-	prog_types     <- c("slow","fast")
 	
 	while(n_trial_cases < casetarget){
-	  # Grab their age from the age distribution
-	  age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
-
-	  # Simulate their time to infection, using survival_pmf probabilities
-	  tinf <- sample(0:100, size=1, prob=survival_pmf)
-	  if (tinf < 100) {
-	    tinf <- tinf + runif(1)  # continuous within that year
-	  } else {
-	    tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
-	  }
+	  # Simulate individual (age, progressor_type, tinf, tsymp, trev, still_infected)
+	  list2env(simulate_individual(eligible_ages, eligible_probs, survival_pmf, rho, p_slow, mu_slow, 
+	                               mu_fast, p_revert, mu_revert, households), environment())
 	  
-	  # HOUSEHOLDS step
-	  if (households) {
-	    if (tinf > age) {  # not already infected
-	      household_infection <- rbinom(1, size=1, prob=0.26)  # true or false coin flip
-	      if (household_infection == TRUE) tinf <- age  # new tinf is current age
-	    } else if (tinf <= age) {
-	      # do nothing
-	    }
-	  }
-	  
-		# Grab their (tinf-dependent) progression status
-	  if (tinf < 100) {
-	    prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
-	  } else {
-	    prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
-	  }
-	  progressor_type <- sample(prog_types, size=1, prob=prog_probs)
-	  
-	  # Grab their reversion status
-	  reversion_status <- rbinom(1, size=1, prob=p_revert)  # true or false coin flip
-	  
-		# Simulate their time to symptoms and time to reversion
-		tsymp <- tinf + rexp(1, (if(progressor_type=="slow") {mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-		trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
-		# But ensure only the first process of reversion/symptoms occurs
-		tsymp <- if (tsymp > trev) Inf else tsymp
-		trev <- if (trev > tsymp) Inf else trev
-		still_infected <- (if(reversion_status==T & trev <= age) {F} else {T})
-		
 		# ELIGIBILITY
 		if(tsymp > age){
 			# They are asymptomatic, so let's test them: 
@@ -374,12 +352,9 @@ sim_stoch <- function(pars, casetarget=50, agedist, households=F){
 		
 		n_overall <- n_overall + 1
 	}
-
-	inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
-	inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
 	
-	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_trial_cases=n_trial_cases, n_overall=n_overall, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
-	
+	out <- list(n_tested=n_tested, n_enrolled=n_enrolled, n_fast=n_fast, n_slow=n_enrolled-n_fast, n_trial_cases=n_trial_cases, 
+	            n_overall=n_overall, inf_prev_15to24=n_infected_15to24/n_overall_15to24, inf_prev_25to34=n_infected_25to34/n_overall_25to34)
 	return(out)
 	})
 }
@@ -397,58 +372,18 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
     n_overall_25to34 <- 0  # only used for estimating inf prev
     n_infected_15to24 <- 0  # only used for estimating inf prev
     n_infected_25to34 <- 0  # only used for estimating inf prev
-    still_infected <- 1
     
     # Pre-compute survival function pmf - NB there is also a separate compute_survival_fn which does the same thing
-    survival_fn <- exp(-cumsum(rho[1:100]))  # survival fn with foi by single-year ages
-    survival_pmf <- c(1, survival_fn[-100]) - survival_fn  # prob infected during year a
-    survival_pmf <- c(survival_pmf, survival_fn[100])  # adding tail for not infected during lifetime
+    survival_pmf <- compute_survival_fn(rho)$survival_pmf
     
     # Pre-compute some of the sampling vectors
     eligible_ages  <- minage:maxage
     eligible_probs <- agedist[as.character(eligible_ages)]
-    prog_types     <- c("slow","fast")
     
     while(n_trial_cases < casetarget){
-      # Grab their age from the age distribution
-      age <- sample(eligible_ages, size=1, prob=eligible_probs)  # R normalises the subset automatically
-      
-      # Simulate their time to infection, using survival_pmf probabilities
-      tinf <- sample(0:100, size=1, prob=survival_pmf)
-      if (tinf < 100) {
-        tinf <- tinf + runif(1)  # continuous within that year
-      } else {
-        tinf <- 100 + rexp(1, rho[100])  # not infected during lifetime; assume constant foi for ages 101+?
-      }
-      
-      # HOUSEHOLDS step
-      if (households) {
-        if (tinf > age) {  # not already infected
-          household_infection <- rbinom(1, size=1, prob=0.26)  # true or false coin flip
-          if (household_infection == TRUE) tinf <- age  # new tinf is current age
-        } else if (tinf <= age) {
-          # do nothing
-        }
-      }
-      
-      # Grab their (tinf-dependent) progression status 
-      if (tinf < 100) {
-        prog_probs <- c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1])  # p_slow is a vector of age-varying probability of being slow
-      } else {
-        prog_probs <- c(p_slow[100], 1-p_slow[100])  # not infected during lifetime
-      }
-      progressor_type <- sample(prog_types, size=1, prob=prog_probs)
-      
-      # Grab their reversion status
-      reversion_status <- rbinom(1, size=1, prob=p_revert)  # true or false coin flip
-      
-      # Simulate their time to symptoms and time to reversion
-      tsymp <- tinf + rexp(1, (if(progressor_type=="slow"){mu_slow} else {mu_fast}))  # fixed rate of progression to disease
-      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
-      # But ensure only the first process of reversion/symptoms occurs
-      tsymp <- if (tsymp > trev) Inf else tsymp
-      trev <- if (trev > tsymp) Inf else trev
-      still_infected <- (if(reversion_status==T & trev <= age) {F} else {T})
+      # Simulate individual (age, progressor_type, tinf, tsymp, trev, still_infected)
+      list2env(simulate_individual(eligible_ages, eligible_probs, survival_pmf, rho, p_slow, mu_slow, 
+                                   mu_fast, p_revert, mu_revert, households), environment())
       
       # ELIGIBILITY
       if(tsymp > age){
@@ -476,17 +411,14 @@ sim_stoch_notest <- function(pars, casetarget=50, agedist, households=F){
       }
     }
     
-    inf_prev_15to24 <- n_infected_15to24 / n_overall_15to24
-    inf_prev_25to34 <- n_infected_25to34 / n_overall_25to34
-    
-    out <- list(n_enrolled=n_enrolled, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, inf_prev_15to24=inf_prev_15to24, inf_prev_25to34=inf_prev_25to34)
-    
+    out <- list(n_enrolled=n_enrolled, n_trial_cases=n_trial_cases, n_overall=n_overall, n_infected=n_infected, 
+                inf_prev_15to24=n_infected_15to24/n_overall_15to24, inf_prev_25to34=n_infected_25to34/n_overall_25to34)
     return(out)
   })
 }
 sim_stoch_notest <- compiler::cmpfun(sim_stoch_notest)  # R bytecode compiler (for speed)
 
-sim_stoch_trial <- function(pars, enrol_target, agedist) {
+sim_stoch_trial <- function(pars, enrol_target, agedist, households=F) {
   # Like sim_stoch but stops when enrol_target enrolls are reached rather than casetarget cases.
   with(as.list(pars), {
 
@@ -495,42 +427,16 @@ sim_stoch_trial <- function(pars, enrol_target, agedist) {
     n_enrolled <- 0
     n_fast      <- 0
     n_trial_cases <- 0
-    still_infected <- 1
 
-    survival_fn  <- exp(-cumsum(rho[1:100]))
-    survival_pmf <- c(1, survival_fn[-100]) - survival_fn
-    survival_pmf <- c(survival_pmf, survival_fn[100])
+    survival_pmf <- compute_survival_fn(rho)$survival_pmf
 
     eligible_ages  <- minage:maxage
     eligible_probs <- agedist[as.character(eligible_ages)]
-    prog_types     <- c("slow", "fast")
 
     while (n_enrolled < enrol_target) {
-      # Grab their age from the age distribution
-      age <- sample(eligible_ages, size=1, prob=eligible_probs)
-      
-      # Simulate their time to infection, using survival_pmf probabilities
-      tinf <- sample(0:100, size=1, prob=survival_pmf)
-      if (tinf < 100) {
-        tinf <- tinf + runif(1)
-      } else {
-        tinf <- 100 + rexp(1, rho[100])
-      }
-
-      # Grab their (tinf-dependent) progression status
-      prog_probs <- if (tinf < 100) c(p_slow[floor(tinf)+1], 1-p_slow[floor(tinf)+1]) else c(p_slow[100], 1-p_slow[100])
-      progressor_type <- sample(prog_types, size=1, prob=prog_probs)
-      
-      # Grab their reversion status
-      reversion_status <- rbinom(1, size=1, prob=p_revert)  # true or false coin flip
-      
-      # Simulate their time to symptoms and time to reversion
-      tsymp <- tinf + rexp(1, if (progressor_type=="slow") mu_slow else mu_fast)
-      trev <- (if(reversion_status==T) {tinf + rexp(1, mu_revert)} else {Inf})  # Inf = doesn't revert
-      # But ensure only the first process of reversion/symptoms occurs
-      tsymp <- if (tsymp > trev) Inf else tsymp
-      trev <- if (trev > tsymp) Inf else trev
-      still_infected <- (if(reversion_status==T & trev <= age) {F} else {T})
+      # Simulate individual (age, progressor_type, tinf, tsymp, trev, still_infected)
+      list2env(simulate_individual(eligible_ages, eligible_probs, survival_pmf, rho, p_slow, mu_slow, 
+                                   mu_fast, p_revert, mu_revert, households), environment())
       
       # ELIGIBILITY
       if (tsymp > age) {
@@ -634,10 +540,6 @@ pull_last <- function(x, life_exp=99){  # for character string x
   as.numeric(stringr::str_extract(x, "[[:digit:]\\.]+$"))
 }
 
-pull_mean <- function(x, life_exp=99){
-  (pull_first(x) + pull_last(x, life_exp)) / 2
-}
-
 # Functions outside the model, at time of recruitment
 calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
@@ -664,4 +566,16 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   inf_prev_15to24 <- unname(model_run["inf_prev_15to24"])
   inf_prev_25to34 <- unname(model_run["inf_prev_25to34"])
   return(c(ARTI = ARTI, inf_prev_15to24 = inf_prev_15to24, inf_prev_25to34 = inf_prev_25to34))
+}
+
+summarise_case_incidence_and_ARTI <- function(df, pars, reps, sig=80) {
+  # Compute case incidence and ARTI/infection-prevalence for each rep, and bind into one tibble
+  out <- lapply(1:reps, function(i) {
+    cases <- calculate_case_incidence_at_time_of_recruitment_from_model(df, pars=pars, my_rep=i, sig=sig)
+    ARTI_and_prev <- estimate_ARTI_from_model(df, pars=pars, my_rep=i, sig=sig)
+    tibble(i=i, inf_prev_15to24=ARTI_and_prev["inf_prev_15to24"],
+           inf_prev_25to34=ARTI_and_prev["inf_prev_25to34"],
+           ARTI=ARTI_and_prev["ARTI"], cases=cases)
+  })
+  bind_rows(out)
 }
