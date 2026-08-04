@@ -226,6 +226,9 @@ define_mu_slow <- function(method) {
     mu_slow=0.003
   } else if (method=="Vynnycky") {
     print("Functionality not yet added for Vynnycky (i.e. age-varying mu_slow)")
+  } else {
+    message("define_mu_slow: unrecognised method '", method, "' - returning NA")
+    mu_slow <- NA
   }
 }
 
