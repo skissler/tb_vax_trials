@@ -513,7 +513,7 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), linewidth=0.7, alpha=0.5) + 
 		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Cases"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
-		geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
+		#geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
 		labs(x="Test span (years)", y="Number (for 1 case)")
