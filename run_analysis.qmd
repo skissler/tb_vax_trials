@@ -62,7 +62,7 @@ agedist <- extract_age_distribution(unwpp, age_structure)  # population age dist
 #| label: define_params
 
 # Edit here as desired
-rho_lit <- make_foi(3,6,7,6,5)
+rho_lit <- make_foi(4,6,4,7,5)  # South Africa; best fit to Wood et al. 2010 IGRA prevalence-by-age curve among the 523 passing parameter_fit combinations
 p_slow_lit <- extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high")  # works for "uniform", "Vynnycky-1997", "Vynnycky-high"
 mu_slow_lit <- define_mu_slow("0.003")  # works for "min", "base", "0.003", "max"
 p_revert_lit <- Dagnew_reversion_data %>% filter(country==age_structure) %>% pull(prob_of_reversion_once_infected)
@@ -195,7 +195,7 @@ summary_table %>%
 #| label: simulate_with_lit
 #| eval: FALSE
 
-pars_lit$rho <- make_foi(3,6,7,6,5)
+pars_lit$rho <- make_foi(4,6,4,7,5)  # South Africa; best fit to Wood et al. 2010 (see chunk 2)
 # Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
   stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=25)
@@ -586,7 +586,7 @@ target_cases    <- 52
 pars_m72IIb <- list(
 	minage=18,  # from trial
 	maxage=49,  # from trial (up to 50.0y)
-	rho=make_foi(3,6,7,6,5),  # modelled value
+	rho=make_foi(4,6,4,7,5),  # modelled value (South Africa; best fit to Wood et al. 2010, see chunk 2)
 	p_slow=NA,  # modelled value
 	mu_slow=NA,  # assumed, informed by lit
 	mu_fast=1.5,  # from lit

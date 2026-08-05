@@ -726,3 +726,9 @@ Non-test-based enrolment:
 Considered this for a long time and did some wider reading. Cobelens does the following: "In the Mixed trial, the age-specific proportions IGRA-positive and negative were assumed to reflect those of the population, i.e., enrolment was population representative". Kristin suggested something similar: "Could you base p(infection) on country-specific IGRA positivity prevalence by age?". I think this is what we do already, implicitly (encoded by the fitted force of infection). We enrol everyone who is asymptomatic and the right age, and continually recruit until we observe 50 disease endpoints (those individuals whose tsymp is within three years of the enrolment age).
 
 In conclusion, I think no changes are needed to the non-test-based enrolment model.
+
+# 5th Aug (LH)
+
+Noticed that no test young vs no test household outputs (with uniform foi) seem unusual - more enrolleds in young. Slightly better with the age-varying foi (3-6-7-6-5) but not ideal. Investigated and motivated choosing the age-varying foi more carefully. In the end, decided to choose an foi which mapped well to the Wood 2010 curve and had a good number of cases (and had vynnycky-high p_f and 0.003 mu_s). We chose: 4-6-4-7-5.
+
+![](images/clipboard-319881090.png)
