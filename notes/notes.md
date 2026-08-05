@@ -729,6 +729,8 @@ In conclusion, I think no changes are needed to the non-test-based enrolment mod
 
 # 5th Aug (LH)
 
-Noticed that no test young vs no test household outputs (with uniform foi) seem unusual - more enrolleds in young. Slightly better with the age-varying foi (3-6-7-6-5) but not ideal. Investigated and motivated choosing the age-varying foi more carefully. In the end, decided to choose an foi which mapped well to the Wood 2010 curve and had a good number of cases (and had vynnycky-high p_f and 0.003 mu_s). We chose: 4-6-4-7-5.
+Noticed that no test young vs no test household outputs (with uniform foi) seem unusual - more enrolleds in young. Slightly better with the age-varying foi (3-6-7-6-5) but not ideal. Investigated and motivated choosing the age-varying foi more carefully - there were 523 parameter combinations that met all the thresholds. In the end, I decided to choose an foi which mapped well to the Wood et al. 2010 prevalence curve (figure attached) and had a good number of cases (and had vynnycky-high p_f and 0.003 mu_s). The foi used for South Africa is now: 4-6-4-7-5.
 
 ![](images/clipboard-319881090.png)
+
+This also motivates using age-varying foi's over uniform wherever possible. For the multi-country analysis (Kenya/India/SA), I had just been using uniform foi for speed, but that hides the no test young vs no test standard nuances. So will run some fits for Kenya and India and use an age-varying foi throughout the paper.
