@@ -244,108 +244,205 @@ p_slow_structures_scenarios <- list(
   "uniform_95"    = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"),
   "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
   "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"))
+
+# Shared benchmark thresholds by country, used for conditions_met checks in 6a (uniform sweep) and the
+# Kenya/India age-varying parameter fitting
+country_thresholds_scenarios <- tibble(
+  country       = c("South Africa", "Kenya",   "India"),
+  arti_lo       = c(0.04,           0.016,      0.00),
+  arti_hi       = c(0.06,           0.036,      0.02),
+  cases_lo      = c(242,            109,        160),
+  cases_hi      = c(571,            339,        218)
+)
 ```
 
-## 6a. Varied vaccine trial sites
+## 6a. Varied vaccine trial sites (including foi parameter fit)
 
-Compare trial recruitment requirements across three country populations (South Africa, India, Kenya) under a range of FOI structures and p_slow values. Parameters held constant: minage, maxage, sigma range, trial_length, mu_fast, mu_slow (0.003). Age distribution, FOI, and p_slow vary by scenario.
+Full age-varying FOI model fitting for Kenya and India, mirroring the South Africa fitting in chunk 4. FOI search range for each country is informed by an initial uniform sweep (Kenya: 2-5%, India: 1-4%). Parameters held constant: minage, maxage, sigma range, trial_length, mu_fast, mu_slow (0.003). Age distribution, FOI, and p_slow vary by scenario.
 
 ```{r}
-#| label: 6a_varied_sites
+#| label: 6a_varied_sites_fit
 #| eval: FALSE
 
+## First find suitable foi values for Kenya and India
 plan(multisession, workers=n_workers)  # reset worker pool in case of stale state from previous run
 
-countries_6a      <- countries_scenarios
-foi_structures_6a <- c("uniform_1", "uniform_2", "uniform_3", "uniform_4", "uniform_5", "uniform_6", "uniform_7", "uniform_8", "uniform_9", "uniform_10")
-p_slow_structures_6a <- p_slow_structures_scenarios
+countries_6a      <- c("Kenya", "India")
+p_slow_structures_6a <- c("Vynnycky-1997", "uniform")
+slow_structures <- c("base", "max", "0.003")
+reps <- 5
 
 # Pre-compute age distributions — keeps unwpp out of the future_lapply workers
-agedists_6a <- agedists_scenarios
+agedists_6a <- agedists_scenarios[countries_6a]
 
 # Build base parameter list (shared across all scenarios)
 pars_6a <- pars_lit
 p_revert_6a <- p_revert_by_country
 
+# FOI grid
+foi_grid_1 <- tibble(a0_4=1:10, a5_24=1:10, a25_34=1:10, a35_49=1:10, a50plus=1:10)  # initial uniform fits (shared)
+foi_grid_2_by_country <- list(
+  "Kenya" = expand.grid(a0_4=2:5, a5_24=2:5, a25_34=2:5, a35_49=2:5, a50plus=2:5),  # closer inspection of 2-5%, informed by uniform sweep above
+  "India" = expand.grid(a0_4=1:4, a5_24=1:4, a25_34=1:4, a35_49=1:4, a50plus=1:4))  # closer inspection of 1-4%, informed by uniform sweep above
+
+summary_table_kenya_india <- tibble()
+
+for (country in c("Kenya", "India")) {
+  foi_grid <- bind_rows(foi_grid_1, foi_grid_2_by_country[[country]]) %>% distinct()
+  foi_structures <- make_foi(foi_grid)  # named list of FOI vectors for this country
+
+  # pars_country: local copy of pars_lit for this fitting loop - pars_lit itself is left untouched
+  pars_country <- pars_lit
+  pars_country$p_revert <- p_revert_by_country[[country]]
+  agedist_country <- agedists_scenarios[[country]]
+
+  for (progression_structure in p_slow_structures_6a) {
+    prog <- extract_probability_of_being_slow(progressor_type_by_age_studies, progression_structure)
+    pars_country$p_slow <- prog
+
+    for (slow_structure in slow_structures) {
+      mu_slow <- define_mu_slow(slow_structure)
+      pars_country$mu_slow <- mu_slow
+
+      for (foi_structure in names(foi_structures)) {
+        foi <- foi_structures[[foi_structure]]
+        pars_country$rho <- foi
+
+        with_progress({stochastic_df_country <- sim_stoch_over_sigma(pars=pars_country, sigmavec=c(80), casetarget=50, agedist=agedist_country, reps=reps)})
+
+        from_model <- summarise_case_incidence_and_ARTI(stochastic_df_country, pars=pars_country, reps=reps, sig=80)
+        summary_table_kenya_india <- bind_rows(summary_table_kenya_india, tibble(
+          country=country, progression_structure=progression_structure, slow_structure=slow_structure,
+          foi_structure=foi_structure,
+          inf_prev_15to24=median(stochastic_df_country$inf_prev_15to24),
+          inf_prev_25to34=median(stochastic_df_country$inf_prev_25to34),
+          ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
+      }
+    }
+  }
+}
+
+# Benchmark bounds by country (Dagnew_positivity_data loaded in setup chunk, country_thresholds_scenarios in 6_scenarios_setup)
+dagnew_bounds_15to24_ki <- Dagnew_positivity_data %>%
+  filter(country %in% c("Kenya","India"), age_group == "15-24") %>%
+  select(country, min_positivity, max_positivity) %>%
+  rename(min_15to24 = min_positivity, max_15to24 = max_positivity) %>%
+  rows_update(tibble(country="India", min_15to24 = 0.098, max_15to24 = 0.158), by="country")  # india data from Selvaraju et al 2023
+
+dagnew_bounds_25to34_ki <- Dagnew_positivity_data %>%
+  filter(country %in% c("Kenya","India"), age_group == "25-34") %>%
+  select(country, min_positivity, max_positivity) %>%
+  rename(min_25to34 = min_positivity, max_25to34 = max_positivity) %>%
+  rows_update(tibble(country="India", min_25to34 = 0.171, max_25to34 = 0.252), by="country")  # india data from Selvaraju et al 2023
+
+summary_table_kenya_india <- summary_table_kenya_india %>%
+  left_join(dagnew_bounds_15to24_ki, by="country") %>%
+  left_join(dagnew_bounds_25to34_ki, by="country") %>%
+  left_join(country_thresholds_scenarios, by="country") %>%
+  mutate(conditions_met =
+    between(inf_prev_15to24, min_15to24, max_15to24) &
+    between(inf_prev_25to34, min_25to34, max_25to34) &
+    between(ARTI, arti_lo, arti_hi) &
+    between(cases, cases_lo, cases_hi))
+
+write.csv(summary_table_kenya_india, file="output/kenya_india_parameter_fit_results.csv", row.names=FALSE)
+```
+
+
+```{r}
+#| label: 6a_varied_site_results
+#| eval: FALSE
+
 # Flat grid over all combinations: country x FOI x sigma x rep
-sim_grid_6a <- bind_rows(tibble(country="India",        foi_structure=c("uniform_1","uniform_2")),
-                         tibble(country="Kenya",        foi_structure=c("uniform_3","uniform_4")),
-                         tibble(country="South Africa", foi_structure=c("uniform_5","uniform_6","uniform_7"))) %>%
-  crossing(slow_structure = names(p_slow_structures_6a),
-           sigma          = c(0.5, 1:10, seq(15, 80, by=5)),
-           rep            = 1:25)
+foi_by_country <- list(
+  "South Africa" = make_foi(4,6,4,7,5),                # best fit from chunk 4
+  "Kenya"        = define_foi_by_age("uniform_1"),      # replace with best foi from Kenya/India fitting above
+  "India"        = define_foi_by_age("uniform_3"))      # replace with best foi from Kenya/India fitting above
+
+# p_slow lookup (named list of actual p_slow vectors, keyed by structure name) - distinct from
+# p_slow_structures_6a in the fitting chunk above, which is just the plain vector of structure names
+p_slow_lookup_6a <- list(
+  "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"),
+  "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
+  "uniform"       = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"))
+
+# South Africa's p_slow/mu_slow are already fixed (matching pars_lit's chosen fit); Kenya/India still
+# compare all p_slow/mu_slow options since their fitting hasn't settled on a single best combination yet
+sim_grid_6a <- bind_rows(
+  tibble(country="South Africa") %>% crossing(p_slow="Vynnycky-high", mu_slow="0.003"),
+  tibble(country=c("Kenya","India")) %>% crossing(p_slow=c("Vynnycky-1997","uniform"), mu_slow=slow_structures)
+) %>%
+  crossing(sigma = c(0.5, 1:10, seq(15, 80, by=5)), rep = 1:25)
+
+# South Africa/Kenya/India all needed here (agedists_6a/countries_6a above only cover Kenya/India)
+countries_6a_results <- c("South Africa", "Kenya", "India")
+agedists_6a_results  <- agedists_scenarios
 
 # Single flat future_lapply — avoids nested parallelism and memory spikes
 with_progress({
   p <- progressr::progressor(steps=nrow(sim_grid_6a))
   stoch_list_6a <- future.apply::future_lapply(1:nrow(sim_grid_6a), function(i) {
     pars_i        <- pars_6a
-    pars_i$rho    <- define_foi_by_age(sim_grid_6a$foi_structure[i])
-    pars_i$p_slow <- p_slow_structures_6a[[sim_grid_6a$slow_structure[i]]]
+    pars_i$rho    <- foi_by_country[[sim_grid_6a$country[i]]]
+    pars_i$p_slow <- p_slow_lookup_6a[[sim_grid_6a$p_slow[i]]]
+    pars_i$mu_slow <- define_mu_slow(sim_grid_6a$mu_slow[i])
     pars_i$p_revert <- p_revert_6a[[sim_grid_6a$country[i]]]
     pars_i$sigma  <- sim_grid_6a$sigma[i]
-    agedist_i     <- agedists_6a[[sim_grid_6a$country[i]]]
+    agedist_i     <- agedists_6a_results[[sim_grid_6a$country[i]]]
     out           <- sim_stoch(pars_i, casetarget=50, agedist=agedist_i)
     p()
-    tibble(country=sim_grid_6a$country[i], foi_structure=sim_grid_6a$foi_structure[i],
-       slow_structure=sim_grid_6a$slow_structure[i], sigma=sim_grid_6a$sigma[i], rep=sim_grid_6a$rep[i],
+    tibble(country=sim_grid_6a$country[i], p_slow=sim_grid_6a$p_slow[i],
+       mu_slow=sim_grid_6a$mu_slow[i], sigma=sim_grid_6a$sigma[i], rep=sim_grid_6a$rep[i],
        n_tested=out$n_tested, n_enrolled=out$n_enrolled, n_overall=out$n_overall,
-       n_trial_cases=out$n_trial_cases,
-       inf_prev_15to24=out$inf_prev_15to24, inf_prev_25to34=out$inf_prev_25to34)
+       n_trial_cases=out$n_trial_cases, inf_prev_15to24=out$inf_prev_15to24, inf_prev_25to34=out$inf_prev_25to34)
   }, future.seed=TRUE)
 })
 
 stoch_df_6a <- bind_rows(stoch_list_6a)
 
-#' 3x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country, colour = FOI structure
+#' 3x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country, colour = p_slow, linetype = mu_slow
 stoch_df_6a_long <- stoch_df_6a %>%
-  mutate(country = factor(country, levels=countries_6a),
+  mutate(country = factor(country, levels=countries_6a_results),
          n_enrolled_1 = n_enrolled / n_trial_cases,
          n_tested_1   = n_tested   / n_trial_cases) %>%
-  select(country, foi_structure, slow_structure, sigma, rep, n_enrolled_1, n_tested_1) %>%
+  select(country, p_slow, mu_slow, sigma, rep, n_enrolled_1, n_tested_1) %>%
   pivot_longer(cols=c(n_enrolled_1, n_tested_1), names_to="metric", values_to="value") %>%
   mutate(metric = case_when(metric=="n_enrolled_1"~"Enrolled", metric=="n_tested_1"~"Tested"),
-         metric = factor(metric, levels=c("Enrolled","Tested"))) %>%
-  filter(!(country=="Kenya" & foi_structure %in% c("uniform_4"))) %>%  # filter out foi's that do not give plausible outputs
-  filter(!(country=="India" & foi_structure %in% c("uniform_1"))) %>%  # filter out foi's that do not give plausible outputs
-  filter(!(country=="South Africa" & foi_structure %in% c("uniform_5", "uniform_7")))  # filter out foi's that do not give plausible outputs
+         metric = factor(metric, levels=c("Enrolled","Tested")))
 write.csv(stoch_df_6a_long, file="output/variedsite_results_stochoutput.csv", row.names=FALSE)
 
 median_df_6a <- stoch_df_6a_long %>%
-  group_by(country, foi_structure, slow_structure, sigma, metric) %>%
+  group_by(country, p_slow, mu_slow, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
 write.csv(median_df_6a, file="output/variedsite_results_medians.csv", row.names=FALSE)
 
-foi_labels    <- c("uniform_1"="1%","uniform_2"="2%","uniform_3"="3%","uniform_4"="4%",
-                   "uniform_5"="5%","uniform_6"="6%","uniform_7"="7%","uniform_8"="8%",
-                   "uniform_9"="9%","uniform_10"="10%")
-p_slow_labels <- c("uniform_95"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")
+p_slow_labels_6a  <- c("uniform"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")
+mu_slow_labels_6a <- c("base"="μ_s = 0.001","max"="μ_s = 0.00527","0.003"="μ_s = 0.003")
 
-fig_6a <- ggplot(stoch_df_6a_long, aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
+fig_6a <- ggplot(stoch_df_6a_long, aes(x=sigma, y=value, col=p_slow, linetype=mu_slow)) +
   geom_point(size=0.4, alpha=0.1) +
   geom_line(data=median_df_6a, linewidth=0.7) +
   facet_grid(metric ~ country, scales="free_y") +
-  scale_colour_brewer(palette="Set1", labels=foi_labels) +
-  scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
-                      labels=p_slow_labels) +
+  scale_colour_brewer(palette="Set1", labels=p_slow_labels_6a) +
+  scale_linetype_manual(values=c("base"="solid","max"="dashed","0.003"="dotted"),
+                      labels=mu_slow_labels_6a) +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection", linetype="p_f")
+  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f", linetype="μ_s")
 fig_6a
 ggsave(fig_6a, file="figures/6a_varied_sites.png", width=7.29, height=4.51)
 
 fig_6a_zoom <- ggplot(stoch_df_6a_long %>% filter(sigma <= 15),
-                      aes(x=sigma, y=value, col=foi_structure, linetype=slow_structure)) +
+                      aes(x=sigma, y=value, col=p_slow, linetype=mu_slow)) +
   geom_point(size=0.4, alpha=0.1) +
   geom_line(data=median_df_6a %>% filter(sigma <= 15), linewidth=0.7) +
   facet_grid(metric ~ country, scales="free_y") +
-  scale_colour_brewer(palette="Set1",
-                      labels=foi_labels) +
-  scale_linetype_manual(values=c("uniform_95"="solid","Vynnycky-1997"="dashed","Vynnycky-high"="dotted"),
-                        labels=p_slow_labels) +
+  scale_colour_brewer(palette="Set1", labels=p_slow_labels_6a) +
+  scale_linetype_manual(values=c("base"="solid","max"="dashed","0.003"="dotted"),
+                        labels=mu_slow_labels_6a) +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Test span (years)", y="Number (for 1 case)", col="Force of infection (%)", linetype="p_f")
+  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f", linetype="μ_s")
 fig_6a_zoom
 ggsave(fig_6a_zoom, file="figures/6a_varied_sites_zoom.png", width=7.29, height=4.51)
 
@@ -357,44 +454,12 @@ summary_table_6a <- stoch_df_6a %>%
     meanage      = ((pars_6a$maxage - pars_6a$minage) / 2) + pars_6a$minage,
     ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
     cases_per100k = n_trial_cases / (n_overall * pars_6a$trial_length) * 100000) %>%
-  group_by(country, foi_structure, slow_structure) %>%
+  group_by(country, p_slow, mu_slow) %>%
   summarise(inf_prev_15to24 = median(inf_prev_15to24),
     inf_prev_25to34 = median(inf_prev_25to34),
     ARTI            = median(ARTI),
     cases_per100k   = median(cases_per100k),
     .groups = "drop")
-
-# Literature for criteria (Dagnew_positivity_data loaded in setup chunk)
-dagnew_bounds_15to24 <- Dagnew_positivity_data %>%
-  filter(country %in% countries_6a, age_group == "15-24") %>%
-  select(country, min_positivity, max_positivity) %>%
-  rename(min_15to24 = min_positivity, max_15to24 = max_positivity) %>%
-  rows_update(tibble(country="India", min_15to24 = 0.098, max_15to24 = 0.158), by="country")  # adding india data from Selvaraju et al 2023
-
-dagnew_bounds_25to34 <- Dagnew_positivity_data %>%
-  filter(country %in% countries_6a, age_group == "25-34") %>%
-  select(country, min_positivity, max_positivity) %>%
-  rename(min_25to34 = min_positivity, max_25to34 = max_positivity) %>%
-  rows_update(tibble(country="India", min_25to34 = 0.171, max_25to34 = 0.252), by="country")  # adding india data from Selvaraju et al 2023
-
-country_thresholds_6a <- tibble(
-  country       = c("South Africa", "Kenya",   "India"),
-  arti_lo       = c(0.04,           0.016,      0.00),
-  arti_hi       = c(0.06,           0.036,      0.02),
-  cases_lo      = c(242,            109,        160),
-  cases_hi      = c(571,            339,        218)
-)
-
-summary_table_6a <- summary_table_6a %>%
-  left_join(dagnew_bounds_15to24, by="country") %>%
-  left_join(dagnew_bounds_25to34, by="country") %>%
-  left_join(country_thresholds_6a, by="country") %>%
-  mutate(conditions_met =
-    between(inf_prev_15to24, min_15to24, max_15to24) & 
-    between(inf_prev_25to34, min_25to34, max_25to34) &
-    between(ARTI, arti_lo, arti_hi) &
-    between(cases_per100k, cases_lo, cases_hi)) #%>%
-  #select(country, foi_structure, slow_structure, inf_prev_15to24, inf_prev_25to34, ARTI, cases_per100k, conditions_met)
 
 write.csv(summary_table_6a, file="output/variedsite_results.csv", row.names=FALSE)
 ```
