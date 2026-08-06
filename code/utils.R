@@ -513,7 +513,6 @@ plot_stochastic_analytic <- function(stochastic_df, analytical_df, cols=c("n_tes
 		geom_line(data=analytical_df_toplot, aes(x=sigma, y=value, col=factor(name, levels=c("Contacted","Tested","Enrolled","Cases"))), linewidth=0.7, alpha=0.5) + 
 		scale_color_manual(values=c("Contacted"="green","Tested"="black","Enrolled"="blue","Cases"="red")) + 
 		geom_vline(aes(xintercept=2), col="black", linetype="dashed", alpha=0.5) + 
-		#geom_vline(aes(xintercept=80), col="black", linetype="dashed", alpha=0.5) + 
 		theme_classic() + 
 		theme(legend.title=element_blank()) + 
 		labs(x="Test span (years)", y="Number (for 1 case)")
@@ -541,7 +540,7 @@ pull_last <- function(x, life_exp=99){  # for character string x
 }
 
 # Functions outside the model, at time of recruitment
-calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=80){  # case inc = # of new cases / (pop * trial_length)
+calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars, my_rep=1, sig=50){  # case inc = # of new cases / (pop * trial_length)
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
@@ -550,7 +549,7 @@ calculate_case_incidence_at_time_of_recruitment_from_model <- function(df, pars,
   return(incidence*100000)
 }
 
-estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
+estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=50){
   if ("rep" %in% names(df)) df <- df %>% filter(rep == my_rep)
   if ("sigma" %in% names(df)) df <- df %>% filter(sigma == sig)
   model_run <- df %>% unlist()
@@ -568,7 +567,7 @@ estimate_ARTI_from_model <- function(df, pars, my_rep=1, sig=80){
   return(c(ARTI = ARTI, inf_prev_15to24 = inf_prev_15to24, inf_prev_25to34 = inf_prev_25to34))
 }
 
-summarise_case_incidence_and_ARTI <- function(df, pars, reps, sig=80) {
+summarise_case_incidence_and_ARTI <- function(df, pars, reps, sig=50) {
   # Compute case incidence and ARTI/infection-prevalence for each rep, and bind into one tibble
   out <- lapply(1:reps, function(i) {
     cases <- calculate_case_incidence_at_time_of_recruitment_from_model(df, pars=pars, my_rep=i, sig=sig)

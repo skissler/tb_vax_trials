@@ -1,451 +1,191 @@
-"country","foi_structure","slow_structure","sigma","metric","value"
-"South Africa","uniform_6","Vynnycky-1997",0.5,"Enrolled",9.4
-"South Africa","uniform_6","Vynnycky-1997",0.5,"Tested",1586.58
-"South Africa","uniform_6","Vynnycky-1997",1,"Enrolled",12.52
-"South Africa","uniform_6","Vynnycky-1997",1,"Tested",1061.4
-"South Africa","uniform_6","Vynnycky-1997",2,"Enrolled",19.86
-"South Africa","uniform_6","Vynnycky-1997",2,"Tested",891.86
-"South Africa","uniform_6","Vynnycky-1997",3,"Enrolled",26.36
-"South Africa","uniform_6","Vynnycky-1997",3,"Tested",773.08
-"South Africa","uniform_6","Vynnycky-1997",4,"Enrolled",33.1
-"South Africa","uniform_6","Vynnycky-1997",4,"Tested",709.34
-"South Africa","uniform_6","Vynnycky-1997",5,"Enrolled",35.96
-"South Africa","uniform_6","Vynnycky-1997",5,"Tested",616.96
-"South Africa","uniform_6","Vynnycky-1997",6,"Enrolled",43.58
-"South Africa","uniform_6","Vynnycky-1997",6,"Tested",596.16
-"South Africa","uniform_6","Vynnycky-1997",7,"Enrolled",53.66
-"South Africa","uniform_6","Vynnycky-1997",7,"Tested",604.34
-"South Africa","uniform_6","Vynnycky-1997",8,"Enrolled",52.98
-"South Africa","uniform_6","Vynnycky-1997",8,"Tested",516.76
-"South Africa","uniform_6","Vynnycky-1997",9,"Enrolled",59.36
-"South Africa","uniform_6","Vynnycky-1997",9,"Tested",499.12
-"South Africa","uniform_6","Vynnycky-1997",10,"Enrolled",63.42
-"South Africa","uniform_6","Vynnycky-1997",10,"Tested",450.16
-"South Africa","uniform_6","Vynnycky-1997",15,"Enrolled",76.36
-"South Africa","uniform_6","Vynnycky-1997",15,"Tested",315.18
-"South Africa","uniform_6","Vynnycky-1997",20,"Enrolled",80.54
-"South Africa","uniform_6","Vynnycky-1997",20,"Tested",222.98
-"South Africa","uniform_6","Vynnycky-1997",25,"Enrolled",87.34
-"South Africa","uniform_6","Vynnycky-1997",25,"Tested",192.34
-"South Africa","uniform_6","Vynnycky-1997",30,"Enrolled",92.96
-"South Africa","uniform_6","Vynnycky-1997",30,"Tested",166.18
-"South Africa","uniform_6","Vynnycky-1997",35,"Enrolled",96.82
-"South Africa","uniform_6","Vynnycky-1997",35,"Tested",151.2
-"South Africa","uniform_6","Vynnycky-1997",40,"Enrolled",94.08
-"South Africa","uniform_6","Vynnycky-1997",40,"Tested",135.62
-"South Africa","uniform_6","Vynnycky-1997",45,"Enrolled",96.96
-"South Africa","uniform_6","Vynnycky-1997",45,"Tested",133.88
-"South Africa","uniform_6","Vynnycky-1997",50,"Enrolled",91.34
-"South Africa","uniform_6","Vynnycky-1997",50,"Tested",124.84
-"South Africa","uniform_6","Vynnycky-1997",55,"Enrolled",95.68
-"South Africa","uniform_6","Vynnycky-1997",55,"Tested",129.8
-"South Africa","uniform_6","Vynnycky-1997",60,"Enrolled",95.3
-"South Africa","uniform_6","Vynnycky-1997",60,"Tested",128.6
-"South Africa","uniform_6","Vynnycky-1997",65,"Enrolled",100.58
-"South Africa","uniform_6","Vynnycky-1997",65,"Tested",135.38
-"South Africa","uniform_6","Vynnycky-1997",70,"Enrolled",92.78
-"South Africa","uniform_6","Vynnycky-1997",70,"Tested",127.26
-"South Africa","uniform_6","Vynnycky-1997",75,"Enrolled",99.72
-"South Africa","uniform_6","Vynnycky-1997",75,"Tested",134.16
-"South Africa","uniform_6","Vynnycky-1997",80,"Enrolled",97.04
-"South Africa","uniform_6","Vynnycky-1997",80,"Tested",131.58
-"South Africa","uniform_6","Vynnycky-high",0.5,"Enrolled",8.12
-"South Africa","uniform_6","Vynnycky-high",0.5,"Tested",1344.08
-"South Africa","uniform_6","Vynnycky-high",1,"Enrolled",9.6
-"South Africa","uniform_6","Vynnycky-high",1,"Tested",850.34
-"South Africa","uniform_6","Vynnycky-high",2,"Enrolled",14.08
-"South Africa","uniform_6","Vynnycky-high",2,"Tested",628.72
-"South Africa","uniform_6","Vynnycky-high",3,"Enrolled",19.82
-"South Africa","uniform_6","Vynnycky-high",3,"Tested",580.24
-"South Africa","uniform_6","Vynnycky-high",4,"Enrolled",25.46
-"South Africa","uniform_6","Vynnycky-high",4,"Tested",547.84
-"South Africa","uniform_6","Vynnycky-high",5,"Enrolled",30.5
-"South Africa","uniform_6","Vynnycky-high",5,"Tested",520.94
-"South Africa","uniform_6","Vynnycky-high",6,"Enrolled",34.38
-"South Africa","uniform_6","Vynnycky-high",6,"Tested",482.18
-"South Africa","uniform_6","Vynnycky-high",7,"Enrolled",41.18
-"South Africa","uniform_6","Vynnycky-high",7,"Tested",484.96
-"South Africa","uniform_6","Vynnycky-high",8,"Enrolled",45.9
-"South Africa","uniform_6","Vynnycky-high",8,"Tested",467.2
-"South Africa","uniform_6","Vynnycky-high",9,"Enrolled",46.46
-"South Africa","uniform_6","Vynnycky-high",9,"Tested",391.94
-"South Africa","uniform_6","Vynnycky-high",10,"Enrolled",53.46
-"South Africa","uniform_6","Vynnycky-high",10,"Tested",403.84
-"South Africa","uniform_6","Vynnycky-high",15,"Enrolled",72.06
-"South Africa","uniform_6","Vynnycky-high",15,"Tested",306.6
-"South Africa","uniform_6","Vynnycky-high",20,"Enrolled",72.28
-"South Africa","uniform_6","Vynnycky-high",20,"Tested",204.52
-"South Africa","uniform_6","Vynnycky-high",25,"Enrolled",82.24
-"South Africa","uniform_6","Vynnycky-high",25,"Tested",179.14
-"South Africa","uniform_6","Vynnycky-high",30,"Enrolled",88.72
-"South Africa","uniform_6","Vynnycky-high",30,"Tested",159.24
-"South Africa","uniform_6","Vynnycky-high",35,"Enrolled",86.12
-"South Africa","uniform_6","Vynnycky-high",35,"Tested",135.06
-"South Africa","uniform_6","Vynnycky-high",40,"Enrolled",89.92
-"South Africa","uniform_6","Vynnycky-high",40,"Tested",131.32
-"South Africa","uniform_6","Vynnycky-high",45,"Enrolled",93
-"South Africa","uniform_6","Vynnycky-high",45,"Tested",128.04
-"South Africa","uniform_6","Vynnycky-high",50,"Enrolled",91.86
-"South Africa","uniform_6","Vynnycky-high",50,"Tested",125.14
-"South Africa","uniform_6","Vynnycky-high",55,"Enrolled",92.38
-"South Africa","uniform_6","Vynnycky-high",55,"Tested",128.14
-"South Africa","uniform_6","Vynnycky-high",60,"Enrolled",89.22
-"South Africa","uniform_6","Vynnycky-high",60,"Tested",122.18
-"South Africa","uniform_6","Vynnycky-high",65,"Enrolled",96.5
-"South Africa","uniform_6","Vynnycky-high",65,"Tested",132.26
-"South Africa","uniform_6","Vynnycky-high",70,"Enrolled",92.28
-"South Africa","uniform_6","Vynnycky-high",70,"Tested",126.54
-"South Africa","uniform_6","Vynnycky-high",75,"Enrolled",91.2
-"South Africa","uniform_6","Vynnycky-high",75,"Tested",125.1
-"South Africa","uniform_6","Vynnycky-high",80,"Enrolled",92.96
-"South Africa","uniform_6","Vynnycky-high",80,"Tested",126.42
-"South Africa","uniform_6","uniform_95",0.5,"Enrolled",21.06
-"South Africa","uniform_6","uniform_95",0.5,"Tested",3537.46
-"South Africa","uniform_6","uniform_95",1,"Enrolled",27.4
-"South Africa","uniform_6","uniform_95",1,"Tested",2437.1
-"South Africa","uniform_6","uniform_95",2,"Enrolled",39.66
-"South Africa","uniform_6","uniform_95",2,"Tested",1667.9
-"South Africa","uniform_6","uniform_95",3,"Enrolled",47.4
-"South Africa","uniform_6","uniform_95",3,"Tested",1338.1
-"South Africa","uniform_6","uniform_95",4,"Enrolled",59.56
-"South Africa","uniform_6","uniform_95",4,"Tested",1227.38
-"South Africa","uniform_6","uniform_95",5,"Enrolled",64.9
-"South Africa","uniform_6","uniform_95",5,"Tested",1018.4
-"South Africa","uniform_6","uniform_95",6,"Enrolled",69.76
-"South Africa","uniform_6","uniform_95",6,"Tested",894.28
-"South Africa","uniform_6","uniform_95",7,"Enrolled",76.04
-"South Africa","uniform_6","uniform_95",7,"Tested",845.16
-"South Africa","uniform_6","uniform_95",8,"Enrolled",76.64
-"South Africa","uniform_6","uniform_95",8,"Tested",705.78
-"South Africa","uniform_6","uniform_95",9,"Enrolled",80.06
-"South Africa","uniform_6","uniform_95",9,"Tested",650.98
-"South Africa","uniform_6","uniform_95",10,"Enrolled",89.84
-"South Africa","uniform_6","uniform_95",10,"Tested",625.64
-"South Africa","uniform_6","uniform_95",15,"Enrolled",92.46
-"South Africa","uniform_6","uniform_95",15,"Tested",377.36
-"South Africa","uniform_6","uniform_95",20,"Enrolled",96.98
-"South Africa","uniform_6","uniform_95",20,"Tested",265.54
-"South Africa","uniform_6","uniform_95",25,"Enrolled",95.88
-"South Africa","uniform_6","uniform_95",25,"Tested",203.9
-"South Africa","uniform_6","uniform_95",30,"Enrolled",104.98
-"South Africa","uniform_6","uniform_95",30,"Tested",183.98
-"South Africa","uniform_6","uniform_95",35,"Enrolled",96.8
-"South Africa","uniform_6","uniform_95",35,"Tested",149.14
-"South Africa","uniform_6","uniform_95",40,"Enrolled",101.14
-"South Africa","uniform_6","uniform_95",40,"Tested",145.56
-"South Africa","uniform_6","uniform_95",45,"Enrolled",99.2
-"South Africa","uniform_6","uniform_95",45,"Tested",135.46
-"South Africa","uniform_6","uniform_95",50,"Enrolled",107.28
-"South Africa","uniform_6","uniform_95",50,"Tested",144.7
-"South Africa","uniform_6","uniform_95",55,"Enrolled",103.02
-"South Africa","uniform_6","uniform_95",55,"Tested",140.44
-"South Africa","uniform_6","uniform_95",60,"Enrolled",101.32
-"South Africa","uniform_6","uniform_95",60,"Tested",137.44
-"South Africa","uniform_6","uniform_95",65,"Enrolled",104.98
-"South Africa","uniform_6","uniform_95",65,"Tested",143.46
-"South Africa","uniform_6","uniform_95",70,"Enrolled",103.22
-"South Africa","uniform_6","uniform_95",70,"Tested",139.12
-"South Africa","uniform_6","uniform_95",75,"Enrolled",107.52
-"South Africa","uniform_6","uniform_95",75,"Tested",146.2
-"South Africa","uniform_6","uniform_95",80,"Enrolled",110.98
-"South Africa","uniform_6","uniform_95",80,"Tested",149.74
-"India","uniform_2","Vynnycky-1997",0.5,"Enrolled",9.76
-"India","uniform_2","Vynnycky-1997",0.5,"Tested",1800.48
-"India","uniform_2","Vynnycky-1997",1,"Enrolled",13.42
-"India","uniform_2","Vynnycky-1997",1,"Tested",1274.7
-"India","uniform_2","Vynnycky-1997",2,"Enrolled",19.14
-"India","uniform_2","Vynnycky-1997",2,"Tested",1028.92
-"India","uniform_2","Vynnycky-1997",3,"Enrolled",26.16
-"India","uniform_2","Vynnycky-1997",3,"Tested",922.86
-"India","uniform_2","Vynnycky-1997",4,"Enrolled",32.32
-"India","uniform_2","Vynnycky-1997",4,"Tested",868.8
-"India","uniform_2","Vynnycky-1997",5,"Enrolled",36.06
-"India","uniform_2","Vynnycky-1997",5,"Tested",791
-"India","uniform_2","Vynnycky-1997",6,"Enrolled",40.52
-"India","uniform_2","Vynnycky-1997",6,"Tested",732.62
-"India","uniform_2","Vynnycky-1997",7,"Enrolled",43.28
-"India","uniform_2","Vynnycky-1997",7,"Tested",676.52
-"India","uniform_2","Vynnycky-1997",8,"Enrolled",48.14
-"India","uniform_2","Vynnycky-1997",8,"Tested",651.5
-"India","uniform_2","Vynnycky-1997",9,"Enrolled",50.24
-"India","uniform_2","Vynnycky-1997",9,"Tested",611.92
-"India","uniform_2","Vynnycky-1997",10,"Enrolled",54.84
-"India","uniform_2","Vynnycky-1997",10,"Tested",587.4
-"India","uniform_2","Vynnycky-1997",15,"Enrolled",67.26
-"India","uniform_2","Vynnycky-1997",15,"Tested",468.02
-"India","uniform_2","Vynnycky-1997",20,"Enrolled",73.08
-"India","uniform_2","Vynnycky-1997",20,"Tested",376.24
-"India","uniform_2","Vynnycky-1997",25,"Enrolled",77
-"India","uniform_2","Vynnycky-1997",25,"Tested",327.16
-"India","uniform_2","Vynnycky-1997",30,"Enrolled",76.82
-"India","uniform_2","Vynnycky-1997",30,"Tested",287.98
-"India","uniform_2","Vynnycky-1997",35,"Enrolled",85.14
-"India","uniform_2","Vynnycky-1997",35,"Tested",286.26
-"India","uniform_2","Vynnycky-1997",40,"Enrolled",82.78
-"India","uniform_2","Vynnycky-1997",40,"Tested",264.02
-"India","uniform_2","Vynnycky-1997",45,"Enrolled",87.38
-"India","uniform_2","Vynnycky-1997",45,"Tested",262.78
-"India","uniform_2","Vynnycky-1997",50,"Enrolled",84.88
-"India","uniform_2","Vynnycky-1997",50,"Tested",256.56
-"India","uniform_2","Vynnycky-1997",55,"Enrolled",84.58
-"India","uniform_2","Vynnycky-1997",55,"Tested",256.92
-"India","uniform_2","Vynnycky-1997",60,"Enrolled",85.32
-"India","uniform_2","Vynnycky-1997",60,"Tested",259.64
-"India","uniform_2","Vynnycky-1997",65,"Enrolled",85.5
-"India","uniform_2","Vynnycky-1997",65,"Tested",260.9
-"India","uniform_2","Vynnycky-1997",70,"Enrolled",83.9
-"India","uniform_2","Vynnycky-1997",70,"Tested",256.26
-"India","uniform_2","Vynnycky-1997",75,"Enrolled",89
-"India","uniform_2","Vynnycky-1997",75,"Tested",265.76
-"India","uniform_2","Vynnycky-1997",80,"Enrolled",89.74
-"India","uniform_2","Vynnycky-1997",80,"Tested",273.32
-"India","uniform_2","Vynnycky-high",0.5,"Enrolled",7.52
-"India","uniform_2","Vynnycky-high",0.5,"Tested",1392.44
-"India","uniform_2","Vynnycky-high",1,"Enrolled",9.9
-"India","uniform_2","Vynnycky-high",1,"Tested",959.52
-"India","uniform_2","Vynnycky-high",2,"Enrolled",14.74
-"India","uniform_2","Vynnycky-high",2,"Tested",775.52
-"India","uniform_2","Vynnycky-high",3,"Enrolled",19.04
-"India","uniform_2","Vynnycky-high",3,"Tested",691.7
-"India","uniform_2","Vynnycky-high",4,"Enrolled",22.7
-"India","uniform_2","Vynnycky-high",4,"Tested",623.26
-"India","uniform_2","Vynnycky-high",5,"Enrolled",28.14
-"India","uniform_2","Vynnycky-high",5,"Tested",629.18
-"India","uniform_2","Vynnycky-high",6,"Enrolled",30.6
-"India","uniform_2","Vynnycky-high",6,"Tested",575.84
-"India","uniform_2","Vynnycky-high",7,"Enrolled",37.32
-"India","uniform_2","Vynnycky-high",7,"Tested",606.98
-"India","uniform_2","Vynnycky-high",8,"Enrolled",37.86
-"India","uniform_2","Vynnycky-high",8,"Tested",522.62
-"India","uniform_2","Vynnycky-high",9,"Enrolled",41.56
-"India","uniform_2","Vynnycky-high",9,"Tested",518.88
-"India","uniform_2","Vynnycky-high",10,"Enrolled",44.38
-"India","uniform_2","Vynnycky-high",10,"Tested",501
-"India","uniform_2","Vynnycky-high",15,"Enrolled",58.3
-"India","uniform_2","Vynnycky-high",15,"Tested",415.66
-"India","uniform_2","Vynnycky-high",20,"Enrolled",65.92
-"India","uniform_2","Vynnycky-high",20,"Tested",343.78
-"India","uniform_2","Vynnycky-high",25,"Enrolled",67.6
-"India","uniform_2","Vynnycky-high",25,"Tested",283.14
-"India","uniform_2","Vynnycky-high",30,"Enrolled",75.62
-"India","uniform_2","Vynnycky-high",30,"Tested",282.88
-"India","uniform_2","Vynnycky-high",35,"Enrolled",72.2
-"India","uniform_2","Vynnycky-high",35,"Tested",244.32
-"India","uniform_2","Vynnycky-high",40,"Enrolled",78.5
-"India","uniform_2","Vynnycky-high",40,"Tested",258.26
-"India","uniform_2","Vynnycky-high",45,"Enrolled",75.32
-"India","uniform_2","Vynnycky-high",45,"Tested",232.88
-"India","uniform_2","Vynnycky-high",50,"Enrolled",76.14
-"India","uniform_2","Vynnycky-high",50,"Tested",235.98
-"India","uniform_2","Vynnycky-high",55,"Enrolled",78.7
-"India","uniform_2","Vynnycky-high",55,"Tested",243.6
-"India","uniform_2","Vynnycky-high",60,"Enrolled",82.96
-"India","uniform_2","Vynnycky-high",60,"Tested",247.92
-"India","uniform_2","Vynnycky-high",65,"Enrolled",76.08
-"India","uniform_2","Vynnycky-high",65,"Tested",229.42
-"India","uniform_2","Vynnycky-high",70,"Enrolled",79.42
-"India","uniform_2","Vynnycky-high",70,"Tested",244.92
-"India","uniform_2","Vynnycky-high",75,"Enrolled",79.72
-"India","uniform_2","Vynnycky-high",75,"Tested",242.06
-"India","uniform_2","Vynnycky-high",80,"Enrolled",79.46
-"India","uniform_2","Vynnycky-high",80,"Tested",243.88
-"India","uniform_2","uniform_95",0.5,"Enrolled",24.78
-"India","uniform_2","uniform_95",0.5,"Tested",4459.88
-"India","uniform_2","uniform_95",1,"Enrolled",28.9
-"India","uniform_2","uniform_95",1,"Tested",2718.24
-"India","uniform_2","uniform_95",2,"Enrolled",39.88
-"India","uniform_2","uniform_95",2,"Tested",1992.02
-"India","uniform_2","uniform_95",3,"Enrolled",50.44
-"India","uniform_2","uniform_95",3,"Tested",1693.16
-"India","uniform_2","uniform_95",4,"Enrolled",57.94
-"India","uniform_2","uniform_95",4,"Tested",1513.56
-"India","uniform_2","uniform_95",5,"Enrolled",66.8
-"India","uniform_2","uniform_95",5,"Tested",1353.08
-"India","uniform_2","uniform_95",6,"Enrolled",70.16
-"India","uniform_2","uniform_95",6,"Tested",1207.64
-"India","uniform_2","uniform_95",7,"Enrolled",70.92
-"India","uniform_2","uniform_95",7,"Tested",1045.36
-"India","uniform_2","uniform_95",8,"Enrolled",77.6
-"India","uniform_2","uniform_95",8,"Tested",988.5
-"India","uniform_2","uniform_95",9,"Enrolled",80.58
-"India","uniform_2","uniform_95",9,"Tested",913.6
-"India","uniform_2","uniform_95",10,"Enrolled",82.34
-"India","uniform_2","uniform_95",10,"Tested",836.12
-"India","uniform_2","uniform_95",15,"Enrolled",88.54
-"India","uniform_2","uniform_95",15,"Tested",586.02
-"India","uniform_2","uniform_95",20,"Enrolled",97.6
-"India","uniform_2","uniform_95",20,"Tested",478.18
-"India","uniform_2","uniform_95",25,"Enrolled",93.76
-"India","uniform_2","uniform_95",25,"Tested",383.7
-"India","uniform_2","uniform_95",30,"Enrolled",96.72
-"India","uniform_2","uniform_95",30,"Tested",348.5
-"India","uniform_2","uniform_95",35,"Enrolled",96
-"India","uniform_2","uniform_95",35,"Tested",311.74
-"India","uniform_2","uniform_95",40,"Enrolled",96
-"India","uniform_2","uniform_95",40,"Tested",297.94
-"India","uniform_2","uniform_95",45,"Enrolled",98.74
-"India","uniform_2","uniform_95",45,"Tested",295.68
-"India","uniform_2","uniform_95",50,"Enrolled",99.88
-"India","uniform_2","uniform_95",50,"Tested",304.08
-"India","uniform_2","uniform_95",55,"Enrolled",98.44
-"India","uniform_2","uniform_95",55,"Tested",291.02
-"India","uniform_2","uniform_95",60,"Enrolled",103.48
-"India","uniform_2","uniform_95",60,"Tested",306.12
-"India","uniform_2","uniform_95",65,"Enrolled",101.82
-"India","uniform_2","uniform_95",65,"Tested",302.5
-"India","uniform_2","uniform_95",70,"Enrolled",103.74
-"India","uniform_2","uniform_95",70,"Tested",309.8
-"India","uniform_2","uniform_95",75,"Enrolled",101.12
-"India","uniform_2","uniform_95",75,"Tested",293.52
-"India","uniform_2","uniform_95",80,"Enrolled",102.58
-"India","uniform_2","uniform_95",80,"Tested",303.34
-"Kenya","uniform_3","Vynnycky-1997",0.5,"Enrolled",10.98
-"Kenya","uniform_3","Vynnycky-1997",0.5,"Tested",1680.46
-"Kenya","uniform_3","Vynnycky-1997",1,"Enrolled",13.32
-"Kenya","uniform_3","Vynnycky-1997",1,"Tested",1056.56
-"Kenya","uniform_3","Vynnycky-1997",2,"Enrolled",19.94
-"Kenya","uniform_3","Vynnycky-1997",2,"Tested",822.06
-"Kenya","uniform_3","Vynnycky-1997",3,"Enrolled",25.02
-"Kenya","uniform_3","Vynnycky-1997",3,"Tested",687.44
-"Kenya","uniform_3","Vynnycky-1997",4,"Enrolled",31.54
-"Kenya","uniform_3","Vynnycky-1997",4,"Tested",676.14
-"Kenya","uniform_3","Vynnycky-1997",5,"Enrolled",36.4
-"Kenya","uniform_3","Vynnycky-1997",5,"Tested",614.54
-"Kenya","uniform_3","Vynnycky-1997",6,"Enrolled",42.04
-"Kenya","uniform_3","Vynnycky-1997",6,"Tested",575.78
-"Kenya","uniform_3","Vynnycky-1997",7,"Enrolled",45.6
-"Kenya","uniform_3","Vynnycky-1997",7,"Tested",528.44
-"Kenya","uniform_3","Vynnycky-1997",8,"Enrolled",49.42
-"Kenya","uniform_3","Vynnycky-1997",8,"Tested",507.56
-"Kenya","uniform_3","Vynnycky-1997",9,"Enrolled",52.38
-"Kenya","uniform_3","Vynnycky-1997",9,"Tested",474.6
-"Kenya","uniform_3","Vynnycky-1997",10,"Enrolled",56.84
-"Kenya","uniform_3","Vynnycky-1997",10,"Tested",465.4
-"Kenya","uniform_3","Vynnycky-1997",15,"Enrolled",73.1
-"Kenya","uniform_3","Vynnycky-1997",15,"Tested",362.08
-"Kenya","uniform_3","Vynnycky-1997",20,"Enrolled",76.12
-"Kenya","uniform_3","Vynnycky-1997",20,"Tested",269.78
-"Kenya","uniform_3","Vynnycky-1997",25,"Enrolled",80.06
-"Kenya","uniform_3","Vynnycky-1997",25,"Tested",242.56
-"Kenya","uniform_3","Vynnycky-1997",30,"Enrolled",85.62
-"Kenya","uniform_3","Vynnycky-1997",30,"Tested",224.46
-"Kenya","uniform_3","Vynnycky-1997",35,"Enrolled",88.8
-"Kenya","uniform_3","Vynnycky-1997",35,"Tested",219.94
-"Kenya","uniform_3","Vynnycky-1997",40,"Enrolled",86.8
-"Kenya","uniform_3","Vynnycky-1997",40,"Tested",202.6
-"Kenya","uniform_3","Vynnycky-1997",45,"Enrolled",81.42
-"Kenya","uniform_3","Vynnycky-1997",45,"Tested",185.96
-"Kenya","uniform_3","Vynnycky-1997",50,"Enrolled",87.36
-"Kenya","uniform_3","Vynnycky-1997",50,"Tested",191.3
-"Kenya","uniform_3","Vynnycky-1997",55,"Enrolled",86.44
-"Kenya","uniform_3","Vynnycky-1997",55,"Tested",196.38
-"Kenya","uniform_3","Vynnycky-1997",60,"Enrolled",85.36
-"Kenya","uniform_3","Vynnycky-1997",60,"Tested",195.32
-"Kenya","uniform_3","Vynnycky-1997",65,"Enrolled",86.34
-"Kenya","uniform_3","Vynnycky-1997",65,"Tested",194.68
-"Kenya","uniform_3","Vynnycky-1997",70,"Enrolled",86.52
-"Kenya","uniform_3","Vynnycky-1997",70,"Tested",196.94
-"Kenya","uniform_3","Vynnycky-1997",75,"Enrolled",91.22
-"Kenya","uniform_3","Vynnycky-1997",75,"Tested",202.18
-"Kenya","uniform_3","Vynnycky-1997",80,"Enrolled",88.16
-"Kenya","uniform_3","Vynnycky-1997",80,"Tested",201.24
-"Kenya","uniform_3","Vynnycky-high",0.5,"Enrolled",8.26
-"Kenya","uniform_3","Vynnycky-high",0.5,"Tested",1206.1
-"Kenya","uniform_3","Vynnycky-high",1,"Enrolled",9.94
-"Kenya","uniform_3","Vynnycky-high",1,"Tested",794.04
-"Kenya","uniform_3","Vynnycky-high",2,"Enrolled",14.66
-"Kenya","uniform_3","Vynnycky-high",2,"Tested",612.08
-"Kenya","uniform_3","Vynnycky-high",3,"Enrolled",20.26
-"Kenya","uniform_3","Vynnycky-high",3,"Tested",531.06
-"Kenya","uniform_3","Vynnycky-high",4,"Enrolled",25.02
-"Kenya","uniform_3","Vynnycky-high",4,"Tested",535.94
-"Kenya","uniform_3","Vynnycky-high",5,"Enrolled",30.62
-"Kenya","uniform_3","Vynnycky-high",5,"Tested",521.88
-"Kenya","uniform_3","Vynnycky-high",6,"Enrolled",33.44
-"Kenya","uniform_3","Vynnycky-high",6,"Tested",471.36
-"Kenya","uniform_3","Vynnycky-high",7,"Enrolled",35.96
-"Kenya","uniform_3","Vynnycky-high",7,"Tested",431.1
-"Kenya","uniform_3","Vynnycky-high",8,"Enrolled",41.02
-"Kenya","uniform_3","Vynnycky-high",8,"Tested",437.5
-"Kenya","uniform_3","Vynnycky-high",9,"Enrolled",47.2
-"Kenya","uniform_3","Vynnycky-high",9,"Tested",435.08
-"Kenya","uniform_3","Vynnycky-high",10,"Enrolled",47.12
-"Kenya","uniform_3","Vynnycky-high",10,"Tested",380.64
-"Kenya","uniform_3","Vynnycky-high",15,"Enrolled",61.14
-"Kenya","uniform_3","Vynnycky-high",15,"Tested",308.56
-"Kenya","uniform_3","Vynnycky-high",20,"Enrolled",64.92
-"Kenya","uniform_3","Vynnycky-high",20,"Tested",243.54
-"Kenya","uniform_3","Vynnycky-high",25,"Enrolled",77.3
-"Kenya","uniform_3","Vynnycky-high",25,"Tested",235.82
-"Kenya","uniform_3","Vynnycky-high",30,"Enrolled",74.94
-"Kenya","uniform_3","Vynnycky-high",30,"Tested",200.4
-"Kenya","uniform_3","Vynnycky-high",35,"Enrolled",79.66
-"Kenya","uniform_3","Vynnycky-high",35,"Tested",199.62
-"Kenya","uniform_3","Vynnycky-high",40,"Enrolled",80.82
-"Kenya","uniform_3","Vynnycky-high",40,"Tested",189.22
-"Kenya","uniform_3","Vynnycky-high",45,"Enrolled",79.6
-"Kenya","uniform_3","Vynnycky-high",45,"Tested",182.92
-"Kenya","uniform_3","Vynnycky-high",50,"Enrolled",77.28
-"Kenya","uniform_3","Vynnycky-high",50,"Tested",176.48
-"Kenya","uniform_3","Vynnycky-high",55,"Enrolled",84.36
-"Kenya","uniform_3","Vynnycky-high",55,"Tested",193.32
-"Kenya","uniform_3","Vynnycky-high",60,"Enrolled",81.46
-"Kenya","uniform_3","Vynnycky-high",60,"Tested",185.78
-"Kenya","uniform_3","Vynnycky-high",65,"Enrolled",80.6
-"Kenya","uniform_3","Vynnycky-high",65,"Tested",181.86
-"Kenya","uniform_3","Vynnycky-high",70,"Enrolled",80.02
-"Kenya","uniform_3","Vynnycky-high",70,"Tested",182.9
-"Kenya","uniform_3","Vynnycky-high",75,"Enrolled",76.66
-"Kenya","uniform_3","Vynnycky-high",75,"Tested",175.02
-"Kenya","uniform_3","Vynnycky-high",80,"Enrolled",79.02
-"Kenya","uniform_3","Vynnycky-high",80,"Tested",182.62
-"Kenya","uniform_3","uniform_95",0.5,"Enrolled",23.82
-"Kenya","uniform_3","uniform_95",0.5,"Tested",3616.92
-"Kenya","uniform_3","uniform_95",1,"Enrolled",29.16
-"Kenya","uniform_3","uniform_95",1,"Tested",2171.62
-"Kenya","uniform_3","uniform_95",2,"Enrolled",42.74
-"Kenya","uniform_3","uniform_95",2,"Tested",1671.16
-"Kenya","uniform_3","uniform_95",3,"Enrolled",53.56
-"Kenya","uniform_3","uniform_95",3,"Tested",1434.92
-"Kenya","uniform_3","uniform_95",4,"Enrolled",59.64
-"Kenya","uniform_3","uniform_95",4,"Tested",1186.16
-"Kenya","uniform_3","uniform_95",5,"Enrolled",66.4
-"Kenya","uniform_3","uniform_95",5,"Tested",1052.66
-"Kenya","uniform_3","uniform_95",6,"Enrolled",66.7
-"Kenya","uniform_3","uniform_95",6,"Tested",890.56
-"Kenya","uniform_3","uniform_95",7,"Enrolled",73.72
-"Kenya","uniform_3","uniform_95",7,"Tested",836.34
-"Kenya","uniform_3","uniform_95",8,"Enrolled",81.34
-"Kenya","uniform_3","uniform_95",8,"Tested",799.94
-"Kenya","uniform_3","uniform_95",9,"Enrolled",79.48
-"Kenya","uniform_3","uniform_95",9,"Tested",691.48
-"Kenya","uniform_3","uniform_95",10,"Enrolled",82.36
-"Kenya","uniform_3","uniform_95",10,"Tested",617.54
-"Kenya","uniform_3","uniform_95",15,"Enrolled",91.98
-"Kenya","uniform_3","uniform_95",15,"Tested",437
-"Kenya","uniform_3","uniform_95",20,"Enrolled",97.22
-"Kenya","uniform_3","uniform_95",20,"Tested",346.32
-"Kenya","uniform_3","uniform_95",25,"Enrolled",96.74
-"Kenya","uniform_3","uniform_95",25,"Tested",288.82
-"Kenya","uniform_3","uniform_95",30,"Enrolled",100.62
-"Kenya","uniform_3","uniform_95",30,"Tested",264.2
-"Kenya","uniform_3","uniform_95",35,"Enrolled",102.72
-"Kenya","uniform_3","uniform_95",35,"Tested",253.76
-"Kenya","uniform_3","uniform_95",40,"Enrolled",100.66
-"Kenya","uniform_3","uniform_95",40,"Tested",234.22
-"Kenya","uniform_3","uniform_95",45,"Enrolled",98.86
-"Kenya","uniform_3","uniform_95",45,"Tested",220.58
-"Kenya","uniform_3","uniform_95",50,"Enrolled",100.04
-"Kenya","uniform_3","uniform_95",50,"Tested",225
-"Kenya","uniform_3","uniform_95",55,"Enrolled",101.68
-"Kenya","uniform_3","uniform_95",55,"Tested",227.4
-"Kenya","uniform_3","uniform_95",60,"Enrolled",103.16
-"Kenya","uniform_3","uniform_95",60,"Tested",229.4
-"Kenya","uniform_3","uniform_95",65,"Enrolled",102.42
-"Kenya","uniform_3","uniform_95",65,"Tested",229.28
-"Kenya","uniform_3","uniform_95",70,"Enrolled",97.48
-"Kenya","uniform_3","uniform_95",70,"Tested",216.98
-"Kenya","uniform_3","uniform_95",75,"Enrolled",101.56
-"Kenya","uniform_3","uniform_95",75,"Tested",225.94
-"Kenya","uniform_3","uniform_95",80,"Enrolled",106.16
-"Kenya","uniform_3","uniform_95",80,"Tested",234.68
+"country","p_slow","sigma","metric","value"
+"South Africa","Vynnycky-high",0.5,"Enrolled",7.83
+"South Africa","Vynnycky-high",0.5,"Tested",1215.17
+"South Africa","Vynnycky-high",1,"Enrolled",9.96
+"South Africa","Vynnycky-high",1,"Tested",810.48
+"South Africa","Vynnycky-high",2,"Enrolled",15.22
+"South Africa","Vynnycky-high",2,"Tested",639.11
+"South Africa","Vynnycky-high",3,"Enrolled",20.03
+"South Africa","Vynnycky-high",3,"Tested",562.03
+"South Africa","Vynnycky-high",4,"Enrolled",25.29
+"South Africa","Vynnycky-high",4,"Tested",522.9
+"South Africa","Vynnycky-high",5,"Enrolled",31.2
+"South Africa","Vynnycky-high",5,"Tested",500.02
+"South Africa","Vynnycky-high",6,"Enrolled",35.93
+"South Africa","Vynnycky-high",6,"Tested",465.86
+"South Africa","Vynnycky-high",7,"Enrolled",39.4
+"South Africa","Vynnycky-high",7,"Tested",438.08
+"South Africa","Vynnycky-high",8,"Enrolled",43.89
+"South Africa","Vynnycky-high",8,"Tested",401.3
+"South Africa","Vynnycky-high",9,"Enrolled",47.64
+"South Africa","Vynnycky-high",9,"Tested",381
+"South Africa","Vynnycky-high",10,"Enrolled",53.6
+"South Africa","Vynnycky-high",10,"Tested",368.93
+"South Africa","Vynnycky-high",15,"Enrolled",68.87
+"South Africa","Vynnycky-high",15,"Tested",278.5
+"South Africa","Vynnycky-high",20,"Enrolled",77.77
+"South Africa","Vynnycky-high",20,"Tested",215.66
+"South Africa","Vynnycky-high",25,"Enrolled",81.41
+"South Africa","Vynnycky-high",25,"Tested",176.39
+"South Africa","Vynnycky-high",30,"Enrolled",85.97
+"South Africa","Vynnycky-high",30,"Tested",156.33
+"South Africa","Vynnycky-high",35,"Enrolled",86.1
+"South Africa","Vynnycky-high",35,"Tested",138.35
+"South Africa","Vynnycky-high",40,"Enrolled",90.94
+"South Africa","Vynnycky-high",40,"Tested",135.16
+"South Africa","Vynnycky-high",45,"Enrolled",88.23
+"South Africa","Vynnycky-high",45,"Tested",126.56
+"South Africa","Vynnycky-high",50,"Enrolled",91.47
+"South Africa","Vynnycky-high",50,"Tested",129.75
+"Kenya","Vynnycky-1997",0.5,"Enrolled",10.15
+"Kenya","Vynnycky-1997",0.5,"Tested",1466.53
+"Kenya","Vynnycky-1997",1,"Enrolled",12.7
+"Kenya","Vynnycky-1997",1,"Tested",954.4
+"Kenya","Vynnycky-1997",2,"Enrolled",18.3
+"Kenya","Vynnycky-1997",2,"Tested",733.72
+"Kenya","Vynnycky-1997",3,"Enrolled",24.86
+"Kenya","Vynnycky-1997",3,"Tested",671.93
+"Kenya","Vynnycky-1997",4,"Enrolled",28.92
+"Kenya","Vynnycky-1997",4,"Tested",611.36
+"Kenya","Vynnycky-1997",5,"Enrolled",35.5
+"Kenya","Vynnycky-1997",5,"Tested",603.86
+"Kenya","Vynnycky-1997",6,"Enrolled",38.83
+"Kenya","Vynnycky-1997",6,"Tested",558.03
+"Kenya","Vynnycky-1997",7,"Enrolled",42.68
+"Kenya","Vynnycky-1997",7,"Tested",529.58
+"Kenya","Vynnycky-1997",8,"Enrolled",46.37
+"Kenya","Vynnycky-1997",8,"Tested",501.34
+"Kenya","Vynnycky-1997",9,"Enrolled",50.35
+"Kenya","Vynnycky-1997",9,"Tested",486.45
+"Kenya","Vynnycky-1997",10,"Enrolled",53.75
+"Kenya","Vynnycky-1997",10,"Tested",464.94
+"Kenya","Vynnycky-1997",15,"Enrolled",67.48
+"Kenya","Vynnycky-1997",15,"Tested",358.18
+"Kenya","Vynnycky-1997",20,"Enrolled",75.52
+"Kenya","Vynnycky-1997",20,"Tested",286.64
+"Kenya","Vynnycky-1997",25,"Enrolled",78.59
+"Kenya","Vynnycky-1997",25,"Tested",246.94
+"Kenya","Vynnycky-1997",30,"Enrolled",82.93
+"Kenya","Vynnycky-1997",30,"Tested",228.34
+"Kenya","Vynnycky-1997",35,"Enrolled",85.26
+"Kenya","Vynnycky-1997",35,"Tested",215.31
+"Kenya","Vynnycky-1997",40,"Enrolled",82.17
+"Kenya","Vynnycky-1997",40,"Tested",195.64
+"Kenya","Vynnycky-1997",45,"Enrolled",85.52
+"Kenya","Vynnycky-1997",45,"Tested",194
+"Kenya","Vynnycky-1997",50,"Enrolled",86.95
+"Kenya","Vynnycky-1997",50,"Tested",196.81
+"Kenya","uniform",0.5,"Enrolled",23.32
+"Kenya","uniform",0.5,"Tested",3354.93
+"Kenya","uniform",1,"Enrolled",29.37
+"Kenya","uniform",1,"Tested",2155.12
+"Kenya","uniform",2,"Enrolled",40.35
+"Kenya","uniform",2,"Tested",1569.41
+"Kenya","uniform",3,"Enrolled",49.78
+"Kenya","uniform",3,"Tested",1312.72
+"Kenya","uniform",4,"Enrolled",55.02
+"Kenya","uniform",4,"Tested",1112.3
+"Kenya","uniform",5,"Enrolled",62
+"Kenya","uniform",5,"Tested",1008.42
+"Kenya","uniform",6,"Enrolled",66.91
+"Kenya","uniform",6,"Tested",907.49
+"Kenya","uniform",7,"Enrolled",69.73
+"Kenya","uniform",7,"Tested",812.76
+"Kenya","uniform",8,"Enrolled",75
+"Kenya","uniform",8,"Tested",772.73
+"Kenya","uniform",9,"Enrolled",76.82
+"Kenya","uniform",9,"Tested",702.99
+"Kenya","uniform",10,"Enrolled",77.83
+"Kenya","uniform",10,"Tested",643.11
+"Kenya","uniform",15,"Enrolled",87.69
+"Kenya","uniform",15,"Tested",447.64
+"Kenya","uniform",20,"Enrolled",96.15
+"Kenya","uniform",20,"Tested",356.01
+"Kenya","uniform",25,"Enrolled",95.35
+"Kenya","uniform",25,"Tested",290.98
+"Kenya","uniform",30,"Enrolled",97.36
+"Kenya","uniform",30,"Tested",264.59
+"Kenya","uniform",35,"Enrolled",100.03
+"Kenya","uniform",35,"Tested",246.9
+"Kenya","uniform",40,"Enrolled",99.21
+"Kenya","uniform",40,"Tested",232.58
+"Kenya","uniform",45,"Enrolled",106.77
+"Kenya","uniform",45,"Tested",240.42
+"Kenya","uniform",50,"Enrolled",98.53
+"Kenya","uniform",50,"Tested",220.81
+"India","Vynnycky-1997",0.5,"Enrolled",10.13
+"India","Vynnycky-1997",0.5,"Tested",1438.72
+"India","Vynnycky-1997",1,"Enrolled",12.82
+"India","Vynnycky-1997",1,"Tested",977.41
+"India","Vynnycky-1997",2,"Enrolled",18.97
+"India","Vynnycky-1997",2,"Tested",787.49
+"India","Vynnycky-1997",3,"Enrolled",25.4
+"India","Vynnycky-1997",3,"Tested",708.14
+"India","Vynnycky-1997",4,"Enrolled",30.7
+"India","Vynnycky-1997",4,"Tested",663.11
+"India","Vynnycky-1997",5,"Enrolled",34.02
+"India","Vynnycky-1997",5,"Tested",590.55
+"India","Vynnycky-1997",6,"Enrolled",39.01
+"India","Vynnycky-1997",6,"Tested",570.79
+"India","Vynnycky-1997",7,"Enrolled",42.25
+"India","Vynnycky-1997",7,"Tested",533.44
+"India","Vynnycky-1997",8,"Enrolled",48.92
+"India","Vynnycky-1997",8,"Tested",527.09
+"India","Vynnycky-1997",9,"Enrolled",48.82
+"India","Vynnycky-1997",9,"Tested",471.19
+"India","Vynnycky-1997",10,"Enrolled",53.62
+"India","Vynnycky-1997",10,"Tested",465.06
+"India","Vynnycky-1997",15,"Enrolled",63.39
+"India","Vynnycky-1997",15,"Tested",362.92
+"India","Vynnycky-1997",20,"Enrolled",74.07
+"India","Vynnycky-1997",20,"Tested",323.76
+"India","Vynnycky-1997",25,"Enrolled",73.25
+"India","Vynnycky-1997",25,"Tested",273.56
+"India","Vynnycky-1997",30,"Enrolled",74.29
+"India","Vynnycky-1997",30,"Tested",250.23
+"India","Vynnycky-1997",35,"Enrolled",77.74
+"India","Vynnycky-1997",35,"Tested",246
+"India","Vynnycky-1997",40,"Enrolled",83.02
+"India","Vynnycky-1997",40,"Tested",246.68
+"India","Vynnycky-1997",45,"Enrolled",80.05
+"India","Vynnycky-1997",45,"Tested",234.2
+"India","Vynnycky-1997",50,"Enrolled",80.13
+"India","Vynnycky-1997",50,"Tested",234.31
+"India","uniform",0.5,"Enrolled",23.52
+"India","uniform",0.5,"Tested",3383.85
+"India","uniform",1,"Enrolled",29.73
+"India","uniform",1,"Tested",2193.45
+"India","uniform",2,"Enrolled",42.28
+"India","uniform",2,"Tested",1651.72
+"India","uniform",3,"Enrolled",51.62
+"India","uniform",3,"Tested",1379.27
+"India","uniform",4,"Enrolled",55.67
+"India","uniform",4,"Tested",1131.29
+"India","uniform",5,"Enrolled",64.93
+"India","uniform",5,"Tested",1066.73
+"India","uniform",6,"Enrolled",67.25
+"India","uniform",6,"Tested",924.17
+"India","uniform",7,"Enrolled",71.92
+"India","uniform",7,"Tested",849.55
+"India","uniform",8,"Enrolled",76.13
+"India","uniform",8,"Tested",783.04
+"India","uniform",9,"Enrolled",77.49
+"India","uniform",9,"Tested",712.7
+"India","uniform",10,"Enrolled",78.3
+"India","uniform",10,"Tested",647.44
+"India","uniform",15,"Enrolled",90.05
+"India","uniform",15,"Tested",485.97
+"India","uniform",20,"Enrolled",95.21
+"India","uniform",20,"Tested",404.33
+"India","uniform",25,"Enrolled",96.16
+"India","uniform",25,"Tested",344.02
+"India","uniform",30,"Enrolled",97.29
+"India","uniform",30,"Tested",314.56
+"India","uniform",35,"Enrolled",96.5
+"India","uniform",35,"Tested",292.26
+"India","uniform",40,"Enrolled",96.23
+"India","uniform",40,"Tested",279.93
+"India","uniform",45,"Enrolled",96.07
+"India","uniform",45,"Tested",274.3
+"India","uniform",50,"Enrolled",101.26
+"India","uniform",50,"Tested",288.58

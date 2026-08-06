@@ -118,15 +118,15 @@ for (progression_structure in progression_structures) {
     foi <- foi_structures[[foi_structure]] # force of infection by age
     pars_4$rho <- foi
 
-    # Simulate stochastic approach (sigma=80)
-    with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_4, sigmavec=c(80), casetarget=50, agedist=agedist, reps=reps)})
+    # Simulate stochastic approach (sigma=50)
+    with_progress({stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_4, sigmavec=c(50), casetarget=50, agedist=agedist, reps=reps)})
 
-    # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
-    from_model <- summarise_case_incidence_and_ARTI(stochastic_df_lit, pars=pars_4, reps=reps, sig=80)
+    # Estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=50)
+    from_model <- summarise_case_incidence_and_ARTI(stochastic_df_lit, pars=pars_4, reps=reps, sig=50)
     summary_table <- bind_rows(summary_table, tibble(progression_structure=progression_structure, slow_structure=slow_structure,
                                                      foi_structure=foi_structure, 
-                                                     inf_prev_15to24=median(stochastic_df_lit$inf_prev_15to24),  # assuming sigmavec=c(80)
-                                                     inf_prev_25to34=median(stochastic_df_lit$inf_prev_25to34),  # assuming sigmavec=c(80)
+                                                     inf_prev_15to24=median(stochastic_df_lit$inf_prev_15to24),  # assuming sigmavec=c(50)
+                                                     inf_prev_25to34=median(stochastic_df_lit$inf_prev_25to34),  # assuming sigmavec=c(50)
                                                      ARTI=median(from_model$ARTI), cases=median(from_model$cases)))
     }
   }
@@ -200,11 +200,11 @@ summary_table %>%
 
 # Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=25)
+  stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit, sigmavec=c(0.5,1:50), casetarget=50, agedist=agedist, reps=100)
 })
 
 # Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit, sigmavec=seq(from=0.5, to=80, by=0.2), casetarget=50, agedist=agedist)
+analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit, sigmavec=seq(from=0.5, to=50, by=0.2), casetarget=50, agedist=agedist)
 
 # Plot all results (per 1)
 fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, ylimit=1000)
@@ -215,8 +215,30 @@ fig_stochastic_analytic_lit_zoom <- plot_stochastic_analytic(stochastic_df_lit %
 fig_stochastic_analytic_lit_zoom
 ggsave(fig_stochastic_analytic_lit_zoom, file=paste0("figures/stochastic_analytic_lit_zoom.png"), width=7.29, height=4.51)
 
-# Optional: estimate case incidence per 100k, infection prevalence, and ARTI from model (sigma=80)
-from_model <- summarise_case_incidence_and_ARTI(stochastic_df_lit, pars=pars_lit, reps=25, sig=80)
+# Save full (per-rep, per-sigma) South Africa results for reuse in chunk 6c, instead of re-simulating
+# South Africa there. n_enrolled_1/n_tested_1 pre-computed to match the schema used by chunk 6a/6b.
+stochastic_df_lit_full <- stochastic_df_lit %>%
+  mutate(country = "South Africa", p_slow = "Vynnycky-high",
+         n_enrolled_1 = n_enrolled / n_trial_cases, n_tested_1 = n_tested / n_trial_cases)
+write.csv(stochastic_df_lit_full, file="output/southafrica_stochoutput.csv", row.names=FALSE)
+
+#' Summary table: infection prevalence at ages 20/30, ARTI, case incidence
+#' Computed from stochastic output at sigma=50 (infection prevs, ARTI, cases). Saved for reuse in
+#' chunk 6a (combined into summary_table_6a) instead of re-simulating South Africa there.
+summary_table_5 <- stochastic_df_lit_full %>%
+  filter(sigma == 50) %>%
+  mutate(inf_prev_all = (n_overall - n_tested + n_enrolled) / n_overall,
+    meanage      = ((pars_lit$maxage - pars_lit$minage) / 2) + pars_lit$minage,
+    ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
+    cases_per100k = n_trial_cases / (n_overall * pars_lit$trial_length) * 100000) %>%
+  group_by(country, p_slow) %>%
+  summarise(inf_prev_15to24 = median(inf_prev_15to24),
+    inf_prev_25to34 = median(inf_prev_25to34),
+    ARTI            = median(ARTI),
+    cases_per100k   = median(cases_per100k),
+    .groups = "drop")
+
+write.csv(summary_table_5, file="output/southafrica_results.csv", row.names=FALSE)
 ```
 
 ## 6. Scenarios (shared setup)
@@ -353,33 +375,25 @@ write.csv(summary_table_kenya_india, file="output/kenya_india_parameter_fit_resu
 #| label: 6a_varied_site_results
 #| eval: FALSE
 
-# Flat grid over all combinations: country x FOI x sigma x rep
-# Each country uses its single fitted FOI (Vynnycky-high for South Africa, Vynnycky-1997 for Kenya/India)
-# regardless of which p_slow structure is being shown, to keep one FOI choice per country rather than
-# one per (country, p_slow)
-foi_by_country <- list(
-  "South Africa" = make_foi(4,6,4,7,5),
-  "Kenya"        = make_foi(5,2,5,4,2),
-  "India"        = make_foi(1,2,4,2,1))
+# Plot varied site results, using one best-choice FOI informed by results of the model fitting chunks.
+# South Africa is not re-simulated here - its results are already saved from chunk 5
+# (output/southafrica_results.csv) and are merged into summary_table_6a below.
+pars_6a     <- pars_lit
+p_revert_6a <- p_revert_by_country
 
-# p_slow lookup (named list of actual p_slow vectors, keyed by structure name) - distinct from
-# p_slow_structures_6a in the fitting chunk above, which is just the plain vector of structure names
+countries_6a_plot <- c("Kenya", "India")
+
+foi_by_country <- list(
+  "Kenya" = make_foi(5,2,5,4,2),
+  "India" = make_foi(1,2,4,2,1))
+
 p_slow_lookup_6a <- list(
-  "Vynnycky-high" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"),
   "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
   "uniform"       = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"))
 
-# All three countries now use their final fitted FOI/mu_slow=0.003 combination; Kenya/India still
-# show both progression-structure options (p_slow shape), with the FOI held fixed per country
-sim_grid_6a <- bind_rows(
-  tibble(country="South Africa", p_slow="Vynnycky-high"),
-  tibble(country=c("Kenya","India")) %>% crossing(p_slow=c("Vynnycky-1997","uniform"))
-) %>%
-  crossing(sigma = c(0.5, 1:10, seq(15, 80, by=5)), rep = 1:25)
-
-# South Africa/Kenya/India all needed here (agedists_6a/countries_6a above only cover Kenya/India)
-countries_6a_results <- c("South Africa", "Kenya", "India")
-agedists_6a_results  <- agedists_scenarios
+sim_grid_6a <- tibble(country=countries_6a_plot) %>%
+  crossing(p_slow=c("Vynnycky-1997","uniform")) %>%
+  crossing(sigma = c(0.5, 1:10, seq(15, 50, by=5)), rep = 1:100)
 
 # Single flat future_lapply — avoids nested parallelism and memory spikes
 with_progress({
@@ -391,7 +405,7 @@ with_progress({
     pars_i$mu_slow <- define_mu_slow("0.003")
     pars_i$p_revert <- p_revert_6a[[sim_grid_6a$country[i]]]
     pars_i$sigma  <- sim_grid_6a$sigma[i]
-    agedist_i     <- agedists_6a_results[[sim_grid_6a$country[i]]]
+    agedist_i     <- agedists_scenarios[[sim_grid_6a$country[i]]]
     out           <- sim_stoch(pars_i, casetarget=50, agedist=agedist_i)
     p()
     tibble(country=sim_grid_6a$country[i], p_slow=sim_grid_6a$p_slow[i],
@@ -403,16 +417,20 @@ with_progress({
 
 stoch_df_6a <- bind_rows(stoch_list_6a)
 
-#' 3x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country, colour = p_slow (final fitted FOI/p_slow choices, mu_slow=0.003 throughout)
+# Save full (raw counts, per-rep) Kenya/India results for reuse in chunk 6c, instead of re-simulating there
+write.csv(stoch_df_6a, file="output/variedsite_results_stochoutput.csv", row.names=FALSE)
+
+#' 2x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country (Kenya, India), colour = p_slow.
+#' South Africa's own version of this test-span curve is already plotted separately in chunk 5
+#' (fig_stochastic_analytic_lit) so isn't repeated here.
 stoch_df_6a_long <- stoch_df_6a %>%
-  mutate(country = factor(country, levels=countries_6a_results),
+  mutate(country = factor(country, levels=countries_6a_plot),
          n_enrolled_1 = n_enrolled / n_trial_cases,
          n_tested_1   = n_tested   / n_trial_cases) %>%
   select(country, p_slow, sigma, rep, n_enrolled_1, n_tested_1) %>%
   pivot_longer(cols=c(n_enrolled_1, n_tested_1), names_to="metric", values_to="value") %>%
   mutate(metric = case_when(metric=="n_enrolled_1"~"Enrolled", metric=="n_tested_1"~"Tested"),
          metric = factor(metric, levels=c("Enrolled","Tested")))
-write.csv(stoch_df_6a_long, file="output/variedsite_results_stochoutput.csv", row.names=FALSE)
 
 median_df_6a <- stoch_df_6a_long %>%
   group_by(country, p_slow, sigma, metric) %>%
@@ -444,10 +462,10 @@ fig_6a_zoom <- ggplot(stoch_df_6a_long %>% filter(sigma <= 15),
 fig_6a_zoom
 ggsave(fig_6a_zoom, file="figures/6a_varied_sites_zoom.png", width=7.29, height=4.51)
 
-#' Summary table: infection prevalence at ages 20/30, ARTI, case incidence
-#' Computed from stochastic output at sigma=80 (infection prevs, ARTI, cases)
-summary_table_6a <- stoch_df_6a %>%
-  filter(sigma == 80) %>%
+#' Summary table: infection prevalence at ages 20/30, ARTI, case incidence, for Kenya/India
+#' Computed from stochastic output at sigma=50 (infection prevs, ARTI, cases)
+summary_table_6a_ki <- stoch_df_6a %>%
+  filter(sigma == 50) %>%
   mutate(inf_prev_all = (n_overall - n_tested + n_enrolled) / n_overall,
     meanage      = ((pars_6a$maxage - pars_6a$minage) / 2) + pars_6a$minage,
     ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
@@ -458,6 +476,10 @@ summary_table_6a <- stoch_df_6a %>%
     ARTI            = median(ARTI),
     cases_per100k   = median(cases_per100k),
     .groups = "drop")
+
+# Combine with South Africa's pre-computed summary (chunk 5) instead of re-simulating it here
+summary_table_sa <- read.csv("output/southafrica_results.csv")
+summary_table_6a <- bind_rows(summary_table_sa, summary_table_6a_ki)
 
 write.csv(summary_table_6a, file="output/variedsite_results.csv", row.names=FALSE)
 ```
@@ -531,7 +553,11 @@ with_progress({
   }, future.seed=TRUE)
 })
 
-notest_df_6b <- bind_rows(notest_list_6b)
+notest_df_6b <- bind_rows(notest_list_6b) %>%
+  mutate(n_enrolled_1 = n_enrolled / n_trial_cases)
+
+# Save full (per-rep) no-test results for reuse in chunk 6c, instead of re-simulating there
+write.csv(notest_df_6b, file="output/notest_stochoutput.csv", row.names=FALSE)
 
 #' Summarise over reps: median + 10th/90th percentile
 notest_summary_6b <- notest_df_6b %>%
@@ -567,75 +593,53 @@ ggsave(fig_6b, file="figures/6b_notest_scenarios.png", width=7.29, height=4.51)
 
 ## 6c. Main figure: test-based vs no-test strategies combined
 
-Combines two test-based strategies (sigma = 2 years, ~lifetime) with the three `sim_stoch_notest` scenarios from 6b, one fixed FOI and one fixed p_slow structure per country (Vynnycky-high for South Africa, Vynnycky-1997 for Kenya and India), fill = enrolment strategy.
+Combines two test-based strategies (sigma = 2 years, ~lifetime) with the three `sim_stoch_notest` scenarios from 6b, one fixed FOI and one fixed p_slow structure per country (Vynnycky-high for South Africa, Vynnycky-1997 for Kenya and India), fill = enrolment strategy. No new simulation here - reads the full per-rep results already saved by chunks 5 (South Africa), 6a (Kenya/India), and 6b (no-test scenarios).
 
 ```{r}
 #| label: 6c_main_combined
 #| eval: FALSE
 
-plan(multisession, workers=n_workers)
-
 countries_6c <- countries_scenarios
-p_slow_by_country_6c <- list(
-  "South Africa" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-high"),
-  "Kenya"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
-  "India"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"))
-p_revert_6c <- p_revert_by_country
-foi_by_country_6c <- list(
-  "South Africa" = make_foi(4,6,4,7,5),
-  "Kenya"        = make_foi(5,2,5,4,2),
-  "India"        = make_foi(1,2,4,2,1))
-agedists_6c <- agedists_scenarios
 
-# Build base parameter list
-pars_6c <- pars_lit
-pars_6c$mu_slow <- define_mu_slow("0.003")
+# Strategy definitions: 2 test-based (sigma = 2y / lifetime) + 3 no-test scenarios
+strategy_levels_6c <- c("No test\nstandard", "No test\nyoung", "No test\nhousehold", "Test\nlifetime", "Test\n2 years")
 
-# Strategy definitions: 3 test-based (varying sigma) + 3 no-test (varying age range/households)
-strategies_6c <- tibble(
-  strategy   = c("No test\nstandard", "No test\nyoung", "No test\nhousehold", "Test\nlifetime", "Test\n2 years"),
-  type       = c("notest", "notest", "notest", "test", "test"),
-  sigma      = c(NA, NA, NA, 80, 2),
-  minage     = c(15, 12, 6, NA, NA),
-  maxage     = c(49, 34, 99, NA, NA),
-  households = c(FALSE, FALSE, TRUE, NA, NA))
+# Test-based: South Africa from chunk 5's full output, Kenya/India from chunk 6a's full output.
+# Each country only has one fitted p_slow shown here (Vynnycky-high for SA, Vynnycky-1997 for Kenya/India).
+sa_test_6c <- read.csv("output/southafrica_stochoutput.csv") %>%
+  filter(sigma %in% c(2, 50)) %>%
+  mutate(strategy = ifelse(sigma == 50, "test_lifetime", "test_2y"))
 
-# Flat grid: country x strategy x rep
-sim_grid_6c <- crossing(country=countries_6c, strategy=strategies_6c$strategy, rep=1:25) %>%
-  left_join(strategies_6c, by="strategy")
+ki_test_6c <- read.csv("output/variedsite_results_stochoutput.csv") %>%
+  filter(p_slow == "Vynnycky-1997", sigma %in% c(2, 50)) %>%
+  mutate(n_enrolled_1 = n_enrolled / n_trial_cases,
+         strategy = ifelse(sigma == 50, "test_lifetime", "test_2y"))
 
-with_progress({
-  p <- progressr::progressor(steps=nrow(sim_grid_6c))
-  stoch_list_6c <- future.apply::future_lapply(1:nrow(sim_grid_6c), function(i) {
-    pars_i        <- pars_6c
-    pars_i$rho    <- foi_by_country_6c[[sim_grid_6c$country[i]]]
-    pars_i$p_slow <- p_slow_by_country_6c[[sim_grid_6c$country[i]]]
-    pars_i$p_revert <- p_revert_6c[[sim_grid_6c$country[i]]]
-    agedist_i     <- agedists_6c[[sim_grid_6c$country[i]]]
+test_6c <- bind_rows(
+  sa_test_6c %>% select(country, strategy, rep, n_enrolled_1),
+  ki_test_6c %>% select(country, strategy, rep, n_enrolled_1))
 
-    if (sim_grid_6c$type[i] == "test") {
-      pars_i$sigma <- sim_grid_6c$sigma[i]
-      out <- sim_stoch(pars_i, casetarget=50, agedist=agedist_i)
-    } else {
-      pars_i$minage <- sim_grid_6c$minage[i]
-      pars_i$maxage <- sim_grid_6c$maxage[i]
-      out <- sim_stoch_notest(pars_i, casetarget=50, agedist=agedist_i,
-                              households=sim_grid_6c$households[i])
-    }
-    p()
-    tibble(country=sim_grid_6c$country[i], strategy=sim_grid_6c$strategy[i], type=sim_grid_6c$type[i],
-      rep=sim_grid_6c$rep[i], n_enrolled=out$n_enrolled, n_trial_cases=out$n_trial_cases)
-  }, future.seed=TRUE)
-})
+# No-test: from chunk 6b's full output. Each country only has one fitted p_slow shown here
+# (Vynnycky-high for SA, Vynnycky-1997 for Kenya/India), matching the test-based strategies above.
+notest_6c <- read.csv("output/notest_stochoutput.csv") %>%
+  filter((country == "South Africa" & slow_structure == "Vynnycky-high") |
+         (country %in% c("Kenya","India") & slow_structure == "Vynnycky-1997")) %>%
+  mutate(strategy = scenario) %>%
+  select(country, strategy, rep, n_enrolled_1)
 
-stoch_df_6c <- bind_rows(stoch_list_6c)
+stoch_df_6c <- bind_rows(test_6c, notest_6c) %>%
+  mutate(strategy = case_when(
+    strategy == "no test standard"  ~ "No test\nstandard",
+    strategy == "no test young"     ~ "No test\nyoung",
+    strategy == "no test household" ~ "No test\nhousehold",
+    strategy == "test_lifetime"     ~ "Test\nlifetime",
+    strategy == "test_2y"           ~ "Test\n2 years"))
 
 # Plot: x = strategy (grouped, test-based then no-test), 3 dodged boxes per group = country, fill = country
 country_colours_6c <- c("South Africa"="#4DAF4A", "Kenya"="#377EB8", "India"="#E41A1C")
 fig_6c <- stoch_df_6c %>%
   mutate(country  = factor(country, levels=countries_6c),
-         strategy = factor(strategy, levels=strategies_6c$strategy),
-         n_enrolled_1 = n_enrolled / n_trial_cases) %>%
+         strategy = factor(strategy, levels=strategy_levels_6c)) %>%
   ggplot(aes(x=strategy, y=n_enrolled_1, fill=country)) +
   geom_boxplot(coef=Inf, position=position_dodge2(preserve="single")) +
   scale_fill_manual(values=country_colours_6c) +
@@ -665,11 +669,11 @@ pars_m72IIb <- list(
 	mu_fast=1.5,  # from lit
 	p_revert=p_revert_lit,  # from lit
 	mu_revert=0.75, # from lit
-	sigma=100,  # IGRA test is essentially lifelong
+	sigma=80,  # IGRA test is essentially lifelong
 	trial_length=3)  # from trial
 p_slow_m72IIb_vals     <- seq(0.5, 1.0, by=0.05)
 slow_structures_m72IIb <- c("base", "min", "max", "0.003")
-reps <- 25
+reps <- 100
 
 # Build a flat grid of all parameter combinations x reps
 uniform_grid <- expand.grid(
@@ -743,16 +747,16 @@ pars_lit_uniform <- list(
 	mu_fast=1.5,  # for most fast progressors progressing within two years, assuming exponential distribution
 	p_revert=0,  # no reversion for analytic match
 	mu_revert=0, # no reversion for analytic match
-	sigma=100,  # IGRA test is essentially lifelong
+	sigma=80,  # IGRA test is essentially lifelong
 	trial_length=3)
 
 # Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
 with_progress({
-  stochastic_df_match <- sim_stoch_over_sigma(pars=pars_lit_uniform, sigmavec=c(0.5,1:80), casetarget=50, agedist=agedist, reps=25)
+  stochastic_df_match <- sim_stoch_over_sigma(pars=pars_lit_uniform, sigmavec=c(0.5,1:50), casetarget=50, agedist=agedist, reps=100)
 })
 
 #' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_uniform, sigmavec=seq(from=0.5, to=80, by=0.1), casetarget=50, agedist=agedist)
+analytical_df_match <- sim_analytic_over_sigma(pars=pars_lit_uniform, sigmavec=seq(from=0.5, to=50, by=0.2), casetarget=50, agedist=agedist)
 
 #' Plot all results
 fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, analytical_df_match)
