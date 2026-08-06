@@ -354,10 +354,13 @@ write.csv(summary_table_kenya_india, file="output/kenya_india_parameter_fit_resu
 #| eval: FALSE
 
 # Flat grid over all combinations: country x FOI x sigma x rep
+# Each country uses its single fitted FOI (Vynnycky-high for South Africa, Vynnycky-1997 for Kenya/India)
+# regardless of which p_slow structure is being shown, to keep one FOI choice per country rather than
+# one per (country, p_slow)
 foi_by_country <- list(
-  "South Africa" = make_foi(4,6,4,7,5),                # best fit from chunk 4
-  "Kenya"        = define_foi_by_age("uniform_1"),      # replace with best foi from Kenya/India fitting above
-  "India"        = define_foi_by_age("uniform_3"))      # replace with best foi from Kenya/India fitting above
+  "South Africa" = make_foi(4,6,4,7,5),
+  "Kenya"        = make_foi(5,2,5,4,2),
+  "India"        = make_foi(1,2,4,2,1))
 
 # p_slow lookup (named list of actual p_slow vectors, keyed by structure name) - distinct from
 # p_slow_structures_6a in the fitting chunk above, which is just the plain vector of structure names
@@ -366,11 +369,11 @@ p_slow_lookup_6a <- list(
   "Vynnycky-1997" = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
   "uniform"       = extract_probability_of_being_slow(progressor_type_by_age_studies, "uniform"))
 
-# South Africa's p_slow/mu_slow are already fixed (matching pars_lit's chosen fit); Kenya/India still
-# compare all p_slow/mu_slow options since their fitting hasn't settled on a single best combination yet
+# All three countries now use their final fitted FOI/mu_slow=0.003 combination; Kenya/India still
+# show both progression-structure options (p_slow shape), with the FOI held fixed per country
 sim_grid_6a <- bind_rows(
-  tibble(country="South Africa") %>% crossing(p_slow="Vynnycky-high", mu_slow="0.003"),
-  tibble(country=c("Kenya","India")) %>% crossing(p_slow=c("Vynnycky-1997","uniform"), mu_slow=slow_structures)
+  tibble(country="South Africa", p_slow="Vynnycky-high"),
+  tibble(country=c("Kenya","India")) %>% crossing(p_slow=c("Vynnycky-1997","uniform"))
 ) %>%
   crossing(sigma = c(0.5, 1:10, seq(15, 80, by=5)), rep = 1:25)
 
@@ -385,14 +388,14 @@ with_progress({
     pars_i        <- pars_6a
     pars_i$rho    <- foi_by_country[[sim_grid_6a$country[i]]]
     pars_i$p_slow <- p_slow_lookup_6a[[sim_grid_6a$p_slow[i]]]
-    pars_i$mu_slow <- define_mu_slow(sim_grid_6a$mu_slow[i])
+    pars_i$mu_slow <- define_mu_slow("0.003")
     pars_i$p_revert <- p_revert_6a[[sim_grid_6a$country[i]]]
     pars_i$sigma  <- sim_grid_6a$sigma[i]
     agedist_i     <- agedists_6a_results[[sim_grid_6a$country[i]]]
     out           <- sim_stoch(pars_i, casetarget=50, agedist=agedist_i)
     p()
     tibble(country=sim_grid_6a$country[i], p_slow=sim_grid_6a$p_slow[i],
-       mu_slow=sim_grid_6a$mu_slow[i], sigma=sim_grid_6a$sigma[i], rep=sim_grid_6a$rep[i],
+       sigma=sim_grid_6a$sigma[i], rep=sim_grid_6a$rep[i],
        n_tested=out$n_tested, n_enrolled=out$n_enrolled, n_overall=out$n_overall,
        n_trial_cases=out$n_trial_cases, inf_prev_15to24=out$inf_prev_15to24, inf_prev_25to34=out$inf_prev_25to34)
   }, future.seed=TRUE)
@@ -400,49 +403,44 @@ with_progress({
 
 stoch_df_6a <- bind_rows(stoch_list_6a)
 
-#' 3x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country, colour = p_slow, linetype = mu_slow
+#' 3x2 panel plot: rows = n_enrolled_1 / n_tested_1, columns = country, colour = p_slow (final fitted FOI/p_slow choices, mu_slow=0.003 throughout)
 stoch_df_6a_long <- stoch_df_6a %>%
   mutate(country = factor(country, levels=countries_6a_results),
          n_enrolled_1 = n_enrolled / n_trial_cases,
          n_tested_1   = n_tested   / n_trial_cases) %>%
-  select(country, p_slow, mu_slow, sigma, rep, n_enrolled_1, n_tested_1) %>%
+  select(country, p_slow, sigma, rep, n_enrolled_1, n_tested_1) %>%
   pivot_longer(cols=c(n_enrolled_1, n_tested_1), names_to="metric", values_to="value") %>%
   mutate(metric = case_when(metric=="n_enrolled_1"~"Enrolled", metric=="n_tested_1"~"Tested"),
          metric = factor(metric, levels=c("Enrolled","Tested")))
 write.csv(stoch_df_6a_long, file="output/variedsite_results_stochoutput.csv", row.names=FALSE)
 
 median_df_6a <- stoch_df_6a_long %>%
-  group_by(country, p_slow, mu_slow, sigma, metric) %>%
+  group_by(country, p_slow, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
 write.csv(median_df_6a, file="output/variedsite_results_medians.csv", row.names=FALSE)
 
 p_slow_labels_6a  <- c("uniform"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")
-mu_slow_labels_6a <- c("base"="μ_s = 0.001","max"="μ_s = 0.00527","0.003"="μ_s = 0.003")
 
-fig_6a <- ggplot(stoch_df_6a_long, aes(x=sigma, y=value, col=p_slow, linetype=mu_slow)) +
+fig_6a <- ggplot(stoch_df_6a_long, aes(x=sigma, y=value, col=p_slow)) +
   geom_point(size=0.4, alpha=0.1) +
   geom_line(data=median_df_6a, linewidth=0.7) +
   facet_grid(metric ~ country, scales="free_y") +
   scale_colour_brewer(palette="Set1", labels=p_slow_labels_6a) +
-  scale_linetype_manual(values=c("base"="solid","max"="dashed","0.003"="dotted"),
-                      labels=mu_slow_labels_6a) +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f", linetype="μ_s")
+  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f")
 fig_6a
 ggsave(fig_6a, file="figures/6a_varied_sites.png", width=7.29, height=4.51)
 
 fig_6a_zoom <- ggplot(stoch_df_6a_long %>% filter(sigma <= 15),
-                      aes(x=sigma, y=value, col=p_slow, linetype=mu_slow)) +
+                      aes(x=sigma, y=value, col=p_slow)) +
   geom_point(size=0.4, alpha=0.1) +
   geom_line(data=median_df_6a %>% filter(sigma <= 15), linewidth=0.7) +
   facet_grid(metric ~ country, scales="free_y") +
   scale_colour_brewer(palette="Set1", labels=p_slow_labels_6a) +
-  scale_linetype_manual(values=c("base"="solid","max"="dashed","0.003"="dotted"),
-                        labels=mu_slow_labels_6a) +
   theme_classic() +
   theme(strip.background=element_blank()) +
-  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f", linetype="μ_s")
+  labs(x="Test span (years)", y="Number (for 1 case)", col="p_f")
 fig_6a_zoom
 ggsave(fig_6a_zoom, file="figures/6a_varied_sites_zoom.png", width=7.29, height=4.51)
 
@@ -454,7 +452,7 @@ summary_table_6a <- stoch_df_6a %>%
     meanage      = ((pars_6a$maxage - pars_6a$minage) / 2) + pars_6a$minage,
     ARTI         = 1 - (1 - inf_prev_all)^(1 / meanage),
     cases_per100k = n_trial_cases / (n_overall * pars_6a$trial_length) * 100000) %>%
-  group_by(country, p_slow, mu_slow) %>%
+  group_by(country, p_slow) %>%
   summarise(inf_prev_15to24 = median(inf_prev_15to24),
     inf_prev_25to34 = median(inf_prev_25to34),
     ARTI            = median(ARTI),
@@ -489,10 +487,17 @@ scenarios_6b <- tibble(scenario = c("no test standard", "no test young", "no tes
                        minage   = c(15, 12, 6),
                        maxage   = c(49, 34, 99))
 
+# Each country uses its single fitted FOI (Vynnycky-high for South Africa, Vynnycky-1997 for Kenya/India)
+# regardless of which p_slow structure is being shown, matching the same approach used in 6a above
+foi_by_country_6b <- list(
+  "South Africa" = make_foi(4,6,4,7,5),
+  "Kenya"        = make_foi(5,2,5,4,2),
+  "India"        = make_foi(1,2,4,2,1))
+
 sim_grid_6b <- crossing(
-  bind_rows(tibble(country="South Africa", foi_structure="uniform_6", slow_structure="Vynnycky-high"),
-    tibble(country="Kenya", foi_structure="uniform_3", slow_structure=c("uniform_95","Vynnycky-1997")),
-    tibble(country="India", foi_structure="uniform_2", slow_structure=c("uniform_95","Vynnycky-1997"))),
+  bind_rows(tibble(country="South Africa", slow_structure="Vynnycky-high"),
+    tibble(country="Kenya", slow_structure=c("uniform_95","Vynnycky-1997")),
+    tibble(country="India", slow_structure=c("uniform_95","Vynnycky-1997"))),
   scenarios_6b,
   rep = 1:25)
 
@@ -500,19 +505,18 @@ with_progress({
   p <- progressr::progressor(steps=nrow(sim_grid_6b))
   notest_list_6b <- future.apply::future_lapply(1:nrow(sim_grid_6b), function(i) {
     pars_i        <- pars_6b
-    pars_i$rho    <- define_foi_by_age(sim_grid_6b$foi_structure[i])
+    pars_i$rho    <- foi_by_country_6b[[sim_grid_6b$country[i]]]
     pars_i$minage <- sim_grid_6b$minage[i]
     pars_i$maxage <- sim_grid_6b$maxage[i]
     pars_i$p_slow   <- p_slow_structures_6b[[sim_grid_6b$slow_structure[i]]]
     pars_i$p_revert <- p_revert_6b[[sim_grid_6b$country[i]]]
     agedist_i     <- agedists_6b[[sim_grid_6b$country[i]]]
-    out           <- sim_stoch_notest(pars_i, casetarget=50, agedist=agedist_i, 
+    out           <- sim_stoch_notest(pars_i, casetarget=50, agedist=agedist_i,
                                       households = (sim_grid_6b$scenario[i] == "no test household"))
     p()
     tibble(
       scenario      = sim_grid_6b$scenario[i],
       country       = sim_grid_6b$country[i],
-      foi_structure = sim_grid_6b$foi_structure[i],
       slow_structure  = sim_grid_6b$slow_structure[i],
       rep           = sim_grid_6b$rep[i],
       n_enrolled   = out$n_enrolled,
@@ -531,7 +535,7 @@ notest_df_6b <- bind_rows(notest_list_6b)
 
 #' Summarise over reps: median + 10th/90th percentile
 notest_summary_6b <- notest_df_6b %>%
-  group_by(scenario, country, foi_structure, slow_structure) %>%
+  group_by(scenario, country, slow_structure) %>%
   summarise(
     n_enrolled_med = median(n_enrolled),
     n_enrolled_lo  = quantile(n_enrolled, 0.1),
@@ -577,7 +581,10 @@ p_slow_by_country_6c <- list(
   "Kenya"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"),
   "India"        = extract_probability_of_being_slow(progressor_type_by_age_studies, "Vynnycky-1997"))
 p_revert_6c <- p_revert_by_country
-foi_by_country_6c <- c("South Africa"="uniform_6", "Kenya"="uniform_3", "India"="uniform_2")
+foi_by_country_6c <- list(
+  "South Africa" = make_foi(4,6,4,7,5),
+  "Kenya"        = make_foi(5,2,5,4,2),
+  "India"        = make_foi(1,2,4,2,1))
 agedists_6c <- agedists_scenarios
 
 # Build base parameter list
@@ -595,14 +602,13 @@ strategies_6c <- tibble(
 
 # Flat grid: country x strategy x rep
 sim_grid_6c <- crossing(country=countries_6c, strategy=strategies_6c$strategy, rep=1:25) %>%
-  left_join(strategies_6c, by="strategy") %>%
-  mutate(foi_structure = foi_by_country_6c[country])
+  left_join(strategies_6c, by="strategy")
 
 with_progress({
   p <- progressr::progressor(steps=nrow(sim_grid_6c))
   stoch_list_6c <- future.apply::future_lapply(1:nrow(sim_grid_6c), function(i) {
     pars_i        <- pars_6c
-    pars_i$rho    <- define_foi_by_age(sim_grid_6c$foi_structure[i])
+    pars_i$rho    <- foi_by_country_6c[[sim_grid_6c$country[i]]]
     pars_i$p_slow <- p_slow_by_country_6c[[sim_grid_6c$country[i]]]
     pars_i$p_revert <- p_revert_6c[[sim_grid_6c$country[i]]]
     agedist_i     <- agedists_6c[[sim_grid_6c$country[i]]]
