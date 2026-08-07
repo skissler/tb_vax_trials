@@ -691,3 +691,59 @@ fig_stochastic_analytic_match <- plot_stochastic_analytic(stochastic_df_match, a
 fig_stochastic_analytic_match
 ggsave(fig_stochastic_analytic_match, file=paste0("figures/stochastic_analytic_match.png"), width=7.29, height=4.51)
 ```
+
+## 9. Size of trial
+
+Explores the effect of varying trial size - continually enrolling until 5 vs 50 vs 500 cases are reached. How does this affect the level of uncertainty in model outputs? Does stochasticity scale with trial size as expected by a simple renewal-process/CLT argument.
+```{r}
+#| label: 9_size_of_trial_stochasticity
+#| eval: FALSE
+
+# Effect of trial size on observed stochasticity
+plan(multisession, workers=n_workers)
+
+casetargets_9 <- c(5, 50, 500)
+sigmas_9      <- c(2, 50)  # consider two sigma values
+reps_9        <- 100  # same rep count at every (sigma, casetarget) cell
+
+pars_9 <- pars_lit  # South Africa's main fitted scenario, sigma overridden per grid row below (default sigma=100 otherwise)
+sim_grid_9 <- crossing(sigma = sigmas_9, casetarget = casetargets_9, rep = 1:reps_9)
+
+with_progress({
+  p <- progressr::progressor(steps=nrow(sim_grid_9))
+  trial_size_list_9 <- future.apply::future_lapply(1:nrow(sim_grid_9), function(i) {
+    pars_i       <- pars_9
+    pars_i$sigma <- sim_grid_9$sigma[i]
+    out <- sim_stoch(pars_i, casetarget=sim_grid_9$casetarget[i], agedist=agedist)
+    p()
+    tibble(sigma=sim_grid_9$sigma[i], casetarget=sim_grid_9$casetarget[i], rep=sim_grid_9$rep[i],
+           n_overall=out$n_overall, n_tested=out$n_tested, n_enrolled=out$n_enrolled,
+           n_trial_cases=out$n_trial_cases)
+  }, future.seed=TRUE)
+})
+
+trial_size_df_9 <- bind_rows(trial_size_list_9) %>%
+  mutate(n_overall_1  = n_overall  / casetarget,
+         n_tested_1   = n_tested   / casetarget,
+         n_enrolled_1 = n_enrolled / casetarget)
+write.csv(trial_size_df_9, file="output/size_of_trial_stochoutput.csv", row.names=FALSE)
+
+# Panel A: raw spread by casetarget, sigma=2 vs 50 dodged within each metric facet - do the boxes
+# visibly narrow as casetarget grows, at both sigma spans?
+fig_9 <- trial_size_df_9 %>%
+  pivot_longer(cols=c(n_overall_1, n_tested_1, n_enrolled_1), names_to="metric", values_to="value") %>%
+  mutate(metric = case_when(metric=="n_overall_1"~"Contacted", metric=="n_tested_1"~"Tested", metric=="n_enrolled_1"~"Enrolled"),
+         metric = factor(metric, levels=c("Contacted","Tested","Enrolled")),
+         casetarget = factor(casetarget, levels=casetargets_9),
+         sigma = factor(sigma, levels=sigmas_9)) %>%
+  ggplot(aes(x=casetarget, y=value, fill=sigma)) +
+  geom_boxplot(coef=Inf, position=position_dodge2(preserve="single")) +
+  facet_wrap(~metric, scales="free_y") +
+  scale_fill_brewer(palette="Set1") +
+  theme_classic() +
+  theme(strip.background=element_blank()) +
+  labs(x="Trial size (case target)", y="Number (per case)", fill="σ (years)")
+fig_9
+ggsave(fig_9, file="figures/9_size_of_trial_spread.png", width=8.5, height=4.51)
+```
+
