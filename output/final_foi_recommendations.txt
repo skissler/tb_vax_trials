@@ -1,0 +1,17 @@
+FOI fitting overnight run - completed 2026-08-06 23:26:04
+Total runtime: 4.93 hours
+
+FINAL RECOMMENDATIONS:
+
+South Africa   Vynnycky-high    foi=5_6_3_5_4      [ROBUST PASS]
+  cases=355.3  ARTI=0.0402  inf_prev_15to24=0.626  inf_prev_25to34=0.737
+
+Kenya          Vynnycky-1997    foi=5_2_5_4_2      [ORIGINAL CHOICE CONFIRMED at reps=100]
+  cases=157.2  ARTI=0.0201  inf_prev_15to24=0.349  inf_prev_25to34=0.490
+
+Kenya          uniform          foi=2_3_5_4_2      [ORIGINAL CHOICE CONFIRMED at reps=100]
+  cases=153.2  ARTI=0.0204  inf_prev_15to24=0.348  inf_prev_25to34=0.506
+
+India          Vynnycky-1997    foi=1_1_4_4_4      [NO ROBUST PASS even after widened search - closest miss reported]
+  cases=122.8  ARTI=0.0116  inf_prev_15to24=0.145  inf_prev_25to34=0.282
+
