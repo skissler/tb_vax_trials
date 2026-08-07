@@ -119,7 +119,8 @@ load_test_history <- function(country, progression_structure, slow_structure) {
   prefix <- sprintf("output/%s_%s_%s_history_", tolower(gsub(" ", "", country)), progression_structure, slow_structure)
   files <- Sys.glob(paste0(prefix, "*.csv"))
   if (length(files) == 0) return(tibble(foi_structure=character(), inf_prev_15to24=numeric(),
-    inf_prev_25to34=numeric(), ARTI=numeric(), cases=numeric(), conditions_met=logical(), reps_used=integer()))
+    inf_prev_25to34=numeric(), ARTI=numeric(), cases=numeric(), conditions_met=logical(), reps_used=integer(),
+    country=character(), progression_structure=character(), slow_structure=character()))
 
   reps_from_filename <- function(f) as.integer(sub(".*reps(\\d+).*", "\\1", f))
 
@@ -128,8 +129,10 @@ load_test_history <- function(country, progression_structure, slow_structure) {
     names(df) <- sub("_med$", "", names(df))                 # drop "_med" suffix if present
     names(df)[grepl("^conditions_met", names(df))] <- "conditions_met"  # unify conditions_met* -> conditions_met
     reps <- reps_from_filename(f)
-    df %>% mutate(reps_used = reps) %>%
-      select(foi_structure, inf_prev_15to24, inf_prev_25to34, ARTI, cases, conditions_met, reps_used)
+    df %>% mutate(reps_used = reps, country = country, progression_structure = progression_structure,
+                  slow_structure = slow_structure) %>%
+      select(foi_structure, inf_prev_15to24, inf_prev_25to34, ARTI, cases, conditions_met, reps_used,
+             country, progression_structure, slow_structure)
   }
 
   bind_rows(lapply(files, standardise_one)) %>%
@@ -277,11 +280,27 @@ run_stage3 <- function(country, progression_structure, slow_structure, stage2_re
 ## updated row with which stage/rep count it reflects. Run after stage 2 or 3 completes.
 ## ---------------------------------------------------------------------------
 
+# Per-row version of apply_bounds() - looks up each row's own country in country_bounds instead of
+# applying a single country's bounds to the whole data frame. Needed for master files that hold more
+# than one country (e.g. kenya_india_parameter_fit_results.csv) - using the single-country apply_bounds()
+# on those would silently recompute conditions_met for every row using the wrong country's bounds.
+apply_bounds_per_row <- function(df) {
+  df %>% rowwise() %>% mutate(conditions_met = {
+    b <- country_bounds[[country]]
+    between(inf_prev_15to24, b$inf_prev_15to24$min, b$inf_prev_15to24$max) &
+      between(inf_prev_25to34, b$inf_prev_25to34$min, b$inf_prev_25to34$max) &
+      between(ARTI, b$arti_lo, b$arti_hi) &
+      between(cases, b$cases_lo, b$cases_hi)
+  }) %>% ungroup()
+}
+
 merge_into_master <- function(new_results, reps_used, master_file="output/parameter_fit_results.csv") {
   master <- read.csv(master_file)
   if (!"reps_used" %in% names(master)) master$reps_used <- 5
+  if (!"country" %in% names(master)) master$country <- new_results$country[1]  # SA-only master file has no country column
 
-  target <- master$progression_structure == new_results$progression_structure[1] &
+  target <- master$country == new_results$country[1] &
+    master$progression_structure == new_results$progression_structure[1] &
     master$slow_structure == new_results$slow_structure[1] &
     master$foi_structure %in% new_results$foi_structure
   match_idx <- match(master$foi_structure[target], new_results$foi_structure)
@@ -293,10 +312,9 @@ merge_into_master <- function(new_results, reps_used, master_file="output/parame
   master$cases[idx]           <- new_results$cases[match_idx]
   master$reps_used[idx]       <- reps_used
 
-  country <- new_results$country[1]
-  master <- apply_bounds(master, country)  # NB: this recomputes bounds using new_results' country only - fine
-  # since all countries currently in the master are South Africa; extend apply_bounds per-row if this
-  # file grows to cover multiple countries in one master CSV.
+  # Recompute conditions_met per row using each row's own country's bounds - safe for both the
+  # single-country South Africa file and the multi-country Kenya/India file.
+  master <- apply_bounds_per_row(master)
 
   write.csv(master, file=master_file, row.names=FALSE)
   cat("Merged", sum(target), "rows (reps_used=", reps_used, ") into", master_file, "\n")

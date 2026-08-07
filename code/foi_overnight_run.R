@@ -32,8 +32,8 @@ log_msg <- function(...) {
 unlink(log_file)
 log_msg("Overnight run started")
 
-source('code/foi_model_fitting.R')
-log_msg("Sourced foi_model_fitting.R")
+source('code/foi_model_fitting_setup.R')
+log_msg("Sourced foi_model_fitting_setup.R")
 
 final_recommendations <- list()
 

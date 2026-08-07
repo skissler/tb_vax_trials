@@ -1,16 +1,16 @@
-"scenario","country","foi_structure","slow_structure","n_enrolled_med","n_enrolled_lo","n_enrolled_hi","n_overall_med","n_overall_lo","n_overall_hi"
-"no test household","India","uniform_2","Vynnycky-1997",2460,2036.4,2770.6,2603,2170,2950.8
-"no test household","India","uniform_2","uniform_95",4457,3366.8,5633.2,4648,3517.2,5875.8
-"no test household","Kenya","uniform_3","Vynnycky-1997",2736,2242.8,3121.6,2906,2393,3324.4
-"no test household","Kenya","uniform_3","uniform_95",4458,3568.2,4938.6,4668,3750.4,5187.8
-"no test household","South Africa","uniform_6","Vynnycky-high",3164,2678.2,3577.8,3576,3013,4040.6
-"no test standard","India","uniform_2","Vynnycky-1997",12205,10296.8,15306.2,12842,10856.8,16112.4
-"no test standard","India","uniform_2","uniform_95",13763,11882.8,16536,14316,12357.4,17222.8
-"no test standard","Kenya","uniform_3","Vynnycky-1997",10079,8709.2,12189.4,10736,9300,13031.6
-"no test standard","Kenya","uniform_3","uniform_95",11492,9044.6,13407.2,12095,9487.4,14125.2
-"no test standard","South Africa","uniform_6","Vynnycky-high",6203,5421.6,7305.2,6910,6064.2,8187.6
-"no test young","India","uniform_2","Vynnycky-1997",14768,11846,16720.4,15267,12229.6,17292.4
-"no test young","India","uniform_2","uniform_95",17651,15049.8,20878.4,18141,15460.8,21502
-"no test young","Kenya","uniform_3","Vynnycky-1997",10475,8657.6,12398.6,10975,9032.6,12971.8
-"no test young","Kenya","uniform_3","uniform_95",12969,10864.6,15425.6,13469,11292.8,16018
-"no test young","South Africa","uniform_6","Vynnycky-high",6966,5946.2,7771.8,7510,6429.6,8438.6
+"scenario","country","slow_structure","n_enrolled_med","n_enrolled_lo","n_enrolled_hi","n_overall_med","n_overall_lo","n_overall_hi"
+"no test household","India","Vynnycky-1997",2218.5,1797.6,2704.8,2325.5,1887.4,2847.7
+"no test household","India","uniform_95",4152.5,3490,4868.3,4308.5,3624.1,5056.9
+"no test household","Kenya","Vynnycky-1997",2692,2208.9,3316.9,2861.5,2353.1,3531.9
+"no test household","Kenya","uniform_95",4418.5,3596.7,5267,4653.5,3791,5543
+"no test household","South Africa","Vynnycky-high",3076,2607.4,3671.1,3455,2968.9,4139.9
+"no test standard","India","Vynnycky-1997",15478.5,13215,18896.4,16121.5,13785.9,19695.1
+"no test standard","India","uniform_95",18355,15497.1,21227.6,18913,15992.2,21914.5
+"no test standard","Kenya","Vynnycky-1997",9821,8257,11729.1,10480,8784.4,12531.3
+"no test standard","Kenya","uniform_95",11218.5,9444.7,13061.2,11814.5,9949.3,13746
+"no test standard","South Africa","Vynnycky-high",6347.5,5374.5,7406.3,7049,5992.3,8297.1
+"no test young","India","Vynnycky-1997",18439.5,15508.3,22289.3,18894.5,15919.5,22829.2
+"no test young","India","uniform_95",23370.5,19316.4,26792.3,23852,19745.7,27336.1
+"no test young","Kenya","Vynnycky-1997",11969,9897.2,14158.6,12467,10308.4,14738.7
+"no test young","Kenya","uniform_95",13598,11282.7,16275.2,14135,11693.9,16941.3
+"no test young","South Africa","Vynnycky-high",6660,5653.4,8090.4,7181,6117.5,8750.2

@@ -15,3 +15,35 @@ Kenya          uniform          foi=2_3_5_4_2      [ORIGINAL CHOICE CONFIRMED at
 India          Vynnycky-1997    foi=1_1_4_4_4      [NO ROBUST PASS even after widened search - closest miss reported]
   cases=122.8  ARTI=0.0116  inf_prev_15to24=0.145  inf_prev_25to34=0.282
 
+================================================================================
+MANUAL OVERRIDE - FINAL CHOSEN VALUES (2026-08-07)
+================================================================================
+The auto-picked rows above are NOT what's implemented in run_analysis.qmd. After
+reviewing the auto-picks, the user chose the following instead (see
+output/final_foi_chosen.csv for the machine-readable version with full metrics):
+
+South Africa   Vynnycky-high    foi=6_5_7_7_5      mu_s=0.003
+  cases=243.1  ARTI=0.0410  inf_prev_15to24=0.595  inf_prev_25to34=0.742
+  Auto-pick was mu_s=max (5_6_3_5_4). User specifically wanted a mu_s=0.003 option.
+  Of the 3 candidates that robustly pass all 4 bounds at reps=100 for mu_s=0.003
+  (6_5_7_7_4 / 6_5_7_7_5 / 6_5_7_7_6 - differing only in the a50plus band, which
+  is irrelevant since the trial enrolls no one aged 50+), picked the middle value
+  (5) as an arbitrary tie-break.
+
+Kenya          Vynnycky-1997    foi=5_2_5_4_2      mu_s=0.003
+  cases=157.2  ARTI=0.0201  inf_prev_15to24=0.349  inf_prev_25to34=0.490
+  Matches the auto-pick. The uniform alternative (2_3_5_4_2) was also confirmed
+  robust but the user asked to ignore it and keep Vynnycky-1997.
+
+India          Vynnycky-1997    foi=2_1_3_1_1      mu_s=0.003
+  cases=101.5  ARTI=0.0106  inf_prev_15to24=0.176  inf_prev_25to34=0.286
+  Auto-pick / original choice (1_1_4_4_4) was the closest-miss fallback since no
+  candidate robustly passed all 4 bounds. User asked for an option that better
+  matches the Selvaraju adjusted-TBI age-curve shape without shifting FOI into
+  the 35+ age bands, even if that meant running further below the case bounds.
+  2_1_3_1_1 nearly doubles the curve fit (RMSE 0.13 vs 0.26 for 1_1_4_4_4) at the
+  cost of cases=~101 (vs the 160-218 target bound).
+
+These are the values now implemented in run_analysis.qmd (chunks 3, 6a, 6b, 7).
+================================================================================
+
