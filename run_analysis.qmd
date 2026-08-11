@@ -302,6 +302,11 @@ stoch_df_6a_long <- stoch_df_6a_all %>%
 median_df_6a <- stoch_df_6a_long %>%
   group_by(country, p_slow, sigma, metric) %>%
   summarise(value = median(value), .groups="drop")
+iqr_6a <- stoch_df_6a_long %>%
+  group_by(country, p_slow, sigma, metric) %>%
+  summarise(iqr_lo = quantile(value, 0.25),
+            iqr_hi = quantile(value, 0.75), .groups = "drop")
+median_df_6a <- median_df_6a %>% left_join(iqr_6a, by = c("country", "p_slow", "sigma", "metric"))
 write.csv(median_df_6a, file="output/variedsite_results_medians.csv", row.names=FALSE)
 
 p_slow_labels_6a  <- c("uniform"="5%","Vynnycky-1997"="4-14%","Vynnycky-high"="4-19%")
@@ -349,6 +354,70 @@ summary_table_sa <- read.csv("output/southafrica_results.csv")
 summary_table_6a <- bind_rows(summary_table_sa, summary_table_6a_ki)
 
 write.csv(summary_table_6a, file="output/variedsite_results.csv", row.names=FALSE)
+```
+
+```{r}
+## Build a copy-paste-ready table for manuscript TABLE varied-trial-sites.
+variedsite_results <- read.csv("output/variedsite_results.csv")
+
+foi_by_country_label <- c("India"="2,1,3,1,1", "Kenya"="5,2,5,4,2", "South Africa"="6,5,7,7,5")
+chosen_foi_structure <- c("India"="2_1_3_1_1", "Kenya"="5_2_5_4_2", "South Africa"="6_5_7_7_5")
+p_slow_label <- c("Vynnycky-1997"="4-14%", "uniform"="5%", "Vynnycky-high"="4-19%")
+
+sa_conditions <- read.csv("output/parameter_fit_results.csv") %>%
+  filter(slow_structure=="0.003", foi_structure==chosen_foi_structure[["South Africa"]]) %>%
+  select(country, p_slow=progression_structure, conditions_met)
+
+ki_conditions <- read.csv("output/kenya_india_parameter_fit_results.csv") %>%
+  filter(slow_structure=="0.003",
+         (country=="Kenya" & foi_structure==chosen_foi_structure[["Kenya"]]) |
+         (country=="India" & foi_structure==chosen_foi_structure[["India"]])) %>%
+  select(country, p_slow=progression_structure, conditions_met)
+
+conditions_lookup <- bind_rows(sa_conditions, ki_conditions)
+
+table_varied_trial_sites <- variedsite_results %>%
+  left_join(conditions_lookup, by=c("country","p_slow")) %>%
+  mutate(rho = foi_by_country_label[country],
+         p_f = p_slow_label[p_slow],
+         country = factor(country, levels=c("India","Kenya","South Africa")),
+         across(c(inf_prev_15to24, inf_prev_25to34, ARTI), ~round(.x, 3)),
+         cases_per100k = round(cases_per100k, 0)) %>%
+  arrange(country, p_f) %>%
+  select(Country=country, rho, p_f,
+         `Infection prevalence 15-24y`=inf_prev_15to24,
+         `Infection prevalence 25-34y`=inf_prev_25to34,
+         ARTI,
+         `Case incidence per 100k per year`=cases_per100k,
+         `All conditions met?`=conditions_met)
+
+write.csv(table_varied_trial_sites, file="output/table_varied_trial_sites.csv", row.names=FALSE)
+```
+
+```{r}
+## Build a copy-paste-ready table for manuscript TABLE economic-costs (No. needed to test/enrol columns).
+medians_6a <- read.csv("output/variedsite_results_medians.csv")
+
+foi_by_country_label <- c("India"="2,1,3,1,1", "Kenya"="5,2,5,4,2", "South Africa"="6,5,7,7,5")
+p_slow_label <- c("Vynnycky-1997"="4-14%", "uniform"="5%", "Vynnycky-high"="4-19%")
+
+table_economic_costs <- medians_6a %>%
+  filter(sigma %in% c(2, 50), metric %in% c("Tested", "Enrolled")) %>%
+  mutate(cell = sprintf("%.0f [%.0f-%.0f]", value, iqr_lo, iqr_hi),
+         col  = paste0(metric, "_sigma", sigma)) %>%
+  select(country, p_slow, col, cell) %>%
+  pivot_wider(names_from = col, values_from = cell) %>%
+  mutate(rho = foi_by_country_label[country],
+         p_f = p_slow_label[p_slow],
+         country = factor(country, levels = c("India", "Kenya", "South Africa"))) %>%
+  arrange(country, p_f) %>%
+  select(Country = country, rho, p_f,
+         `No. needed to test (sigma=2y)`  = Tested_sigma2,
+         `No. needed to test (sigma=50y)` = Tested_sigma50,
+         `No. needed to enrol (sigma=2y)` = Enrolled_sigma2,
+         `No. needed to enrol (sigma=50y)`= Enrolled_sigma50)
+
+write.csv(table_economic_costs, file = "output/table_economic_costs.csv", row.names = FALSE)
 ```
 
 ## 6b. No-test enrolment scenarios
