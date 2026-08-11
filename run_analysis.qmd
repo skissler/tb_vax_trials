@@ -357,6 +357,7 @@ write.csv(summary_table_6a, file="output/variedsite_results.csv", row.names=FALS
 ```
 
 ```{r}
+#| eval: FALSE
 ## Build a copy-paste-ready table for manuscript TABLE varied-trial-sites.
 variedsite_results <- read.csv("output/variedsite_results.csv")
 
@@ -395,6 +396,7 @@ write.csv(table_varied_trial_sites, file="output/table_varied_trial_sites.csv", 
 ```
 
 ```{r}
+#| eval: FALSE
 ## Build a copy-paste-ready table for manuscript TABLE economic-costs (No. needed to test/enrol columns).
 medians_6a <- read.csv("output/variedsite_results_medians.csv")
 
@@ -818,7 +820,7 @@ ggsave(fig_9, file="figures/9_size_of_trial_spread.png", width=8.5, height=4.51)
 
 ## 10. Parameter sensitivity analysis
 
-Explores which model parameters (rho, p_f, mu_fast, mu_slow, p_revert, mu_revert) shift trial outcomes the most, perturbing each +/-20% one at a time from South Africa's main fitted scenario (pars_lit). Uses the stochastic model, not analytic - the analytic approach does not model reversion at all (p_revert/mu_revert are not inputs to it) and its age-varying rho/p_slow handling is only an approximation of the true age-varying stochastic process. Three tornado plots: (a) raw per-case counts contacted/tested/enrolled, (b) funnel ratios (tested/contacted, enrolled/tested), (c) cross-sigma ratios (tested and enrolled at sigma=0.5y or 2y, relative to sigma=50y) - i.e. how sensitive the "recent-infection test" benefit itself is to each parameter.
+Explores which model parameters (rho, p_f, mu_fast, mu_slow, p_revert, mu_revert) shift trial outcomes the most, perturbing each +/-20% one at a time from South Africa's main fitted scenario (pars_lit). Uses the stochastic model. Three tornado plots: (a) raw per-case counts contacted/tested/enrolled, (b) funnel ratios (tested/contacted, enrolled/tested), (c) cross-sigma ratios (tested and enrolled at sigma=0.5y or 2y, relative to sigma=50y) - i.e. how sensitive the "recent-infection test" benefit itself is to each parameter.
 
 ```{r}
 #| label: 10_sensitivity_analysis
@@ -832,10 +834,7 @@ sigmas_10 <- c(0.5, 2, 50)
 # One perturbation function per parameter - multiplies the relevant field of pars_lit by `m`
 # (0.8 or 1.2 for a -20%/+20% perturbation). rho/p_slow are age-varying vectors, scaled uniformly
 # to preserve their age-shape rather than perturbing each of rho's 5 age bands separately.
-# NB: p_slow (Vynnycky-high) sits close to 1 for most ages (it's 1 - p_fast, and p_fast is only
-# 4-19%), so scaling p_slow itself by x1.2 pushes it above 1 (an invalid probability). Perturb the
-# actually-uncertain small quantity, p_fast, instead - also matches the paper's own convention of
-# treating p_f as the named parameter of interest.
+# NB: p_slow (Vynnycky-high) sits close to 1 for most ages so p_fast is perturbed instead.
 sensitivity_params_10 <- list(
   rho       = function(pars, m) { pars$rho <- pars$rho * m; pars },
   p_slow    = function(pars, m) { p_fast <- 1 - pars$p_slow; pars$p_slow <- 1 - (p_fast * m); pars },
@@ -884,6 +883,13 @@ sens_summary_10 <- sens_df_10 %>%
   summarise(n_overall = median(n_overall), n_tested = median(n_tested), n_enrolled = median(n_enrolled), .groups = "drop")
 write.csv(sens_summary_10, file = "output/sensitivity_analysis_summary.csv", row.names = FALSE)
 
+## Display labels: symbols matching the manuscript's own parameter notation. The "p_slow" row is
+## labelled "pf" (not "ps") since it's p_fast that's actually perturbed under the hood (see the
+## sensitivity_params_10 comment above) - flag if "ps" is what was actually wanted instead.
+param_labels_10 <- c(rho = "ρ", p_slow = "pf", mu_fast = "μf", mu_slow = "μs",
+                      p_revert = "pr", mu_revert = "μr")
+sigma_symbol_10 <- "σ"
+
 ## (a) Raw per-case counts: % change in median n_overall/n_tested/n_enrolled from baseline, at
 ## matching sigma.
 baseline_10 <- sens_summary_10 %>%
@@ -905,20 +911,6 @@ counts_pct_10 <- sens_summary_10 %>%
 
 param_order_10a <- counts_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
   arrange(max_effect) %>% pull(parameter)
-
-fig_10a <- counts_pct_10 %>%
-  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
-  mutate(parameter = factor(parameter, levels = param_order_10a),
-         sigma = factor(sigma, levels = sigmas_10, labels = paste0("sigma=", sigmas_10))) %>%
-  ggplot(aes(y = parameter)) +
-  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
-  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "steelblue") +
-  facet_grid(sigma ~ metric) +
-  theme_classic() +
-  theme(strip.background = element_blank()) +
-  labs(x = "% change from baseline", y = NULL)
-fig_10a
-ggsave(fig_10a, file = "figures/10a_sensitivity_counts.png", width = 7.29, height = 4.51)
 
 ## (b) Funnel ratios: what fraction of contacts get tested, and what fraction of those tested enrol.
 funnel_10 <- sens_summary_10 %>%
@@ -943,20 +935,6 @@ funnel_pct_10 <- funnel_10 %>%
 
 param_order_10b <- funnel_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
   arrange(max_effect) %>% pull(parameter)
-
-fig_10b <- funnel_pct_10 %>%
-  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
-  mutate(parameter = factor(parameter, levels = param_order_10b),
-         sigma = factor(sigma, levels = sigmas_10, labels = paste0("sigma=", sigmas_10))) %>%
-  ggplot(aes(y = parameter)) +
-  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
-  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "darkorange") +
-  facet_grid(sigma ~ metric) +
-  theme_classic() +
-  theme(strip.background = element_blank()) +
-  labs(x = "% change from baseline", y = NULL)
-fig_10b
-ggsave(fig_10b, file = "figures/10b_sensitivity_funnel.png", width = 7.29, height = 4.51)
 
 ## (c) Cross-sigma ratios: tested/enrolled at sigma=0.5y or 2y, relative to sigma=50y (lifelong) -
 ## i.e. how much the "recent-infection test" reduction in trial size depends on each parameter.
@@ -986,24 +964,63 @@ sigma_ratio_pct_10 <- sigma_ratio_10 %>%
   ) %>%
   select(parameter, direction, starts_with("pct_")) %>%
   pivot_longer(cols = starts_with("pct_"), names_to = "key", values_to = "pct_change") %>%
-  mutate(metric     = case_when(grepl("tested", key) ~ "Tested", grepl("enrolled", key) ~ "Enrolled"),
-         comparison = case_when(grepl("0.5to50", key) ~ "6 months vs lifetime", grepl("2to50", key) ~ "2 years vs lifetime")) %>%
+  mutate(comparison = case_when(grepl("tested", key) ~ "Tested", grepl("enrolled", key) ~ "Enrolled"),
+         metric = case_when(grepl("0.5to50", key) ~ paste0(sigma_symbol_10, "=0.5 vs ", sigma_symbol_10, "=50"),
+                                 grepl("2to50", key)   ~ paste0(sigma_symbol_10, "=2 vs ",   sigma_symbol_10, "=50"))) %>%
   select(-key)
 
 param_order_10c <- sigma_ratio_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
   arrange(max_effect) %>% pull(parameter)
 
+## Shared, symmetric x-axis range across all three figures (all measure "% change from baseline",
+## so a common scale makes them directly visually comparable) - fixed via coord_cartesian (zooms
+## without dropping data) rather than each plot auto-scaling to its own data range.
+shared_xlim_10 <- max(abs(c(counts_pct_10$pct_change, funnel_pct_10$pct_change, sigma_ratio_pct_10$pct_change)), na.rm = TRUE) * 1.05
+
+fig_10a <- counts_pct_10 %>%
+  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
+  mutate(parameter = factor(parameter, levels = param_order_10a, labels = param_labels_10[param_order_10a]),
+         sigma = factor(sigma, levels = sigmas_10, labels = paste0(sigma_symbol_10, "=", sigmas_10))) %>%
+  ggplot(aes(y = parameter)) +
+  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "steelblue") +
+  coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
+  facet_grid(sigma ~ metric) +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_x_continuous(n.breaks = 10) +
+  labs(x = "% change from baseline", y = NULL)
+fig_10a
+ggsave(fig_10a, file = "figures/10a_sensitivity_counts.png", width = 7.29, height = 4.51)
+
+fig_10b <- funnel_pct_10 %>%
+  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
+  mutate(parameter = factor(parameter, levels = param_order_10b, labels = param_labels_10[param_order_10b]),
+         sigma = factor(sigma, levels = sigmas_10, labels = paste0(sigma_symbol_10, "=", sigmas_10))) %>%
+  ggplot(aes(y = parameter)) +
+  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "darkorange") +
+  coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
+  facet_grid(sigma ~ metric) +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_x_continuous(n.breaks = 10) +
+  labs(x = "% change from baseline", y = NULL)
+fig_10b
+ggsave(fig_10b, file = "figures/10b_sensitivity_funnel.png", width = 7.29, height = 4.51)
+
 fig_10c <- sigma_ratio_pct_10 %>%
   pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
-  mutate(parameter = factor(parameter, levels = param_order_10c)) %>%
+  mutate(parameter = factor(parameter, levels = param_order_10c, labels = param_labels_10[param_order_10c])) %>%
   ggplot(aes(y = parameter)) +
   geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
   geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "forestgreen") +
+  coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
   facet_grid(comparison ~ metric) +
   theme_classic() +
   theme(strip.background = element_blank()) +
+  scale_x_continuous(n.breaks = 10) +
   labs(x = "% change from baseline", y = NULL)
 fig_10c
 ggsave(fig_10c, file = "figures/10c_sensitivity_sigma_ratio.png", width = 7.29, height = 4.51)
 ```
-
