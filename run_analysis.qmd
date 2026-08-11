@@ -977,13 +977,22 @@ param_order_10c <- sigma_ratio_pct_10 %>% group_by(parameter) %>% summarise(max_
 ## without dropping data) rather than each plot auto-scaling to its own data range.
 shared_xlim_10 <- max(abs(c(counts_pct_10$pct_change, funnel_pct_10$pct_change, sigma_ratio_pct_10$pct_change)), na.rm = TRUE) * 1.05
 
+## Colour each END of the bar by which way the PARAMETER itself was perturbed to get that point
+## (-20% vs +20%) - the output direction is already visible from x-position, so the colour instead
+## disambiguates which end is which perturbation. The connecting segment stays a neutral grey.
+perturbation_colours_10 <- c("Parameter decreased (-20%)" = "darkgreen", "Parameter increased (+20%)" = "firebrick")
+
 fig_10a <- counts_pct_10 %>%
   pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
   mutate(parameter = factor(parameter, levels = param_order_10a, labels = param_labels_10[param_order_10a]),
          sigma = factor(sigma, levels = sigmas_10, labels = paste0(sigma_symbol_10, "=", sigmas_10))) %>%
   ggplot(aes(y = parameter)) +
   geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
-  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "steelblue") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 1, col = "grey70") +
+  geom_point(aes(x = pct_low,  col = "Parameter decreased (-20%)"), size = 1.2, alpha = 0.6) +
+  geom_point(aes(x = pct_high, col = "Parameter increased (+20%)"), size = 1.2, alpha = 0.6) +
+  scale_colour_manual(values = perturbation_colours_10, name = "Perturbation") +
+  guides(colour = "none") +
   coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
   facet_grid(sigma ~ metric) +
   theme_classic() +
@@ -999,7 +1008,11 @@ fig_10b <- funnel_pct_10 %>%
          sigma = factor(sigma, levels = sigmas_10, labels = paste0(sigma_symbol_10, "=", sigmas_10))) %>%
   ggplot(aes(y = parameter)) +
   geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
-  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "darkorange") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 1, col = "grey70") +
+  geom_point(aes(x = pct_low,  col = "Parameter decreased (-20%)"), size = 1.2, alpha = 0.6) +
+  geom_point(aes(x = pct_high, col = "Parameter increased (+20%)"), size = 1.2, alpha = 0.6) +
+  scale_colour_manual(values = perturbation_colours_10, name = "Perturbation") +
+  guides(colour = "none") +
   coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
   facet_grid(sigma ~ metric) +
   theme_classic() +
@@ -1014,7 +1027,11 @@ fig_10c <- sigma_ratio_pct_10 %>%
   mutate(parameter = factor(parameter, levels = param_order_10c, labels = param_labels_10[param_order_10c])) %>%
   ggplot(aes(y = parameter)) +
   geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
-  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "forestgreen") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 1, col = "grey70") +
+  geom_point(aes(x = pct_low,  col = "Parameter decreased (-20%)"), size = 1.2, alpha = 0.6) +
+  geom_point(aes(x = pct_high, col = "Parameter increased (+20%)"), size = 1.2, alpha = 0.6) +
+  scale_colour_manual(values = perturbation_colours_10, name = "Perturbation") +
+  guides(colour = "none") +
   coord_cartesian(xlim = c(-shared_xlim_10, shared_xlim_10)) +
   facet_grid(comparison ~ metric) +
   theme_classic() +
