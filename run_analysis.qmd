@@ -816,3 +816,194 @@ fig_9
 ggsave(fig_9, file="figures/9_size_of_trial_spread.png", width=8.5, height=4.51)
 ```
 
+## 10. Parameter sensitivity analysis
+
+Explores which model parameters (rho, p_f, mu_fast, mu_slow, p_revert, mu_revert) shift trial outcomes the most, perturbing each +/-20% one at a time from South Africa's main fitted scenario (pars_lit). Uses the stochastic model, not analytic - the analytic approach does not model reversion at all (p_revert/mu_revert are not inputs to it) and its age-varying rho/p_slow handling is only an approximation of the true age-varying stochastic process. Three tornado plots: (a) raw per-case counts contacted/tested/enrolled, (b) funnel ratios (tested/contacted, enrolled/tested), (c) cross-sigma ratios (tested and enrolled at sigma=0.5y or 2y, relative to sigma=50y) - i.e. how sensitive the "recent-infection test" benefit itself is to each parameter.
+
+```{r}
+#| label: 10_sensitivity_analysis
+#| eval: FALSE
+
+plan(multisession, workers=n_workers)
+
+reps_10   <- 100
+sigmas_10 <- c(0.5, 2, 50)
+
+# One perturbation function per parameter - multiplies the relevant field of pars_lit by `m`
+# (0.8 or 1.2 for a -20%/+20% perturbation). rho/p_slow are age-varying vectors, scaled uniformly
+# to preserve their age-shape rather than perturbing each of rho's 5 age bands separately.
+# NB: p_slow (Vynnycky-high) sits close to 1 for most ages (it's 1 - p_fast, and p_fast is only
+# 4-19%), so scaling p_slow itself by x1.2 pushes it above 1 (an invalid probability). Perturb the
+# actually-uncertain small quantity, p_fast, instead - also matches the paper's own convention of
+# treating p_f as the named parameter of interest.
+sensitivity_params_10 <- list(
+  rho       = function(pars, m) { pars$rho <- pars$rho * m; pars },
+  p_slow    = function(pars, m) { p_fast <- 1 - pars$p_slow; pars$p_slow <- 1 - (p_fast * m); pars },
+  mu_fast   = function(pars, m) { pars$mu_fast <- pars$mu_fast * m; pars },
+  mu_slow   = function(pars, m) { pars$mu_slow <- pars$mu_slow * m; pars },
+  p_revert  = function(pars, m) { pars$p_revert <- pars$p_revert * m; pars },
+  mu_revert = function(pars, m) { pars$mu_revert <- pars$mu_revert * m; pars }
+)
+
+# Flat grid: 1 baseline + (6 parameters x 2 directions) = 13 combinations, x 3 sigma x reps_10.
+# Single future_lapply over the whole flat grid (not sim_stoch_over_sigma, which already
+# parallelises internally over sigma x rep - nesting future_lapply inside future_lapply would be
+# the mistake to avoid here, same reasoning as chunk 9's flat-grid comment).
+sens_grid_10 <- crossing(
+    parameter = c("baseline", names(sensitivity_params_10)),
+    direction = c("low", "high")
+  ) %>%
+  filter(parameter != "baseline" | direction == "low") %>%
+  mutate(direction = ifelse(parameter == "baseline", "baseline", direction)) %>%
+  crossing(sigma = sigmas_10, rep = 1:reps_10)
+
+with_progress({
+  p <- progressr::progressor(steps = nrow(sens_grid_10))
+  sens_list_10 <- future.apply::future_lapply(1:nrow(sens_grid_10), function(i) {
+    pars_i      <- pars_lit
+    parameter_i <- sens_grid_10$parameter[i]
+    direction_i <- sens_grid_10$direction[i]
+    if (parameter_i != "baseline") {
+      multiplier <- if (direction_i == "low") 0.8 else 1.2
+      pars_i <- sensitivity_params_10[[parameter_i]](pars_i, multiplier)
+    }
+    pars_i$sigma <- sens_grid_10$sigma[i]
+    out <- sim_stoch(pars_i, casetarget = 50, agedist = agedist)
+    p()
+    tibble(parameter = parameter_i, direction = direction_i, sigma = sens_grid_10$sigma[i], rep = sens_grid_10$rep[i],
+           n_overall = out$n_overall, n_tested = out$n_tested, n_enrolled = out$n_enrolled,
+           n_trial_cases = out$n_trial_cases)
+  }, future.seed = TRUE)
+})
+
+sens_df_10 <- bind_rows(sens_list_10)
+write.csv(sens_df_10, file = "output/sensitivity_analysis_results.csv", row.names = FALSE)
+
+sens_summary_10 <- sens_df_10 %>%
+  group_by(parameter, direction, sigma) %>%
+  summarise(n_overall = median(n_overall), n_tested = median(n_tested), n_enrolled = median(n_enrolled), .groups = "drop")
+write.csv(sens_summary_10, file = "output/sensitivity_analysis_summary.csv", row.names = FALSE)
+
+## (a) Raw per-case counts: % change in median n_overall/n_tested/n_enrolled from baseline, at
+## matching sigma.
+baseline_10 <- sens_summary_10 %>%
+  filter(parameter == "baseline") %>%
+  select(sigma, n_overall_base = n_overall, n_tested_base = n_tested, n_enrolled_base = n_enrolled)
+
+counts_pct_10 <- sens_summary_10 %>%
+  filter(parameter != "baseline") %>%
+  left_join(baseline_10, by = "sigma") %>%
+  mutate(
+    pct_overall  = (n_overall  - n_overall_base)  / n_overall_base  * 100,
+    pct_tested   = (n_tested   - n_tested_base)   / n_tested_base   * 100,
+    pct_enrolled = (n_enrolled - n_enrolled_base) / n_enrolled_base * 100
+  ) %>%
+  select(parameter, direction, sigma, pct_overall, pct_tested, pct_enrolled) %>%
+  pivot_longer(cols = c(pct_overall, pct_tested, pct_enrolled), names_to = "metric", values_to = "pct_change") %>%
+  mutate(metric = case_when(metric == "pct_overall" ~ "Contacted", metric == "pct_tested" ~ "Tested", metric == "pct_enrolled" ~ "Enrolled"),
+         metric = factor(metric, levels = c("Contacted", "Tested", "Enrolled")))
+
+param_order_10a <- counts_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
+  arrange(max_effect) %>% pull(parameter)
+
+fig_10a <- counts_pct_10 %>%
+  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
+  mutate(parameter = factor(parameter, levels = param_order_10a),
+         sigma = factor(sigma, levels = sigmas_10, labels = paste0("sigma=", sigmas_10))) %>%
+  ggplot(aes(y = parameter)) +
+  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "steelblue") +
+  facet_grid(sigma ~ metric) +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  labs(x = "% change from baseline", y = NULL)
+fig_10a
+ggsave(fig_10a, file = "figures/10a_sensitivity_counts.png", width = 7.29, height = 4.51)
+
+## (b) Funnel ratios: what fraction of contacts get tested, and what fraction of those tested enrol.
+funnel_10 <- sens_summary_10 %>%
+  mutate(prop_tested = n_tested / n_overall, prop_enrolled_of_tested = n_enrolled / n_tested) %>%
+  select(parameter, direction, sigma, prop_tested, prop_enrolled_of_tested)
+
+funnel_base_10 <- funnel_10 %>%
+  filter(parameter == "baseline") %>%
+  select(sigma, prop_tested_base = prop_tested, prop_enrolled_of_tested_base = prop_enrolled_of_tested)
+
+funnel_pct_10 <- funnel_10 %>%
+  filter(parameter != "baseline") %>%
+  left_join(funnel_base_10, by = "sigma") %>%
+  mutate(
+    pct_prop_tested             = (prop_tested             - prop_tested_base)             / prop_tested_base             * 100,
+    pct_prop_enrolled_of_tested = (prop_enrolled_of_tested - prop_enrolled_of_tested_base) / prop_enrolled_of_tested_base * 100
+  ) %>%
+  select(parameter, direction, sigma, pct_prop_tested, pct_prop_enrolled_of_tested) %>%
+  pivot_longer(cols = c(pct_prop_tested, pct_prop_enrolled_of_tested), names_to = "metric", values_to = "pct_change") %>%
+  mutate(metric = case_when(metric == "pct_prop_tested" ~ "Tested / Contacted", metric == "pct_prop_enrolled_of_tested" ~ "Enrolled / Tested"),
+         metric = factor(metric, levels = c("Tested / Contacted", "Enrolled / Tested")))
+
+param_order_10b <- funnel_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
+  arrange(max_effect) %>% pull(parameter)
+
+fig_10b <- funnel_pct_10 %>%
+  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
+  mutate(parameter = factor(parameter, levels = param_order_10b),
+         sigma = factor(sigma, levels = sigmas_10, labels = paste0("sigma=", sigmas_10))) %>%
+  ggplot(aes(y = parameter)) +
+  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "darkorange") +
+  facet_grid(sigma ~ metric) +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  labs(x = "% change from baseline", y = NULL)
+fig_10b
+ggsave(fig_10b, file = "figures/10b_sensitivity_funnel.png", width = 7.29, height = 4.51)
+
+## (c) Cross-sigma ratios: tested/enrolled at sigma=0.5y or 2y, relative to sigma=50y (lifelong) -
+## i.e. how much the "recent-infection test" reduction in trial size depends on each parameter.
+sigma_wide_10 <- sens_summary_10 %>%
+  select(parameter, direction, sigma, n_tested, n_enrolled) %>%
+  pivot_wider(names_from = sigma, values_from = c(n_tested, n_enrolled))
+
+sigma_ratio_10 <- sigma_wide_10 %>%
+  mutate(ratio_tested_0.5to50   = n_tested_0.5   / n_tested_50,
+         ratio_tested_2to50     = n_tested_2     / n_tested_50,
+         ratio_enrolled_0.5to50 = n_enrolled_0.5 / n_enrolled_50,
+         ratio_enrolled_2to50   = n_enrolled_2   / n_enrolled_50) %>%
+  select(parameter, direction, starts_with("ratio_"))
+
+base_ratio_tested_0.5to50   <- sigma_ratio_10 %>% filter(parameter == "baseline") %>% pull(ratio_tested_0.5to50)
+base_ratio_tested_2to50     <- sigma_ratio_10 %>% filter(parameter == "baseline") %>% pull(ratio_tested_2to50)
+base_ratio_enrolled_0.5to50 <- sigma_ratio_10 %>% filter(parameter == "baseline") %>% pull(ratio_enrolled_0.5to50)
+base_ratio_enrolled_2to50   <- sigma_ratio_10 %>% filter(parameter == "baseline") %>% pull(ratio_enrolled_2to50)
+
+sigma_ratio_pct_10 <- sigma_ratio_10 %>%
+  filter(parameter != "baseline") %>%
+  mutate(
+    pct_tested_0.5to50   = (ratio_tested_0.5to50   - base_ratio_tested_0.5to50)   / base_ratio_tested_0.5to50   * 100,
+    pct_tested_2to50     = (ratio_tested_2to50     - base_ratio_tested_2to50)     / base_ratio_tested_2to50     * 100,
+    pct_enrolled_0.5to50 = (ratio_enrolled_0.5to50 - base_ratio_enrolled_0.5to50) / base_ratio_enrolled_0.5to50 * 100,
+    pct_enrolled_2to50   = (ratio_enrolled_2to50   - base_ratio_enrolled_2to50)   / base_ratio_enrolled_2to50   * 100
+  ) %>%
+  select(parameter, direction, starts_with("pct_")) %>%
+  pivot_longer(cols = starts_with("pct_"), names_to = "key", values_to = "pct_change") %>%
+  mutate(metric     = case_when(grepl("tested", key) ~ "Tested", grepl("enrolled", key) ~ "Enrolled"),
+         comparison = case_when(grepl("0.5to50", key) ~ "6 months vs lifetime", grepl("2to50", key) ~ "2 years vs lifetime")) %>%
+  select(-key)
+
+param_order_10c <- sigma_ratio_pct_10 %>% group_by(parameter) %>% summarise(max_effect = max(abs(pct_change)), .groups = "drop") %>%
+  arrange(max_effect) %>% pull(parameter)
+
+fig_10c <- sigma_ratio_pct_10 %>%
+  pivot_wider(names_from = direction, values_from = pct_change, names_prefix = "pct_") %>%
+  mutate(parameter = factor(parameter, levels = param_order_10c)) %>%
+  ggplot(aes(y = parameter)) +
+  geom_vline(xintercept = 0, linetype = "dashed", col = "grey50") +
+  geom_segment(aes(x = pct_low, xend = pct_high, yend = parameter), linewidth = 2, col = "forestgreen") +
+  facet_grid(comparison ~ metric) +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  labs(x = "% change from baseline", y = NULL)
+fig_10c
+ggsave(fig_10c, file = "figures/10c_sensitivity_sigma_ratio.png", width = 7.29, height = 4.51)
+```
+
