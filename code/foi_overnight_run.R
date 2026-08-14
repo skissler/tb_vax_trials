@@ -10,7 +10,7 @@
 #
 # What this does and why:
 #   - South Africa (Vynnycky-high / mu_s=0.003 AND max) - for each, reuses any saved history (see the
-#     output/southafrica_Vynnycky-high_*_history_*.csv files) to skip candidates already confirmed at
+#     output/foi_fitting_history/southafrica_Vynnycky-high_*_history_*.csv files) to skip candidates already confirmed at
 #     25 or 100 reps, and only fills in the gaps: near-miss candidates never tested at 100 reps yet.
 #     For 0.003 this means most of the 1115-candidate near-miss pool (already at 25 reps) just needs
 #     the ~9 untested-at-100-reps candidates filled in; for max, nothing's been tested beyond 5 reps
@@ -96,7 +96,7 @@ for (ms in c("0.003", "max")) {
     stage3_all <- bind_rows(already_100_data, stage3_new) %>% distinct(foi_structure, .keep_all=TRUE)
 
     log_msg("Full reps=100 picture for mu_s=", ms, ": ", sum(stage3_all$conditions_met), " of ", nrow(stage3_all), " pass")
-    outfile <- sprintf("output/southafrica_Vynnycky-high_%s_history_full_reps100.csv", ms)
+    outfile <- sprintf("output/foi_fitting_history/southafrica_Vynnycky-high_%s_history_full_reps100.csv", ms)
     write.csv(stage3_all, file=outfile, row.names=FALSE)
 
     sa_pools[[ms]] <- stage3_all
@@ -172,7 +172,7 @@ for (country in c("Kenya", "India")) {
       stage2 <- run_fit_grid(country, pars_base, foi_structures, agedist, reps=25) %>%
         mutate(progression_structure=ps, slow_structure="0.003") %>%
         apply_bounds(country)
-      outfile2 <- sprintf("output/%s_%s_0.003_neighbourhood_stage2_reps25.csv", tolower(country), ps)
+      outfile2 <- sprintf("output/foi_fitting_history/%s_%s_0.003_neighbourhood_stage2_reps25.csv", tolower(country), ps)
       write.csv(stage2, file=outfile2, row.names=FALSE)
       log_msg("Stage 2 done: ", sum(stage2$conditions_met), " of ", nrow(stage2), " pass at reps=25. Saved to ", outfile2)
 
@@ -181,7 +181,7 @@ for (country in c("Kenya", "India")) {
       stage3 <- run_fit_grid(country, pars_base, foi_structures, agedist, reps=100) %>%
         mutate(progression_structure=ps, slow_structure="0.003") %>%
         apply_bounds(country)
-      outfile3 <- sprintf("output/%s_%s_0.003_neighbourhood_stage3_reps100.csv", tolower(country), ps)
+      outfile3 <- sprintf("output/foi_fitting_history/%s_%s_0.003_neighbourhood_stage3_reps100.csv", tolower(country), ps)
       write.csv(stage3, file=outfile3, row.names=FALSE)
       log_msg("Stage 3 done: ", sum(stage3$conditions_met), " of ", nrow(stage3), " pass at reps=100. Saved to ", outfile3)
 
@@ -206,7 +206,7 @@ for (country in c("Kenya", "India")) {
         wide_near_miss <- near_miss_candidates(wide_stage1, country)
         log_msg("Widened stage 2: re-running ", nrow(wide_near_miss), " near-miss candidates at reps=25")
         wide_stage2 <- run_stage2(country, ps, "0.003", wide_stage1, reps=25)
-        outfile2w <- sprintf("output/%s_%s_0.003_widened_stage2_reps25.csv", tolower(country), ps)
+        outfile2w <- sprintf("output/foi_fitting_history/%s_%s_0.003_widened_stage2_reps25.csv", tolower(country), ps)
         write.csv(wide_stage2, file=outfile2w, row.names=FALSE)
         log_msg("Widened stage 2 done: ", sum(wide_stage2$conditions_met), " of ", nrow(wide_stage2), " pass at reps=25")
 
@@ -214,7 +214,7 @@ for (country in c("Kenya", "India")) {
         if (nrow(wide_survivors) == 0) wide_survivors <- near_miss_candidates(wide_stage2, country)
         log_msg("Widened stage 3: re-running ", nrow(wide_survivors), " candidates at reps=100")
         wide_stage3 <- run_stage3(country, ps, "0.003", wide_survivors, reps=100, only_passing=FALSE)
-        outfile3w <- sprintf("output/%s_%s_0.003_widened_stage3_reps100.csv", tolower(country), ps)
+        outfile3w <- sprintf("output/foi_fitting_history/%s_%s_0.003_widened_stage3_reps100.csv", tolower(country), ps)
         write.csv(wide_stage3, file=outfile3w, row.names=FALSE)
         log_msg("Widened stage 3 done: ", sum(wide_stage3$conditions_met), " of ", nrow(wide_stage3), " pass at reps=100")
 

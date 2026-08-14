@@ -109,14 +109,14 @@ apply_bounds <- function(df, country) {
 
 # Loads any previously-saved higher-rep results for a (country, progression_structure, slow_structure)
 # combination, so a later run can skip re-testing candidates already confirmed one way or the other.
-# Looks for files matching output/{country}_{progression_structure}_{slow_structure}_history_*.csv
+# Looks for files matching output/foi_fitting_history/{country}_{progression_structure}_{slow_structure}_history_*.csv
 # (see foi_overnight_run.R for how these get created) - handles the differing column-naming
 # conventions across ad-hoc analysis scripts (some use "_med" suffixes, some use plain names; some
 # use "conditions_met", others "conditions_met_25reps"/"conditions_met_100reps"). Returns one row per
 # foi_structure, keeping only the highest reps_used available for each. Returns a 0-row tibble (not
 # an error) if nothing's been saved yet for this combination.
 load_test_history <- function(country, progression_structure, slow_structure) {
-  prefix <- sprintf("output/%s_%s_%s_history_", tolower(gsub(" ", "", country)), progression_structure, slow_structure)
+  prefix <- sprintf("output/foi_fitting_history/%s_%s_%s_history_", tolower(gsub(" ", "", country)), progression_structure, slow_structure)
   files <- Sys.glob(paste0(prefix, "*.csv"))
   if (length(files) == 0) return(tibble(foi_structure=character(), inf_prev_15to24=numeric(),
     inf_prev_25to34=numeric(), ARTI=numeric(), cases=numeric(), conditions_met=logical(), reps_used=integer(),
@@ -129,8 +129,12 @@ load_test_history <- function(country, progression_structure, slow_structure) {
     names(df) <- sub("_med$", "", names(df))                 # drop "_med" suffix if present
     names(df)[grepl("^conditions_met", names(df))] <- "conditions_met"  # unify conditions_met* -> conditions_met
     reps <- reps_from_filename(f)
-    df %>% mutate(reps_used = reps, country = country, progression_structure = progression_structure,
-                  slow_structure = slow_structure) %>%
+    # .env$ forces these to come from the function's own arguments, not from same-named columns some
+    # of these files already carry (e.g. history_full_reps100.csv has its own slow_structure column,
+    # written/read back as numeric - without .env$, dplyr's data-masking picks that up instead of the
+    # character argument here, causing a bind_rows() type mismatch across files below).
+    df %>% mutate(reps_used = reps, country = .env$country, progression_structure = .env$progression_structure,
+                  slow_structure = .env$slow_structure) %>%
       select(foi_structure, inf_prev_15to24, inf_prev_25to34, ARTI, cases, conditions_met, reps_used,
              country, progression_structure, slow_structure)
   }
@@ -185,7 +189,7 @@ run_stage1 <- function(country, progression_structure, slow_structure, reps=5) {
     mutate(progression_structure=progression_structure, slow_structure=slow_structure) %>%
     apply_bounds(country)
 
-  outfile <- sprintf("output/%s_%s_%s_stage1_reps%d.csv",
+  outfile <- sprintf("output/foi_fitting_history/%s_%s_%s_stage1_reps%d.csv",
                       tolower(gsub(" ", "", country)), progression_structure, slow_structure, reps)
   write.csv(results, file=outfile, row.names=FALSE)
   cat(country, progression_structure, slow_structure, "- stage 1 (reps=", reps, "): ",
@@ -231,7 +235,7 @@ run_stage2 <- function(country, progression_structure, slow_structure, stage1_re
     mutate(progression_structure=progression_structure, slow_structure=slow_structure) %>%
     apply_bounds(country)
 
-  outfile <- sprintf("output/%s_%s_%s_stage2_reps%d.csv",
+  outfile <- sprintf("output/foi_fitting_history/%s_%s_%s_stage2_reps%d.csv",
                       tolower(gsub(" ", "", country)), progression_structure, slow_structure, reps)
   write.csv(results, file=outfile, row.names=FALSE)
   cat(country, progression_structure, slow_structure, "- stage 2 (reps=", reps, "): ",
@@ -240,7 +244,7 @@ run_stage2 <- function(country, progression_structure, slow_structure, stage1_re
 }
 
 # Example (run separately - this is the expensive stage):
-# sa_max_stage1  <- read.csv("output/southafrica_Vynnycky-high_max_stage1_reps5.csv")
+# sa_max_stage1  <- read.csv("output/foi_fitting_history/southafrica_Vynnycky-high_max_stage1_reps5.csv")
 # sa_max_stage2  <- run_stage2("South Africa", "Vynnycky-high", "max", sa_max_stage1, reps=25)
 
 
@@ -262,7 +266,7 @@ run_stage3 <- function(country, progression_structure, slow_structure, stage2_re
     mutate(progression_structure=progression_structure, slow_structure=slow_structure) %>%
     apply_bounds(country)
 
-  outfile <- sprintf("output/%s_%s_%s_stage3_reps%d.csv",
+  outfile <- sprintf("output/foi_fitting_history/%s_%s_%s_stage3_reps%d.csv",
                       tolower(gsub(" ", "", country)), progression_structure, slow_structure, reps)
   write.csv(results, file=outfile, row.names=FALSE)
   cat(country, progression_structure, slow_structure, "- stage 3 (reps=", reps, "): ",
@@ -271,7 +275,7 @@ run_stage3 <- function(country, progression_structure, slow_structure, stage2_re
 }
 
 # Example (run separately - the slowest stage):
-# sa_max_stage2  <- read.csv("output/southafrica_Vynnycky-high_max_stage2_reps25.csv")
+# sa_max_stage2  <- read.csv("output/foi_fitting_history/southafrica_Vynnycky-high_max_stage2_reps25.csv")
 # sa_max_stage3  <- run_stage3("South Africa", "Vynnycky-high", "max", sa_max_stage2, reps=100)
 
 

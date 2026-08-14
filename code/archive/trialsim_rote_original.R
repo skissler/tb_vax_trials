@@ -1,5 +1,8 @@
+# Archived for historical provenance only - this was Stephen's original example workflow.
+# Superseded by run_analysis.qmd, which extends this with clearer naming, an age-varying FOI/p_slow
+# model, reversion, and the full literature-fitting pipeline. Not used by the current analysis.
 # ==============================================================================
-# Import, set parameter values 
+# Import, set parameter values
 # ==============================================================================
 
 library(tidyverse) 

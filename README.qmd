@@ -3,135 +3,78 @@ title: "MINA_TB README"
 format: gfm
 ---
 
-This code base `MINA_TB` aims to estimate the required size of Tuberculosis vaccine trials under different assumptions. Note: this README file renders to README.md.
+This code base `MINA_TB` estimates the required size of Tuberculosis vaccine trials under different assumptions, including the effect of using a test for recent (rather than lifelong) *M. tuberculosis* infection to enrich trial recruitment.
 
-## Conventions
+## Folders
 
-### Folders
+- `code/` - all R code (see below).
+- `data/` - input data (UN population estimates, literature-derived progression/reversion/positivity
+  estimates).
+- `output/` - model outputs, mostly `.csv`. `output/foi_fitting_history/` holds intermediate results
+  from the force-of-infection fitting process specifically (see its own README).
+- `figures/` - saved plots.
+- `shiny/` - an interactive Shiny app exploring the model (`shiny/app.R`), sharing `code/utils.R`
+  directly rather than keeping a separate copy.
+- `documentation/` - the mathematical derivation of the analytic model.
+- `notes/`, `writeup/` - working notes and manuscript drafts, not part of the analysis pipeline.
 
-Code and data are stored in the respective `code/` / `data/` folders. Model outputs are saved in `outputs/`, usually as .csv files, and figures in `figures/`. See `notes/` folder for details on how the model code has developed over time.
+## Code
 
-### Code
+The main analysis pipeline is `run_analysis.qmd`, run interactively section by section (most chunks
+are marked `#| eval: FALSE` and are not executed on render - this is intentional, since several are
+expensive stochastic simulations meant to be run once and cached to `output/`, not re-run every time
+the document renders). Its sections, in order:
 
-The main run file is `run_analysis.qmd`. This builds on Stephen's original code `code/vaxsim_old/trialsim_rote.R`, with new clearer naming conventions and extended model functionality.
+1. **Setup** - load packages, literature data (UN population estimates, progressor-type-by-age
+   studies, Dagnew et al. reversion/positivity data).
+2. **Age structure** - population age distribution for a chosen country.
+3. **Parameter values** - `pars_lit`, the literature/fitted parameter set used throughout.
+4. **South Africa parameter fitting** - reads and plots results of the FOI/p_slow/mu_slow grid
+   search (full fitting itself now lives in `code/foi_model_fitting_setup.R` /
+   `code/foi_overnight_run.R`, described below).
+5. **South Africa literature simulation** - the main stochastic and analytic simulations for
+   South Africa's chosen scenario.
+6. **Scenarios (shared setup)**, **6a** (varied vaccine trial sites: Kenya, India), **6b**
+   (non-test-based enrolment), **6c** (the main combined figure across test-based and no-test
+   strategies).
+7. **M72/AS01E trial emulation** - fitting the model against the M72 phase IIb trial's observed
+   endpoint count.
+8. **Analytic & stochastic match** - validates the two modelling approaches agree under matching
+   (uniform FOI, no reversion) assumptions.
+9. **Size of trial** - explores how observed stochasticity scales with trial size (casetarget), at
+   different test-positivity durations (σ).
+10. **Parameter sensitivity analysis** - tornado plots showing which model parameters (ρ, p_f, μ_f,
+    μ_s, p_r, μ_r) most affect the number needed to contact/test/enrol, and how sensitive the
+    test-span trade-off (σ=2 vs σ=50 years) itself is to each parameter.
 
-All helper functions are stored in `code/utils.R`. If a piece of code is re-used more than twice, it should ideally be written up as a function and added to `utils.R`. Naming conventions for functions are as follows:
+All simulation/analytic helper functions live in `code/utils.R`. Naming conventions:
 
-`sim_` = run the code
+- `sim_` = run a simulation; `plot_` = make a plot.
+- `_analytic` = closed-form analytic approach (derivations in `documentation/MINA-TB.pdf`); exact
+  only for a uniform (age-invariant) force of infection and does not model reversion.
+- `_stoch` = individual-based stochastic simulation; supports age-varying FOI/progression
+  probability and reversion.
+- `_lit` = parameter values taken from the literature; `_m72IIb` = parameter values chosen to
+  emulate the M72 phase IIb trial (Tait et al., 2019).
 
-`plot_` = make a plot
+### FOI fitting
 
-`_analytic` = analytical approach, using probability expressions derived in `documentation/MINA-TB.pdf` (formerly called 'theory')
+`code/foi_model_fitting_setup.R` is a reusable library implementing a 3-stage fitting process
+(5 reps -> 25 reps -> 100 reps) for choosing an age-varying force of infection per country: cheap,
+broad grid searches are unreliable at low rep counts (a "winner's curse" effect - see
+`output/foi_fitting_history/README.md` for the South Africa case that motivated this), so candidates
+are progressively re-verified at higher precision before being trusted.
 
-`_stoch` = stochastic simulation-based approach, also described in `documentation/MINA-TB.pdf` (formerly called 'trials')
+`code/foi_overnight_run.R` is a standalone script (not tied to any interactive session) that runs
+this process end-to-end for South Africa, Kenya, and India, writing final recommendations to
+`output/final_foi_recommendations.csv`/`.txt`. Run it directly, e.g.:
 
-The probability expressions derived in `documentation/MINA-TB.pdf` are also saved as the following functions: `p_inf_and_type_and_asymp_given_age`, `p_asymp_given_age`, and `p_inf_and_type_given_asymp_and_age`.
-
-Lastly, naming of parameter sets uses the following conventions:
-
-`_lit` = parameter values are taken from the literature
-
-`_m72IIb` = parameter values are chosen to emulate results of the M72 phase 2b trial (Van Der Meeren et al., 2018) (formerly called 'nejm')
-
-## Example workflow
-
-The file `code/vaxsim_old/trialsim_rote.R` has been preserved as an example workflow. Key steps are as follows:
-
-1. import functions
-```{r}
-#| label: eg_workflow_1
-library(tidyverse)
-library(readxl)
-source('code/utils.R')
+```
+Rscript code/foi_overnight_run.R
 ```
 
-2. define parameter values
-```{r}
-#| label: eg_workflow_2
-pars_m72IIb_igra <- list(
-	minage=18,
-	maxage=49,
-	rho=rep(0.0275,100),
-	p_slow=rep(0.5,100),
-	mu_slow=0.0001,
-	mu_fast=1.5,
-	sigma=100,
-	ve=0.55,
-	trial_length=3)
-pars_m72IIb_tasa <- pars_m72IIb_igra
-pars_m72IIb_tasa$sigma <- 2
+### Historical code
 
-pars_lit_igra <- list(
-	minage=18,
-	maxage=49,
-	rho=rep(0.0025,100),
-	p_slow=rep(0.95,100),
-	mu_slow=0.0001,
-	mu_fast=1.5,
-	sigma=100,
-	ve=0.55,
-	trial_length=3)
-pars_lit_tasa <- pars_lit_igra 
-pars_lit_tasa$sigma <- 2
-```
-
-3. define an age distribution e.g. uniform
-```{r}
-#| label: eg_workflow_3
-agedist <- rep(1, 80)
-names(agedist) <- 1:80
-agedist <- agedist/sum(agedist)
-```
-
-4. simulate trials under m72IIb conditions (analytical and stochastic approaches)
-```{r}
-#| label: eg_workflow_4
-#' Simulate the stochastic approach with m72IIb params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_m72IIb <- sim_stoch_over_sigma(pars=pars_m72IIb_igra, sigmavec=1:80, reps=25)
-stochastic_df_m72IIb <- read_csv("output/stochastic_df_m72IIb_uniform.csv")
-
-#' Simulate the analytical approach with m72IIb params, over the duration of positivity sigma
-analytical_df_m72IIb <- sim_analytic_over_sigma(pars=pars_m72IIb_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
-analytical_df_m72IIb %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
-
-#' Plot all results
-fig_stochastic_analytic_m72IIb <- plot_stochastic_analytic(stochastic_df_m72IIb, analytical_df_m72IIb, 
-                                           cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="M72/AS01E trial emulation")
-fig_stochastic_analytic_m72IIb
-ggsave(fig_stochastic_analytic_m72IIb, file="figures/stochastic_analytic_m72IIb.pdf", width=5, height=5/1.6)
-
-fig_stochastic_analytic_log_m72IIb <- fig_stochastic_analytic_m72IIb + scale_y_continuous(trans="log10")
-fig_stochastic_analytic_log_m72IIb
-ggsave(fig_stochastic_analytic_log_m72IIb, file="figures/stochastic_analytic_log_m72IIb.pdf", width=5, height=5/1.6)
-
-fig_screenslope_m72IIb <- plot_screenslope(analytical_df_m72IIb)
-fig_screenslope_m72IIb
-```
-
-5. simulate trials under literature conditions (analytical and stochastic approaches)
-```{r}
-#| label: eg_workflow_5
-#' Simulate the stochastic approach with lit params, over the duration of positivity sigma OR pre-load saved csv file
-# stochastic_df_lit <- sim_stoch_over_sigma(pars=pars_lit_igra, sigmavec=1:80, reps=25)
-stochastic_df_lit <- read_csv("output/stochastic_df_lit_uniform.csv")
-
-#' Simulate the analytical approach with lit params, over the duration of positivity sigma
-analytical_df_lit <- sim_analytic_over_sigma(pars=pars_lit_igra, sigmavec=seq(from=.5, to=80, by=0.01), agedist=agedist)
-analytical_df_lit %>% filter(sigma %in% c(0.5, 1, 1.5, 2, 5))
-
-#' Plot all results
-fig_stochastic_analytic_lit <- plot_stochastic_analytic(stochastic_df_lit, analytical_df_lit, cols=c("n_tested","n_recruited","n_fast","n_overall")) + 
-	labs(title="Literature parameters")
-fig_stochastic_analytic_lit
-ggsave(fig_stochastic_analytic_lit, file="figures/stochastic_analytic_lit.pdf", width=5, height=5/1.6)
-
-fig_stochastic_analytic_log_lit <- fig_stochastic_analytic_lit + scale_y_continuous(trans="log10")
-fig_stochastic_analytic_log_lit
-ggsave(fig_stochastic_analytic_log_lit, file="figures/stochastic_analytic_log_lit.pdf", width=5, height=5/1.6)
-
-fig_screenslope_lit <- plot_screenslope(analytical_df_lit)
-fig_screenslope_lit
-```
-
-Possible extensions to the above basic workflow are to include custom age distribution in `sim_stoch` and custom fast targets for `sim_stoch_over_sigma` and `sim_analytic_over_sigma`.
+`code/archive/trialsim_rote_original.R` is Stephen's original example workflow, preserved for
+provenance. It predates the age-varying FOI/p_slow model, reversion, and the literature-fitting
+pipeline, and is not used by the current analysis.

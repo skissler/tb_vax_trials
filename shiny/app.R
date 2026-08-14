@@ -13,15 +13,15 @@ ui <- fluidPage(
       selectInput("country", "Population age distribution",
                   choices=country_choices, selected="South Africa"),
       fluidRow(
-        column(6, numericInput("minage", "Recruitment min age", value=18, min=0, max=98, step=1)),
+        column(6, numericInput("minage", "Recruitment min age", value=15, min=0, max=98, step=1)),
         column(6, numericInput("maxage", "Recruitment max age", value=49, min=1, max=99, step=1))
       ),
       selectInput("foi_structure", "Force of infection",
-                  choices=foi_choices, selected="base"),
+                  choices=foi_choices, selected=foi_choices[1]),
       selectInput("progression_structure", "Probability of being a fast progressor",
-                  choices=pslow_choices, selected="Vynnycky-1997"),
+                  choices=pslow_choices, selected="Vynnycky-high"),
       selectInput("slow_structure", "Annual rate of progression for slow progressors",
-                  choices=muslow_choices, selected="base"),
+                  choices=muslow_choices, selected="0.003"),
 
       hr(),
       h4("Simulation"),
@@ -57,19 +57,21 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   sim_results <- reactiveVal(NULL)
+  sim_results_pars <- reactiveVal(NULL)
 
   observeEvent(input$run, {
 
     pars_base <- list(
       minage       = input$minage,
       maxage       = input$maxage,
-      rho          = define_foi_by_age(input$foi_structure),
+      rho          = foi_lookup[[input$foi_structure]],
       p_slow       = extract_probability_of_being_slow(progressor_type_by_age_studies, input$progression_structure),
       mu_slow      = define_mu_slow(input$slow_structure),
       mu_fast      = 1.5,
+      p_revert     = default_p_revert,
+      mu_revert    = default_mu_revert,
       sigma        = 100,
-      trial_length = 3,
-      ve           = 0.55
+      trial_length = 3
     )
 
     agedist  <- extract_age_distribution(unwpp, input$country)
@@ -77,6 +79,7 @@ server <- function(input, output, session) {
     reps     <- input$reps
     grid     <- expand.grid(sigma=sigmavec, rep=1:reps)
     n_total  <- nrow(grid)
+    casetarget <- 50
 
     results_list <- vector("list", n_total)
 
@@ -84,15 +87,18 @@ server <- function(input, output, session) {
       for (i in 1:n_total) {
         pars_i       <- pars_base
         pars_i$sigma <- grid$sigma[i]
-        out          <- sim_stoch(pars_i, fasttarget=50, agedist=agedist)
+        out          <- sim_stoch(pars_i, casetarget=casetarget, agedist=agedist)
         results_list[[i]] <- tibble(
-          sigma       = grid$sigma[i],
-          rep         = grid$rep[i],
-          n_tested    = out$n_tested,
-          n_recruited = out$n_recruited,
-          n_fast      = out$n_fast,
-          n_slow      = out$n_slow,
-          n_overall   = out$n_overall
+          sigma           = grid$sigma[i],
+          rep             = grid$rep[i],
+          n_tested        = out$n_tested,
+          n_enrolled      = out$n_enrolled,
+          n_fast          = out$n_fast,
+          n_slow          = out$n_slow,
+          n_overall       = out$n_overall,
+          n_trial_cases   = out$n_trial_cases,
+          inf_prev_15to24 = out$inf_prev_15to24,
+          inf_prev_25to34 = out$inf_prev_25to34
         )
         incProgress(1/n_total,
                     detail=paste0("sigma=", grid$sigma[i], ", rep ", grid$rep[i], "/", reps))
@@ -100,10 +106,12 @@ server <- function(input, output, session) {
     })
 
     sim_results(bind_rows(results_list))
+    # pars_base is fixed per run, needed again (unchanged) by the benchmarks table below
+    sim_results_pars(pars_base)
   })
 
 
-  # Main plot: box + whiskers, recruited + screened on same axes
+  # Main plot: box + whiskers, enrolled + tested on same axes
   output$main_plot <- renderPlot({
     req(sim_results())
 
@@ -112,16 +120,16 @@ server <- function(input, output, session) {
         ifelse(sigma==2, "TASA (σ=2)", "IGRA (σ=80)"),
         levels=c("TASA (σ=2)", "IGRA (σ=80)")
       )) %>%
-      select(sigma_label, rep, n_recruited, n_tested) %>%
-      pivot_longer(cols=c(n_recruited, n_tested), names_to="metric", values_to="value") %>%
-      mutate(metric = case_when(metric=="n_recruited"~"Recruited", metric=="n_tested"~"Screened"))
+      select(sigma_label, rep, n_enrolled, n_tested) %>%
+      pivot_longer(cols=c(n_enrolled, n_tested), names_to="metric", values_to="value") %>%
+      mutate(metric = case_when(metric=="n_enrolled"~"Enrolled", metric=="n_tested"~"Tested"))
 
     ggplot(plot_df, aes(x=sigma_label, y=value, fill=metric)) +
       geom_boxplot(position=position_dodge(width=0.35), width=0.3, alpha=0.8, coef=Inf) +
       scale_fill_brewer(palette="Set1") +
       theme_classic() +
       theme(legend.title=element_blank(), strip.background=element_blank()) +
-      labs(x=NULL, y="Number (per 50 fast progressors)")
+      labs(x=NULL, y="Number (for 50 disease-endpoint cases)")
   })
 
 
@@ -136,8 +144,8 @@ server <- function(input, output, session) {
       )) %>%
       group_by(sigma_label) %>%
       summarise(
-        Screened  = round(median(n_tested)),
-        Recruited = round(median(n_recruited)),
+        Tested    = round(median(n_tested)),
+        Enrolled  = round(median(n_enrolled)),
         Fast      = round(median(n_fast)),
         Slow      = round(median(n_slow)),
         Overall   = round(median(n_overall)),
@@ -146,49 +154,33 @@ server <- function(input, output, session) {
       arrange(sigma_label) %>%
       rename(` ` = sigma_label)
   }, digits=0, striped=TRUE, hover=TRUE, bordered=TRUE,
-     caption="All values are medians across simulation reps.")
+     caption="All values are medians across simulation reps, for 50 disease-endpoint cases.")
 
 
-  # Epidemiological benchmarks table
+  # Epidemiological benchmarks table - reuses the same sim_results() stochastic output (sigma=80,
+  # i.e. lifelong/IGRA-like positivity) rather than re-simulating, via the same
+  # summarise_case_incidence_and_ARTI() helper used throughout run_analysis.qmd.
   output$benchmarks <- renderTable({
     req(sim_results())
+    req(sim_results_pars())
 
-    pars <- list(
-      minage       = input$minage,
-      maxage       = input$maxage,
-      rho          = define_foi_by_age(input$foi_structure),
-      p_slow       = extract_probability_of_being_slow(progressor_type_by_age_studies, input$progression_structure),
-      mu_slow      = define_mu_slow(input$slow_structure),
-      mu_fast      = 1.5,
-      sigma        = 80,
-      trial_length = 3,
-      ve           = 0.55
-    )
+    pars <- sim_results_pars()
+    reps_i <- length(unique(sim_results()$rep))
 
-    inf_prev <- estimate_inf_prev_from_model(pars$rho)
-
-    stoch_80 <- sim_results() %>%
-      filter(sigma==80) %>%
-      select(rep, n_tested, n_recruited, n_fast, n_slow, n_overall)
-
-    reps_i    <- unique(stoch_80$rep)
-    cases_vec <- sapply(reps_i, function(r) estimate_case_incidence_from_model(stoch_80, pars=pars, my_rep=r))
-    ARTI_vec  <- sapply(reps_i, function(r) estimate_ARTI_from_model(stoch_80, pars=pars, my_rep=r))
+    metrics <- summarise_case_incidence_and_ARTI(sim_results(), pars=pars, reps=reps_i, sig=80)
 
     tibble(
       Metric = c(
-        "Infection prevalence, age 20",
-        "Infection prevalence, age 30",
-        "Infection prevalence, age 40",
+        "Infection prevalence, age 15-24",
+        "Infection prevalence, age 25-34",
         "ARTI (median)",
         "Cases per 100k per year (median)"
       ),
       Value = c(
-        sprintf("%.2f", inf_prev["inf_prev_age20"]),
-        sprintf("%.2f", inf_prev["inf_prev_age30"]),
-        sprintf("%.2f", inf_prev["inf_prev_age40"]),
-        sprintf("%.3f", median(ARTI_vec)),
-        sprintf("%.0f", median(cases_vec))
+        sprintf("%.2f", median(metrics$inf_prev_15to24)),
+        sprintf("%.2f", median(metrics$inf_prev_25to34)),
+        sprintf("%.3f", median(metrics$ARTI)),
+        sprintf("%.0f", median(metrics$cases))
       )
     )
   }, striped=TRUE, hover=TRUE, bordered=TRUE)
