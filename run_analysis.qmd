@@ -527,6 +527,43 @@ fig_6b <- notest_df_6b %>%
   labs(x=NULL, y="Number enrolled (for 1 case)", fill="p_f")
 fig_6b
 ggsave(fig_6b, file="figures/6b_notest_scenarios.png", width=7.29, height=4.51)
+
+## Build a copy-paste-ready table for manuscript no-test-scenarios table (No. needed to
+## contact/enrol, by country x p_f x scenario), with IQR in square brackets.
+notest_raw <- read.csv("output/notest_stochoutput.csv") %>%
+  mutate(n_overall_1 = n_overall / n_trial_cases,
+         n_enrolled_1 = n_enrolled / n_trial_cases)
+
+foi_by_country_label <- c("India"="2,1,3,1,1", "Kenya"="5,2,5,4,2", "South Africa"="6,5,7,7,5")
+p_slow_label <- c("Vynnycky-1997"="4-14%", "uniform_95"="5%", "Vynnycky-high"="4-19%")
+scenario_label <- c("no test standard"="standard", "no test young"="young", "no test household"="household")
+
+notest_summary_iqr <- notest_raw %>%
+  group_by(country, slow_structure, scenario) %>%
+  summarise(
+    contact_cell = sprintf("%.0f [%.0f-%.0f]", median(n_overall_1), quantile(n_overall_1, 0.25), quantile(n_overall_1, 0.75)),
+    enrol_cell   = sprintf("%.0f [%.0f-%.0f]", median(n_enrolled_1), quantile(n_enrolled_1, 0.25), quantile(n_enrolled_1, 0.75)),
+    .groups = "drop"
+  ) %>%
+  mutate(scenario = scenario_label[scenario]) %>%
+  pivot_wider(names_from = scenario, values_from = c(contact_cell, enrol_cell))
+
+table_notest <- notest_summary_iqr %>%
+  mutate(rho = foi_by_country_label[country],
+         p_f = p_slow_label[slow_structure],
+         country = factor(country, levels = c("India", "Kenya", "South Africa"))) %>%
+  arrange(country, p_f) %>%
+  select(Country = country, rho, p_f,
+         `No. needed to contact (standard)`   = contact_cell_standard,
+         `No. needed to contact (young)`      = contact_cell_young,
+         `No. needed to contact (household)`  = contact_cell_household,
+         `No. needed to enrol (standard)`     = enrol_cell_standard,
+         `No. needed to enrol (young)`        = enrol_cell_young,
+         `No. needed to enrol (household)`    = enrol_cell_household)
+
+write.csv(table_notest, file = "output/table_notest_results.csv", row.names = FALSE)
+library(knitr)
+kable(table_notest)
 ```
 
 ## 6c. Main figure: test-based vs no-test strategies combined
