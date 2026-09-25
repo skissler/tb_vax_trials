@@ -577,7 +577,7 @@ Combines two test-based strategies (sigma = 2 years, ~lifetime) with the three `
 countries_6c <- countries_scenarios
 
 # Strategy definitions: 2 test-based (sigma = 2y / lifetime) + 3 no-test scenarios
-strategy_levels_6c <- c("No test\nstandard", "No test\nyoung", "No test\nhousehold", "Test\nlifetime span", "Test\n2 years span")
+strategy_levels_6c <- c("No test\nstandard", "No test\nyoung", "No test\nhousehold", "Test\nIGRA", "Test\nrecent infection")
 
 # Test-based: South Africa from chunk 5's full output, Kenya/India from chunk 6a's full output.
 # Each country only has one fitted p_slow shown here (Vynnycky-high for SA, Vynnycky-1997 for Kenya/India).
@@ -607,8 +607,8 @@ stoch_df_6c <- bind_rows(test_6c, notest_6c) %>%
     strategy == "no test standard"  ~ "No test\nstandard",
     strategy == "no test young"     ~ "No test\nyoung",
     strategy == "no test household" ~ "No test\nhousehold",
-    strategy == "test_lifetime"     ~ "Test\nlifetime span",
-    strategy == "test_2y"           ~ "Test\n2 years span"))
+    strategy == "test_lifetime"     ~ "Test\nIGRA",
+    strategy == "test_2y"           ~ "Test\nrecent infection"))
 
 # Plot: x = strategy (grouped, test-based then no-test), 3 dodged boxes per group = country, fill = country
 country_colours_6c <- c("South Africa"="#4DAF4A", "Kenya"="#377EB8", "India"="#E41A1C")
@@ -628,8 +628,8 @@ ggsave(fig_6c, file="figures/6c_main_combined.png", width=7.29, height=4.51)
 sigma_to_strategy_6c_alt1 <- function(sigma) case_when(
   sigma == 0.5 ~ "Test\n6 months span",
   sigma == 2   ~ "Test\n2 years span",
-  sigma == 50  ~ "Test\nlifetime span")
-strategy_levels_6c_alt1 <- c("Test\nlifetime span", "Test\n2 years span", "Test\n6 months span")
+  sigma == 50  ~ "Test\nIGRA")
+strategy_levels_6c_alt1 <- c("Test\nIGRA", "Test\n2 years span", "Test\n6 months span")
 
 sa_test_6c_alt1 <- read.csv("output/southafrica_stochoutput.csv") %>%
   filter(sigma %in% c(0.5, 2, 50)) %>%
