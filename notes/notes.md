@@ -1,26 +1,5 @@
 # 6 June 2025 (SMK)
 
-Personal recap of the meeting this week with Kristin and Tyler:
-
-- **Aim 1:** How might a test for recency of TB infection (e.g., TASA) improve our ability to do the things listed below, beyond what's possible with existing diagnostics (e.g., IGRA)?
-  - Assessing risk of infection
-  - Measuring incidence/prevalence (more accurately, with less lag)
-  - Vaccine trials (measuring community-level transmission)
-  - Compare to Styblo approach
-  - Can we specify the sensitivity, specificity, and timing of a recency test to be maximally useful for these applications?
-- **Aim 2:** How might a test for TB infectiousness (CASS, facemasks) improve our ability to control TB?
-  - There's confounding between supershedders and super-contacters. How can we account for this? In which contact contexts might an indicator of biological infectiousness be helpful?
-  - Tools like CASS have been sidelined because they're not "effective" enough... but could this be a feature, not a bug? if they can only detect people with extremely high infectiousness, could this be exactly what we want?
-  - What kind of sensitivity and specificity -- in terms of predicting the number of secondary cases -- would we want from an infectiousness test? Can we specify the test parameters we'd want for it to be a useful outbreak control tool?
-
-I'd like to code up some initial sims. I want to see if I've got the right ideas in mind, and we might be able to use some of the output for preliminary data.
-
-Some code architecture:
-
-- Simulate an epidemic curve
-- Simulate sampling at various points in time, with different tests
-- Show estimates of incidence and prevalence over time
-
 Before diving in, I want to look at existing TB models. Some useful resources:
 
 - [Guidance for country-level TB modelling](https://researchonline.lshtm.ac.uk/id/eprint/4653000/1/gomez_etal_2019_guidance_for_country-level_tb_modelling.pdf) (led by Nick Menzies)
@@ -30,46 +9,11 @@ Before diving in, I want to look at existing TB models. Some useful resources:
 - [The Impact of Realistic Age Structure in Simple Models of Tuberculosis Transmission](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0008479) (Brooks-Pollock, Cohen, Murray)
 - [Interferon-Gamma Release Assays versus Tuberculin Skin Testing for the Diagnosis of Latent Tuberculosis Infection: An Overview of the Evidence](https://onlinelibrary.wiley.com/doi/10.1155/2013/601737) (Trajman, Steffen, Menzies)
 
-# 16 July 2025
-
-Aim 3 -- if you could collect some bare minimum info on contacts, would that be enough to disentangle timing of infectiousness(?)
-
-Some questions:
-
-- We now have two aims pages -- just tests for recent infection, or both tests for recency and tests for infectiousness?
-  - if we do scope it down to two aims: are those substantive enough to sustain two full aims?
-  - probably yes -- let's maybe just keep it with the two aims.
-- A potential [collaborator](https://wikitia.com/wiki/Claudia_Denkinger)
-
-Scheduling -- deadline Oct 12 (Sun), internal deadline Oct 6-7. Sep 29 for admin documents.
-
-9-ish weeks between now and then;
-
-Aim for push over next 5 weeks; most of writing in August.
-
-Significance & Innovation (2 weeks) Approach (2 weeks)
-
-Check for draft from Kristin in early Aug...
-
-Aim 2 feels like the more challenging of the two?
-
-Plot two incidence curves -- ideally with similar IGRA profiles but yielding different TASA curves, just to show that there's information there.
-
-(maybe something too to demonstrate the value of starting TBT for people with a recent infection vs. an IGRA-positive infection)
-
-one more application in the context of vax trials? --\> gating entry into vaccine trial based on people who are IGRA positive. Could gating by TASA be better? (1) is transmission intense enough and (2) at an individual level, could we use TASA to be more predictive for good eligibility?
-
-(still structure aims as vaccine trials + epidemic dynamics)
-
-Look out for rough schedule to get us to submission. Review, give comments.
-
 # 27 July 2025
 
 Some goals for preliminary data modelling:
 
 - Simulate a clinical trial, or do some sample size calculations for a trial, under different rates of progression to TB. Consider using a test to (a) determine eligibility for a trial and (b) refine sample size estimates by getting better notion of incidence in a community.
-
-Let's start there. A second aim would be similar to what I was working on above: how might a test for recency of infection reveal changes in incidence/prevalence that would be obscured with an IGRA-style test?
 
 Let's try to come up with something simple for the first case:
 
