@@ -30,7 +30,7 @@ ui <- fluidPage(
       hr(),
       actionButton("run", "Run simulation", class="btn-primary", width="100%"),
       br(), br(),
-      helpText("Approx run time: 20–30 seconds for 5 reps.")
+      helpText("Approx run time: ~1 second per rep (about 5 seconds for 5 reps).")
     ),
 
     mainPanel(
