@@ -2,7 +2,7 @@
 title: "run_analysis"
 format: html
 ---
-This Quarto Markdown file outlines a workflow for running all steps of the analysis. It is based on the example workflow in `code/trialsim_rote.R`.
+This Quarto Markdown file outlines a workflow for running all steps of the analysis.
 
 ## 1. Setup
 

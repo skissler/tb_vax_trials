@@ -1,4 +1,4 @@
-# 6 June 2025
+# 6 June 2025 (SMK)
 
 Personal recap of the meeting this week with Kristin and Tyler:
 
@@ -55,7 +55,7 @@ Aim 2 feels like the more challenging of the two?
 
 Plot two incidence curves -- ideally with similar IGRA profiles but yielding different TASA curves, just to show that there's information there.
 
-(maybe something too to deminstrate the value of starting TBT for people with a recent infection vs. an IGRA-positive infection)
+(maybe something too to demonstrate the value of starting TBT for people with a recent infection vs. an IGRA-positive infection)
 
 one more application in the context of vax trials? --\> gating entry into vaccine trial based on people who are IGRA positive. Could gating by TASA be better? (1) is transmission intense enough and (2) at an individual level, could we use TASA to be more predictive for good eligibility?
 
@@ -161,7 +161,7 @@ Age structure added to model - population age distribution and incidence by age.
 
 # 25/26 Feb 2026 (LH)
 
-Dealing with varying hazard rates for time to infection (sim_stoch() function). Initially we use an exponential distribution with constant annual incidence rho to estimate time-to-infection. Now rho is age-varying, so I've been investigating survival analysis and other ways to estimate 'time to event X'.
+Dealing with varying hazard rates for time to infection (sim_stoch() function). Initially we use an exponential distribution with constant annual incidence\* rho to estimate time-to-infection. Now rho is age-varying, so I've been investigating survival analysis and other ways to estimate 'time to event X'.
 
 In short, my conclusion is to use a general survival function with empirically-specified hazard rate (inc_by_age). The general survival function collapses to exponential when the hazard rate is constant (which is what we want).
 
@@ -181,7 +181,9 @@ How has this changed model outputs? The distribution of tinf times now follows t
 
 ![new_tinfs_recruited_histogram.png](images/new_tinfs_recruited_histogram.png)
 
-Important note: Currently, incidence of *cases* is used as the hazard rate for tinf. What we actually want is incidence of *infection.*
+Important note: Currently, incidence of *cases* is used as the hazard rate for tinf. What we actually want is incidence of *infection\*.*
+
+*[\*Update - we eventually settled on rho representing the force of infection]*
 
 # 27 Feb 2026 (LH)
 
@@ -227,7 +229,7 @@ Summary and further exploration of age structure methods. How have the changes a
 |             |                                  |                                                                                  |                                                  | Lit plot: Recruited (blue) is \~30,000. Overall/screened is now much lower, around 50,000.                                                                                                                                                       |                                                     |
 +-------------+----------------------------------+----------------------------------------------------------------------------------+--------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------+
 
-Formally, $\rho$ should be the annual rate of Tuberculosis infection (ARTI) not case incidence. **So scenarios 1-4 are now obsolete and can be ignored.**
+Formally, $\rho$ should be the annual rate of Tuberculosis infection\* (ARTI) not case incidence. **So scenarios 1-4 are now obsolete and can be ignored.**
 
 Age-varying ARTI can be calculated from *infection prevalence* estimates, using the following formula: $R = 1 –(1 –P)^{1/A}$, where R is the annual risk of infection (expressed as a fraction), P is M.tb. infection prevalence of the age group (expressed as a fraction), and A is the mean age of the participants. This method is defined in [Arnadottir et al., 1996](https://linkinghub.elsevier.com/retrieve/pii/S0962847996901276). Note that most national TB prevalence surveys are for *prevalence of disease* not *prevalence of infection* so are not what we want for P.
 
@@ -240,6 +242,8 @@ Key takeaways from adding age structure and other model developments (12th March
 - Changing from uniform to age-varying ARTI in the South Africa Wood-2010 example made little effect on model outputs, but note the Wood data is similar (on average) to the uniform 4% that was used previously. There are now 7 different age-varying ARTI data sets that can be used (2 for South Africa, and 1 for each of The Gambia, Saudi Arabia, Vietnam, Tanzania, Greenland).
 
 - Lastly, the probability of being a fast progressor now also changes with age. Vynnycky-1997 estimates a probability of 4% for ages 0-10, 9% for age 15, and 14% for ages 20+ (with straight line interpolation between ages 10 and 20) - Table 3. This is higher overall than the uniform 5% assumed previously. This did affect model outputs significantly, reducing number recruited to one third of its original value (30,000 cf. 80,000) and number screened and overall to less than half their original values (\~50,000 cf. 125,000). Note that we should consider whether we want to use these Vynnycky estimates – estimates come from modelling published in 1997 but it is widely cited in present day.
+
+  *[\*Update - we eventually settled on rho representing the force of infection]*
 
 # 6th March 2026 (LH)
 
@@ -386,7 +390,7 @@ Changed ARTI -\> foi in code. Wrote a quick function to estimate infection preva
 
 Thoughts:
 
-- Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most or nearly all? adults in South Africa to be infected, so this seems plausible.
+- Infection prevalence for eligible ages (18-49y) in these simulations ranges from 71% to 92%. We would expect most? adults in South Africa to be infected, so this seems ok for now.
 - ARTI is perhaps a bit low when using uniform 4% force of infection. (We also do not expect force of infection to be at all uniform).
 - The non-uniform force of infection scenarios ("5,a,b,c") use 5% for ages 0-19, then a% for ages 20-39, b% for ages 40-79, and c% for ages 80+. The final scenario gives an average ARTI which is a bit too large.
 - The foi values for age \> 49 years are probably not being used at all - since these individuals are not in the eligible age range of the trial.
@@ -404,7 +408,7 @@ Claude-assisted diagnostics were run on the whole codebase. Some free-flowing ob
 
   - Check the mean age of infection literature:
 
-    - Houben and Dodd 2016 (<https://doi.org/10.1371/journal.pmed.1002152>). Two modellers from LSHTM TB modelling group.
+    - Houben and Dodd 2016 (<https://doi.org/10.1371/journal.pmed.1002152>). LSHTM TB modelling group.
 
     - Fig 3 shows estimated infection prevalence by age (whole regions). ![](images/clipboard-3299014433.png){width="343"}
 
@@ -446,7 +450,7 @@ Nothing to add here – plots just confirm a high level of infecteds (in both an
 
 **Diagnostic 3: Stepwise age-structure effects**
 
-Here we are running the code adding in more age structure each time (but note the 'uniform' will not be identical to Stephen's original code). Nothing to note here.
+Here we are running the code adding in more age structure each time (but note the 'uniform' will not be identical to SMK's original code). Nothing to note here.
 
 **Diagnostic 4: Case incidence decomposition - fast vs slow contribution**
 
@@ -458,11 +462,11 @@ mu_slow is currently 0.0001. We would need mu_slow to be at least 0.001 i.e 10 t
 
 Let's recheck what mu_slow should be from the literature:
 
-- Rechecking Stephen's notes on parameter values from the literature (27jul), it looks as if we assume an annual rate of 0.0001 of progressing to active disease, and Menzies 2018 states that "for individuals with long-established infection, the annual risk of active tb is low; empirical estimates are on the order of 10-20 per 100k individuals.3"
+- Rechecking SMK's notes on parameter values from the literature (27jul), it looks as if we assume an annual rate of 0.0001 of progressing to active disease, and Menzies 2018 states that "for individuals with long-established infection, the annual risk of active tb is low; empirical estimates are on the order of 10-20 per 100k individuals.3"
 
-  - Note that ref 3 is for a paper on Saskatchewan from 1971 (Barnett) and not publicly available.
+  - Note that ref 3 is for a paper on Saskatchewan from 1971 (Barnett) and not publicly available. *[Update: I did eventually get a copy of this paper through University archives].*
 
-  - Do we have a slight mismatch between risks and rates again here? And does 10-20 per 100k seem to be supported anywhere else in the literature (I can't find many papers that publish a rate of progression to disease for slow progressors). If any other empirical estimates available, try running the model with these. [TASK 2]
+  - Do we have a slight mismatch between risks and rates again here? And does 10-20 per 100k seem to be supported anywhere else in the literature (I can't find many papers that publish a rate of progression to disease for slow progressors). If any other empirical estimates are available, try running the model with these. [TASK 2]
 
     - Shea 2014 estimates 0.00084 per year in the US (<https://doi.org/10.1093/aje/kwt246>).
 
@@ -488,7 +492,7 @@ Let's recheck what mu_slow should be from the literature:
 
       ![](images/clipboard-4182915370.png)
 
-      We will use mu_slow=0.001 as the baseline and the range shown and also age-varying Vynnycky as alternatives.
+      We will use mu_slow=0.001 as the baseline and the range shown as alternatives.
 
 **Diagnostic 6: Time since infection for recruits**
 
@@ -554,7 +558,7 @@ The m72IIb trial enrolled 3575 (<https://www.nejm.org/doi/full/10.1056/NEJMoa190
 
 # 5th-6th May (LH)
 
-Constructing the household contacts model scenario. Much discussion with Stephen led us to come up with the following:
+Constructing the household contacts model scenario. Much discussion with SMK led us to come up with the following:
 
 - IGRA only. **Assume all individuals are living in a household of a recent case.**
 
@@ -570,7 +574,7 @@ Constructing the household contacts model scenario. Much discussion with Stephen
 
 # 6th-12th May 2026 (LH)
 
-Kristin & Tyler identified a new IGRA positivity study - Dagnew et al. 2026 (<https://journals.theunion.org/content/ijtldo/3/4/232>). This gives estimates of infection prevalence in different sites in \~8 countries, by age group (15-24y and 25-34y). I think this is now the best data to fit our model to.
+KN & TSB identified a new IGRA positivity study - Dagnew et al. 2026 (<https://journals.theunion.org/content/ijtldo/3/4/232>). This gives estimates of infection prevalence in different sites in \~8 countries, by age group (15-24y and 25-34y). I think this is now the best data to fit our model to.
 
 I extracted the Dagnew results by age (Table S5) to a csv and then used Claude to compute country averages. Claude's calculations are outlined in GitHub Issue 3 (<https://github.com/skissler/MINA_TB/issues/3>).
 
@@ -580,11 +584,11 @@ Q1 - with this new lower prevalence, can we still reach \>200 cases? Answer: yes
 
 Fab we will go with this dataset for fitting then. I will allow wider upper bands for infection prevalence though as our model does not capture recovery.
 
-With this new Dagnew dataset, South Africa infection prevalence averaged across sites was approx 35% at age 20y and 50% at age 30y. This matches with Tyler's intuition of around 50% inf prevalence as a ballpark figure. The force of infection then needs to update – to less than 5% hazard rate, as from Vynnycky & White we know that a 5% annual hazard rate would give a mean age of infection around 20y and we want slightly later:
+With this new Dagnew dataset, South Africa infection prevalence averaged across sites was approx 35% at age 20y and 50% at age 30y. This matches with TSB's intuition of around 50% inf prevalence as a ballpark figure. The force of infection then needs to update – to less than 5% hazard rate, as from Vynnycky & White we know that a 5% annual hazard rate would give a mean age of infection around 20y and we want slightly later:
 
 ![](images/clipboard-2974238641.png)
 
-We can't reproduce the analysis we did for investigating if new foi should be age-varying as the Dagnew paper doesn't give a nice curve of inf prev by age (only data for two age classes). However we do know we want something 5% or less. So we can try a few different values (1-5%), and also add in a larger p_fast option "Vynnycky-high" (to capture HIV-infected individuals).
+We can't reproduce the analysis we did for investigating if new foi should be age-varying as the Dagnew paper doesn't give a nice curve of inf prev by age (only data for two age classes). However we do know we want something 5% or less. So we can try a few different values (1-5%), and also add in a larger p_fast option "Vynnycky-high" (to capture e.g. HIV-infected individuals).
 
 **Results from model fitting:**
 
@@ -626,7 +630,7 @@ We discussed the terminology for overall/sampled, screened/tested, and enrolled/
 
   - Getting something nice from the model fits might be quite fiddly. Suggest trying 0%, 5%, 10%, and 22.8% reversion, with a super-skimmed down exhaustive search and see what is plausible. Or just run a large model fitting and wait a while (but run a small one first to check its quick and working properly).
 
-# 24th June LH
+# 24th June (LH)
 
 - What happens if you revert during the trial? -\> We discussed and agreed to calculated the expected cases formally incorporating exponentially-distributed mu_revert.
 
@@ -677,7 +681,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 # 20th July 2026 (LH)
 
-- ‡Probability of primary reversion once infected is informed by Dagnew et al. Table S6 but rescaled by number of Day 1 positives and the percentage of individuals who completed the study (i.e. reported a month-12 IGRA status) [[16]](https://www.zotero.org/google-docs/?tsm34f). This yields an approximate probability of primary reversion for those already infected, rather than probability of primary reversion among all participants as reported.
+- ‡Probability of primary reversion once infected is informed by Dagnew et al. Table S6 but rescaled by number of Day 1 positives and the percentage of individuals who completed the study (i.e. reported a month-12 IGRA status). This yields an approximate probability of primary reversion for those already infected, rather than probability of primary reversion among all participants as reported.
 
 - This now gives probability of reversion (once infected) in the range 6-41%, which is much more in line with the Wang et al. review (22.8% overall). Note that in Dagnew study, South Africa has a much lower-than-average rate of reversion, likely due to the high-burden and high-HIV-prevalence etc. So I think its best to stick with Dagnew country-specific estimates and not use the Wang all-countries average.
 
@@ -687,7 +691,7 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 # 23rd july (LH)
 
-- Reversion is much too high now – we are only seeing around 20% infection prevalence in model fitting now and none of the parameter combinations fulfill all the criteria. I think better to try Stephen's approach of a 7.5% chance of reverting (and then draw a trev), rather than compounded 7.5% chance per year.
+- Reversion is much too high now – we are only seeing around 20% infection prevalence in model fitting now and none of the parameter combinations fulfill all the criteria. I think better to try SMK's approach of a 7.5% chance of reverting (and then draw a trev), rather than compounded 7.5% chance per year.
 
   - Want to understand *when* reversion is likely to happen in an individual (relative to their time since infection). Currently our exponential/constant rate set up assumes an increasing chance of reversion as more time passes since infection - is this realistic?
 
@@ -707,9 +711,9 @@ Final bit is to add reversion BEFORE the trial. Plan is as follows:
 
 - Probably also want to consider greater force of infection, e.g. look at 1-10% rather than 1-5%. Now we have reversion its no longer a simple catalytic setup.
 
-Thoughts from Stephen:
+Thoughts from SMK:
 
-"It does seem like the papers above are converging on the idea that *if* reversion happens, it tends to happen soon after infection. So, you’re right that the more realistic model appears to be the one where we say that each person has a \~7.5% chance of reverting, and then for those who revert, we draw their reversion time according to an exponential distribution that puts most of the mass w/in 3 years. (that 3-year time horizon is loosely based on the retrospective German study, where reversion rates past 3 years were quite small). This is pretty similar in spirit to what we’re doing with the fast/slow progressors! We (a) draw a probability that you’re a fast progressor, and then (b) draw the progression time so that most of the mass is w/in 2 years. Exactly the same math, just with a different interpretation."
+"It does seem like the papers above are converging on the idea that *if* reversion happens, it tends to happen soon after infection. So, you’re right that the more realistic model appears to be the one where we say that each person has a \~7.5% chance of reverting, and then for those who revert, we draw their reversion time according to an exponential distribution that puts most of the mass w/in 3 years. (That 3-year time horizon is loosely based on the retrospective German study, where reversion rates past 3 years were quite small). This is pretty similar in spirit to what we’re doing with the fast/slow progressors! We (a) draw a probability that you’re a fast progressor, and then (b) draw the progression time so that most of the mass is w/in 2 years. Exactly the same math, just with a different interpretation."
 
 -\> I have now implemented this (with a coin flip 7.5% probability of being a reverter, and if you are a reverter, most of the probability mass (78%) is within 2 years using Exp(0.75) - informed by the German study above). I am now exploring 1-10% foi to find a good model fit (around 3-7% age-varying looks promising). We still have the exponential race for case vs reversion during the trial which we don't really need anymore (because every person now has a tsymp and a trev) - I guess I should remove but will first see if the new approach is likely to meet the conditions.
 
@@ -723,14 +727,14 @@ SOLUTION: If tsymp \> trev, set tsymp to Inf. And if trev \> tsymp, set trev to 
 
 Non-test-based enrolment:
 
-Considered this for a long time and did some wider reading. Cobelens does the following: "In the Mixed trial, the age-specific proportions IGRA-positive and negative were assumed to reflect those of the population, i.e., enrolment was population representative". Kristin suggested something similar: "Could you base p(infection) on country-specific IGRA positivity prevalence by age?". I think this is what we do already, implicitly (encoded by the fitted force of infection). We enrol everyone who is asymptomatic and the right age, and continually recruit until we observe 50 disease endpoints (those individuals whose tsymp is within three years of the enrolment age).
+Considered this for a long time and did some wider reading. Cobelens does the following: "In the Mixed trial, the age-specific proportions IGRA-positive and negative were assumed to reflect those of the population, i.e., enrolment was population representative". KN suggested something similar: "Could you base p(infection) on country-specific IGRA positivity prevalence by age?". I think this is what we do already, implicitly (encoded by the fitted force of infection). We enrol everyone who is asymptomatic and the right age, and continually recruit until we observe 50 disease endpoints (those individuals whose tsymp is within three years of the enrolment age).
 
 In conclusion, I think no changes are needed to the non-test-based enrolment model.
 
 # 5th Aug (LH)
 
-Noticed that no test young vs no test household outputs (with uniform foi) seem unusual - more enrolleds in young. Slightly better with the age-varying foi (3-6-7-6-5) but not ideal. Investigated and motivated choosing the age-varying foi more carefully - there were 523 parameter combinations that met all the thresholds. In the end, I decided to choose an foi which mapped well to the Wood et al. 2010 prevalence curve (figure attached) and had a good number of cases (and had vynnycky-high p_f and 0.003 mu_s). The foi used for South Africa is now: 4-6-4-7-5.
+Noticed that no test young vs no test household outputs (with uniform foi) seem unusual - more enrolleds in young. Slightly better with the age-varying foi (3-6-7-6-5) but not ideal. Investigated and this issue motivated choosing the age-varying foi more carefully - there were 523 parameter combinations that met all the thresholds. In the end, I decided to choose an foi which mapped well to the Wood et al. 2010 prevalence curve (figure attached) and had a good number of cases (and had vynnycky-high p_f and 0.003 mu_s). The foi used for South Africa is now: 4-6-4-7-5.
 
 ![](images/clipboard-319881090.png)
 
-This also motivates using age-varying foi's over uniform wherever possible. For the multi-country analysis (Kenya/India/SA), I had just been using uniform foi for speed, but that hides the no test young vs no test standard nuances. So will run some fits for Kenya and India and use an age-varying foi throughout the paper.
+This also motivates using age-varying foi's over uniform wherever possible. For the multi-country analysis (Kenya/India/SA), I had just been using uniform foi for speed, but that hides the no test young vs no test standard nuances. So will run some fits for Kenya and India and use an age-varying foi throughout the paper. –\> All done now and final results all added to the paper!
